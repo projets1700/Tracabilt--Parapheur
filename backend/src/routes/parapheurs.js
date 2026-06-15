@@ -1,12 +1,13 @@
 const router = require('express').Router();
 const { listerParapheurs, obtenirParapheur, creerParapheur, mettreAJourParapheur, supprimerParapheur } = require('../controllers/parapheursController');
 const { exigerAdmin } = require('../middleware/auth');
+const { reglesCreerParapheur, reglesModifierParapheur } = require('../middleware/validation');
 
 router.get('/', listerParapheurs);
 router.get('/:reference', obtenirParapheur);
 
-router.post('/', exigerAdmin, creerParapheur);
-router.put('/:id', exigerAdmin, mettreAJourParapheur);
+router.post('/',    exigerAdmin, reglesCreerParapheur,    creerParapheur);
+router.put('/:id',  exigerAdmin, reglesModifierParapheur, mettreAJourParapheur);
 router.delete('/:id', exigerAdmin, supprimerParapheur);
 
 module.exports = router;

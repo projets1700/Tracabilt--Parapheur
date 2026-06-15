@@ -8,18 +8,18 @@
 | 2 | Authentification (JWT + bcrypt) | ✅ Intégré dans le backend |
 | 3 | API publique visiteur | ✅ Intégré dans le backend |
 | 4 | API mobile scanner | ✅ Intégré dans le backend |
-| 5 | Interface web visiteur | En cours |
-| 6 | Interface admin | ❌ À faire |
-| 7 | Application mobile | ❌ À faire |
-| 8 | Mode hors ligne | ❌ À faire |
-| 9 | Sécurité | ✅ Intégré dans le backend |
-| 10 | Tests | ❌ À faire |
+| 5 | Interface web visiteur | ✅ PageVisionneur + PageConnexion |
+| 6 | Interface admin | ✅ Dashboard, Parapheurs, Utilisateurs, Événements |
+| 7 | Application mobile | ✅ 6 écrans Expo (scanner QR, GPS, sync) |
+| 8 | Mode hors ligne | ✅ Intégré dans l'app mobile |
+| 9 | Sécurité | ✅ Validation, rate limiting, JWT, bcrypt |
+| 10 | Tests | ✅ 31 tests (22 passent sans BDD, 9 nécessitent la BDD) |
 | 11 | Déploiement | ❌ À faire |
 
 ## ⚠️ Base de données non configurée
 
 La base de données PostgreSQL n'a pas encore été créée.
-Pour la configurer plus tard :
+Pour la configurer :
 
 1. Créer la base : `createdb tracaparapheur`
 2. Adapter `backend/.env` avec le bon mot de passe PostgreSQL
@@ -33,17 +33,29 @@ Comptes de démo (après seed) :
 ## Structure du projet
 
 ```
-backend/   → API Express + PostgreSQL
-frontend/  → Interface React (Vite)
-mobile/    → Application mobile React Native (à venir)
+backend/   → API Express + PostgreSQL (port 3001)
+frontend/  → Interface React/Vite (port 5173)
+mobile/    → Application Expo React Native
 ```
 
-## Lancer le backend
+## Lancer le projet
 
+**Backend :**
 ```bash
-cd backend
-npm install
-npm run dev
+cd backend && npm install && npm run dev
 ```
 
-Le serveur démarre sur http://localhost:3001
+**Frontend :**
+```bash
+cd frontend && npm install && npm run dev
+```
+
+**Mobile :**
+```bash
+cd mobile && npm install && npx expo start
+```
+
+**Tests backend :**
+```bash
+cd backend && npm test
+```
