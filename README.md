@@ -1,61 +1,129 @@
 # TraçaParapheur — Système de traçabilité de parapheurs
 
-## Avancement
+Application de traçabilité de parapheurs physiques via QR Code et GPS.  
+Composée d'un backend API, d'une interface web et d'une application mobile.
 
-| Partie | Description | Statut |
-|--------|-------------|--------|
-| 1 | Backend + base de données | Code ✅ — BDD non créée ⚠️ |
-| 2 | Authentification (JWT + bcrypt) | ✅ Intégré dans le backend |
-| 3 | API publique visiteur | ✅ Intégré dans le backend |
-| 4 | API mobile scanner | ✅ Intégré dans le backend |
-| 5 | Interface web visiteur | ✅ PageVisionneur + PageConnexion |
-| 6 | Interface admin | ✅ Dashboard, Parapheurs, Utilisateurs, Événements |
-| 7 | Application mobile | ✅ 6 écrans Expo (scanner QR, GPS, sync) |
-| 8 | Mode hors ligne | ✅ Intégré dans l'app mobile |
-| 9 | Sécurité | ✅ Validation, rate limiting, JWT, bcrypt |
-| 10 | Tests | ✅ 31 tests (22 passent sans BDD, 9 nécessitent la BDD) |
-| 11 | Déploiement | ❌ À faire |
-
-## ⚠️ Base de données non configurée
-
-La base de données PostgreSQL n'a pas encore été créée.
-Pour la configurer :
-
-1. Créer la base : `createdb tracaparapheur`
-2. Adapter `backend/.env` avec le bon mot de passe PostgreSQL
-3. Lancer la migration : `npm run migrate` (depuis `backend/`)
-4. Insérer les données de test : `npm run seed` (depuis `backend/`)
-
-Comptes de démo (après seed) :
-- **Admin** : admin@organisation.fr / admin123
-- **Opérateur** : j.martin@organisation.fr / operateur123
+---
 
 ## Structure du projet
 
 ```
-backend/   → API Express + PostgreSQL (port 3001)
-frontend/  → Interface React/Vite (port 5173)
-mobile/    → Application Expo React Native
+backend/   → API REST Express + PostgreSQL (port 3001)
+frontend/  → Interface web React/Vite (port 5173)
+mobile/    → Application mobile Expo React Native
 ```
+
+---
+
+## ⚠️ Prérequis — Base de données non configurée
+
+> **La base de données PostgreSQL n'a pas encore été créée.**  
+> Le backend et les tests ne fonctionneront pas sans cette étape.
+
+**1. Corriger le mot de passe dans `backend/.env` :**
+
+```env
+DB_PASSWORD=ton_mot_de_passe_postgres
+```
+
+**2. Créer la base de données :**
+
+```bash
+# Windows — chemin par défaut PostgreSQL 15
+"C:\Program Files\PostgreSQL\15\bin\createdb.exe" -U postgres tracaparapheur
+```
+
+**3. Lancer la migration (création des tables) :**
+
+```bash
+cd backend
+npm run migrate
+```
+
+**4. Insérer les données de test :**
+
+```bash
+npm run seed
+```
+
+Comptes disponibles après le seed :
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Administrateur | admin@organisation.fr | admin123 |
+| Opérateur | j.martin@organisation.fr | operateur123 |
+
+---
 
 ## Lancer le projet
 
-**Backend :**
+### Backend
+
 ```bash
-cd backend && npm install && npm run dev
+cd backend
+npm install
+npm run dev
 ```
 
-**Frontend :**
+Serveur disponible sur **http://localhost:3001**  
+Vérification : http://localhost:3001/api/sante → `{ "statut": "ok" }`
+
+### Frontend
+
+Dans un second terminal :
+
 ```bash
-cd frontend && npm install && npm run dev
+cd frontend
+npm install
+npm run dev
 ```
 
-**Mobile :**
+Interface disponible sur **http://localhost:5173**
+
+> Le frontend nécessite le backend en cours d'exécution pour fonctionner.
+
+### Application mobile
+
 ```bash
-cd mobile && npm install && npx expo start
+cd mobile
+npm install
+npx expo start
 ```
 
-**Tests backend :**
+Scanner le QR code avec l'application **Expo Go** (Android / iOS).
+
+> Avant de lancer, adapter l'adresse IP dans `mobile/src/services/api.js` :
+> ```js
+> const BASE_URL = 'http://192.168.1.XX:3001/api'; // ton IP locale
+> ```
+
+---
+
+## Tests
+
 ```bash
-cd backend && npm test
+cd backend
+npm test
 ```
+
+31 tests au total :
+- **22 passent sans base de données** (validation, JWT, middleware)
+- **9 nécessitent la base de données configurée** (requêtes SQL)
+
+---
+
+## Avancement du TP
+
+| Partie | Description | Statut |
+|--------|-------------|--------|
+| 1 | Backend + base de données | Code ✅ — BDD non créée ⚠️ |
+| 2 | Authentification (JWT + bcrypt) | ✅ |
+| 3 | API publique visiteur | ✅ |
+| 4 | API mobile scanner | ✅ |
+| 5 | Interface web visiteur | ✅ |
+| 6 | Interface admin | ✅ |
+| 7 | Application mobile | ✅ |
+| 8 | Mode hors ligne | ✅ |
+| 9 | Sécurité | ✅ |
+| 10 | Tests | ✅ |
+| 11 | Déploiement | ❌ À faire |
