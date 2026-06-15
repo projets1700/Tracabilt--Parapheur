@@ -1,24 +1,24 @@
 const pool = require('../config/db');
 
 async function listerParapheurs(req, res) {
+  const { statut, recherche, page = 1, limite = 20 } = req.query;
+  const offset = (page - 1) * limite;
+  const conditions = [];
+  const params = [];
+
+  if (statut) {
+    params.push(statut);
+    conditions.push(`p.statut = $${params.length}`);
+  }
+  if (recherche) {
+    params.push(`%${recherche}%`);
+    conditions.push(`(p.reference ILIKE $${params.length} OR p.description ILIKE $${params.length})`);
+  }
+
+  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+  params.push(limite, offset);
+
   try {
-    const { statut, recherche, page = 1, limite = 20 } = req.query;
-    const offset = (page - 1) * limite;
-    const conditions = [];
-    const params = [];
-
-    if (statut) {
-      params.push(statut);
-      conditions.push(`p.statut = $${params.length}`);
-    }
-    if (recherche) {
-      params.push(`%${recherche}%`);
-      conditions.push(`(p.reference ILIKE $${params.length} OR p.description ILIKE $${params.length})`);
-    }
-
-    const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
-    params.push(limite, offset);
-
     const result = await pool.query(`
       SELECT p.*,
         (SELECT cree_le FROM evenements WHERE parapheur_id = p.id ORDER BY cree_le DESC LIMIT 1) AS dernier_scan,
@@ -34,7 +34,12 @@ async function listerParapheurs(req, res) {
       params.slice(0, params.length - 2)
     );
 
-    res.json({ parapheurs: result.rows, total: parseInt(total.rows[0].count), page: parseInt(page), limite: parseInt(limite) });
+    res.json({
+      parapheurs: result.rows,
+      total: parseInt(total.rows[0].count),
+      page: parseInt(page),
+      limite: parseInt(limite),
+    });
   } catch (err) {
     console.error('Erreur listing parapheurs :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
@@ -52,7 +57,6 @@ async function obtenirParapheur(req, res) {
       return res.status(404).json({ message: 'Parapheur introuvable.' });
     }
     const parapheur = result.rows[0];
-
     const evenements = await pool.query(`
       SELECT e.*, u.prenom || ' ' || u.nom AS operateur_nom
       FROM evenements e
@@ -61,7 +65,6 @@ async function obtenirParapheur(req, res) {
       ORDER BY e.cree_le DESC
       LIMIT 50
     `, [parapheur.id]);
-
     res.json({ ...parapheur, evenements: evenements.rows });
   } catch (err) {
     console.error('Erreur obtention parapheur :', err);
@@ -93,7 +96,10 @@ async function mettreAJourParapheur(req, res) {
   const { description, statut } = req.body;
   try {
     const result = await pool.query(
-      `UPDATE parapheurs SET description = COALESCE($1, description), statut = COALESCE($2, statut), mis_a_jour_le = NOW()
+      `UPDATE parapheurs
+       SET description = COALESCE($1, description),
+           statut = COALESCE($2, statut),
+           mis_a_jour_le = NOW()
        WHERE id = $3 RETURNING *`,
       [description, statut, id]
     );
@@ -109,7 +115,10 @@ async function mettreAJourParapheur(req, res) {
 async function supprimerParapheur(req, res) {
   const { id } = req.params;
   try {
-    const result = await pool.query('DELETE FROM parapheurs WHERE id = $1 RETURNING id', [id]);
+    const result = await pool.query(
+      'DELETE FROM parapheurs WHERE id = $1 RETURNING id',
+      [id]
+    );
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Parapheur introuvable.' });
     }

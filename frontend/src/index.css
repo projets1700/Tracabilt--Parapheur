@@ -62,33 +62,26 @@ input, select, textarea { font-family: inherit; }
   transition: background 0.15s;
 }
 .btn:hover { background: var(--fond2); }
-.btn-primaire {
-  background: var(--bleu);
-  color: white;
-  border-color: var(--bleu);
-}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primaire { background: var(--bleu); color: white; border-color: var(--bleu); }
 .btn-primaire:hover { background: var(--bleu-fonce); }
-.btn-danger {
-  background: var(--rouge);
-  color: white;
-  border-color: var(--rouge);
-}
+.btn-danger { background: var(--rouge); color: white; border-color: var(--rouge); }
+.btn-danger:hover { background: #c03c3b; }
 
 /* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
   padding: 3px 8px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
 }
-.badge-bleu { background: var(--bleu-clair); color: var(--bleu-fonce); }
-.badge-vert { background: var(--vert-clair); color: var(--vert-fonce); }
+.badge-bleu   { background: var(--bleu-clair);   color: var(--bleu-fonce); }
+.badge-vert   { background: var(--vert-clair);   color: var(--vert-fonce); }
 .badge-orange { background: var(--orange-clair); color: #633806; }
-.badge-rouge { background: var(--rouge-clair); color: #791F1F; }
-.badge-gris { background: var(--gris-clair); color: var(--gris-fonce); }
+.badge-rouge  { background: var(--rouge-clair);  color: #791F1F; }
+.badge-gris   { background: var(--gris-clair);   color: var(--gris-fonce); }
 .badge-violet { background: var(--violet-clair); color: #3C3489; }
 
 /* Carte */
@@ -155,3 +148,6 @@ input, select, textarea { font-family: inherit; }
   background: var(--bordure);
   margin: 16px 0;
 }
+
+/* Leaflet fix */
+.leaflet-container { z-index: 1; }

@@ -1,31 +1,35 @@
 const jwt = require('jsonwebtoken');
 
 function verifierToken(req, res, next) {
-  const entete = req.headers.authorization;
-  if (!entete || !entete.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Accès refusé. Token manquant.' });
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token manquant.' });
   }
-  const token = entete.split(' ')[1];
+  const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.utilisateur = payload;
+    req.utilisateur = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch {
     return res.status(401).json({ message: 'Token invalide ou expiré.' });
   }
 }
 
-function exigerRole(...roles) {
-  return (req, res, next) => {
-    if (!roles.includes(req.utilisateur?.role)) {
-      return res.status(403).json({ message: 'Accès interdit. Droits insuffisants.' });
+function exigerAdmin(req, res, next) {
+  verifierToken(req, res, () => {
+    if (req.utilisateur.role !== 'administrateur') {
+      return res.status(403).json({ message: 'Accès réservé aux administrateurs.' });
     }
     next();
-  };
+  });
 }
 
-const exigerAdmin   = [verifierToken, exigerRole('administrateur')];
-const exigerScanner = [verifierToken, exigerRole('operateur')];
-const exigerConnecte = [verifierToken, exigerRole('administrateur', 'operateur')];
+function exigerScanner(req, res, next) {
+  verifierToken(req, res, () => {
+    if (!['administrateur', 'operateur'].includes(req.utilisateur.role)) {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    next();
+  });
+}
 
-module.exports = { verifierToken, exigerRole, exigerAdmin, exigerScanner, exigerConnecte };
+module.exports = { verifierToken, exigerAdmin, exigerScanner };

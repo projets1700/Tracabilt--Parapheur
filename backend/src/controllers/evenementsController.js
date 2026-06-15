@@ -71,7 +71,7 @@ async function synchroniserScans(req, res) {
       }
       await pool.query(`
         INSERT INTO evenements (parapheur_id, utilisateur_id, type, latitude, longitude, precision_gps, localisation_nom, identifiant_appareil, cree_le)
-        VALUES ($1, $2, 'scan', $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, 'sync', $3, $4, $5, $6, $7, $8)
       `, [
         parapheur.rows[0].id,
         req.utilisateur?.id || null,
@@ -126,7 +126,12 @@ async function listerEvenements(req, res) {
       params.slice(0, params.length - 2)
     );
 
-    res.json({ evenements: result.rows, total: parseInt(total.rows[0].count), page: parseInt(page), limite: parseInt(limite) });
+    res.json({
+      evenements: result.rows,
+      total: parseInt(total.rows[0].count),
+      page: parseInt(page),
+      limite: parseInt(limite),
+    });
   } catch (err) {
     console.error('Erreur listing événements :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
