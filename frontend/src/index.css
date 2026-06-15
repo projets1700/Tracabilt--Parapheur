@@ -1,0 +1,157 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bleu: #185FA5;
+  --bleu-clair: #E6F1FB;
+  --bleu-moyen: #378ADD;
+  --bleu-fonce: #0C447C;
+  --vert: #1D9E75;
+  --vert-clair: #E1F5EE;
+  --vert-fonce: #085041;
+  --orange: #BA7517;
+  --orange-clair: #FAEEDA;
+  --rouge: #E24B4A;
+  --rouge-clair: #FCEBEB;
+  --violet: #534AB7;
+  --violet-clair: #EEEDFE;
+  --gris: #888780;
+  --gris-clair: #F1EFE8;
+  --gris-fonce: #444441;
+  --bordure: #E5E5E0;
+  --fond2: #F8F8F4;
+  --texte2: #666;
+  --texte3: #999;
+  --fond-page: #F5F5F0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--fond-page);
+  color: #1a1a1a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+.conteneur {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Boutons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--bordure);
+  background: white;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn:hover { background: var(--fond2); }
+.btn-primaire {
+  background: var(--bleu);
+  color: white;
+  border-color: var(--bleu);
+}
+.btn-primaire:hover { background: var(--bleu-fonce); }
+.btn-danger {
+  background: var(--rouge);
+  color: white;
+  border-color: var(--rouge);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-bleu { background: var(--bleu-clair); color: var(--bleu-fonce); }
+.badge-vert { background: var(--vert-clair); color: var(--vert-fonce); }
+.badge-orange { background: var(--orange-clair); color: #633806; }
+.badge-rouge { background: var(--rouge-clair); color: #791F1F; }
+.badge-gris { background: var(--gris-clair); color: var(--gris-fonce); }
+.badge-violet { background: var(--violet-clair); color: #3C3489; }
+
+/* Carte */
+.carte {
+  background: white;
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Champs */
+.champ {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.champ:focus { border-color: var(--bleu); }
+
+.label-champ {
+  display: block;
+  font-size: 12px;
+  color: var(--texte2);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+/* Messages */
+.message-erreur {
+  background: var(--rouge-clair);
+  color: #791F1F;
+  border: 1px solid #FAC5C5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.message-succes {
+  background: var(--vert-clair);
+  color: var(--vert-fonce);
+  border: 1px solid #9FE1CB;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+/* Chargement */
+.chargement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--texte3);
+  font-size: 14px;
+}
+
+/* Séparateur */
+.sep {
+  height: 1px;
+  background: var(--bordure);
+  margin: 16px 0;
+}
