@@ -112,6 +112,50 @@ npm test
 
 ---
 
+## Lancer avec Docker
+
+> **Recommandé pour tester sans installer PostgreSQL localement.**  
+> Nécessite [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+**1. Créer le fichier `.env` à la racine du projet :**
+
+```bash
+# Copier le modèle
+cp .env.docker .env
+```
+
+Puis adapter le mot de passe si besoin dans `.env` :
+```env
+DB_PASSWORD=motdepasse
+JWT_SECRET=secret_a_changer_en_production
+```
+
+**2. Lancer tous les services :**
+
+```bash
+docker compose up --build
+```
+
+- Frontend : **http://localhost**
+- Backend : **http://localhost/api/sante**
+
+PostgreSQL et la migration sont lancés automatiquement.
+
+**3. Insérer les données de test (première fois) :**
+
+```bash
+docker compose exec backend node src/db/seed.js
+```
+
+**4. Arrêter :**
+
+```bash
+docker compose down          # arrêt (données conservées)
+docker compose down -v       # arrêt + suppression de la base
+```
+
+---
+
 ## Avancement du TP
 
 | Partie | Description | Statut |
@@ -126,4 +170,4 @@ npm test
 | 8 | Mode hors ligne | ✅ |
 | 9 | Sécurité | ✅ |
 | 10 | Tests | ✅ |
-| 11 | Déploiement | ❌ À faire |
+| 11 | Déploiement | ✅ Docker (docker-compose.yml) |

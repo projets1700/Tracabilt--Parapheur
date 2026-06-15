@@ -1,0 +1,13 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY src/ ./src/
+
+EXPOSE 3001
+
+# Lance la migration puis démarre le serveur
+CMD ["sh", "-c", "node src/db/migrate.js && node src/index.js"]
