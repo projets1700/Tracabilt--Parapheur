@@ -2,6 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FournisseurAuth, useAuth } from './hooks/useAuth.jsx';
 import PageConnexion from './pages/PageConnexion';
 import PageVisionneur from './pages/PageVisionneur';
+import MiseEnPageAdmin from './components/MiseEnPageAdmin';
+import PageDashboard from './pages/admin/PageDashboard';
+import PageParapheurs from './pages/admin/PageParapheurs';
+import PageUtilisateurs from './pages/admin/PageUtilisateurs';
+import PageEvenements from './pages/admin/PageEvenements';
 
 function RouteAdmin({ enfants }) {
   const { utilisateur } = useAuth();
@@ -15,6 +20,12 @@ function AppContenu() {
     <Routes>
       <Route path="/" element={<PageVisionneur />} />
       <Route path="/connexion" element={<PageConnexion />} />
+      <Route path="/admin" element={<RouteAdmin><MiseEnPageAdmin /></RouteAdmin>}>
+        <Route index element={<PageDashboard />} />
+        <Route path="parapheurs" element={<PageParapheurs />} />
+        <Route path="utilisateurs" element={<PageUtilisateurs />} />
+        <Route path="evenements" element={<PageEvenements />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
