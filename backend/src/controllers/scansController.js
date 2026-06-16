@@ -5,13 +5,16 @@ async function enregistrerScan(req, res) {
   try {
     const numero = parapheur_numero.toUpperCase().trim();
 
-    const parapheur = await pool.query(
-      'SELECT id FROM parapheurs WHERE numero = $1 AND is_active = TRUE',
+    // Crée le parapheur automatiquement s'il n'existe pas encore
+    await pool.query(
+      'INSERT INTO parapheurs (numero, titre) VALUES ($1, $1) ON CONFLICT (numero) DO NOTHING',
       [numero]
     );
-    if (!parapheur.rows[0]) {
-      return res.status(404).json({ message: `Parapheur "${numero}" introuvable.` });
-    }
+
+    const parapheur = await pool.query(
+      'SELECT id FROM parapheurs WHERE numero = $1',
+      [numero]
+    );
 
     const result = await pool.query(`
       INSERT INTO scans (parapheur_id, scanner_id, latitude, longitude, precision_gps, scanned_at, sync_status)
@@ -42,12 +45,16 @@ async function synchroniserScans(req, res) {
   for (const scan of scans) {
     try {
       const numero = scan.parapheur_numero?.toUpperCase().trim();
+      await pool.query(
+        'INSERT INTO parapheurs (numero, titre) VALUES ($1, $1) ON CONFLICT (numero) DO NOTHING',
+        [numero]
+      );
       const parapheur = await pool.query(
-        'SELECT id FROM parapheurs WHERE numero = $1 AND is_active = TRUE',
+        'SELECT id FROM parapheurs WHERE numero = $1',
         [numero]
       );
       if (!parapheur.rows[0]) {
-        resultats.push({ numero: scan.parapheur_numero, succes: false, message: 'Parapheur introuvable.' });
+        resultats.push({ numero: scan.parapheur_numero, succes: false, message: 'Erreur serveur.' });
         continue;
       }
       await pool.query(`
