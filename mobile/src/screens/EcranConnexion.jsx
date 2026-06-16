@@ -27,8 +27,8 @@ export default function EcranConnexion({ onConnexion }) {
     setChargement(true);
     try {
       const data = await api.connexionScanner(identifiant.trim(), motDePasse.trim());
-      await sauvegarderSession(data.token, data.scanner);
-      onConnexion(data.token, data.scanner);
+      await sauvegarderSession(data.token, data.utilisateur);
+      onConnexion(data.token, data.utilisateur);
     } catch (err) {
       Alert.alert('Connexion échouée', err.message || 'Identifiant ou mot de passe incorrect.');
     } finally {
