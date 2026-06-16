@@ -52,16 +52,17 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
         scanned_at: new Date().toISOString(),
       };
 
+      // Cooldown enregistré dès la tentative, quel que soit le résultat
+      await enregistrerDernierScan(numero);
+
       try {
         await api.enregistrerScan(scanData);
         await ajouterScanLocal(scanData, 'synchronise');
-        await enregistrerDernierScan(numero);
         setResultat({ success: true, numero, message: 'Scan enregistré avec succès !' });
       } catch (err) {
         const estErreurReseau = !err.message || err.message === 'Network request failed' || err.message.includes('fetch');
         if (estErreurReseau) {
           await ajouterScanLocal(scanData, 'en_attente');
-          await enregistrerDernierScan(numero);
           setResultat({ success: false, numero, message: 'Hors-ligne — scan sauvegardé localement.' });
         } else {
           setResultat({ success: false, numero, message: err.message });
