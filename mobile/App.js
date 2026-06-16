@@ -1,13 +1,16 @@
+import NetInfo from '@react-native-community/netinfo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Text, ToastAndroid, Platform, View } from 'react-native';
 
 import EcranConnexion from './src/screens/EcranConnexion';
 import EcranScanner from './src/screens/EcranScanner';
 import EcranHistorique from './src/screens/EcranHistorique';
 import EcranSynchronisation from './src/screens/EcranSynchronisation';
 import { chargerSession, supprimerSession } from './src/services/stockage';
+import { chargerScansEnAttente, marquerToutSynchronise } from './src/services/stockage';
+import { api } from './src/services/api';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,10 +18,17 @@ function TabIcon({ emoji }) {
   return <Text style={{ fontSize: 20 }}>{emoji}</Text>;
 }
 
+function afficherNotif(message) {
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  }
+}
+
 export default function App() {
   const [token, setToken] = useState(null);
   const [scanner, setScanner] = useState(null);
   const [chargement, setChargement] = useState(true);
+  const etaitConnecte = useRef(false);
 
   useEffect(() => {
     chargerSession().then(({ token: t, scanner: s }) => {
@@ -27,6 +37,31 @@ export default function App() {
       setChargement(false);
     });
   }, []);
+
+  const syncAuto = useCallback(async () => {
+    if (!token) return;
+    const pending = await chargerScansEnAttente();
+    if (pending.length === 0) return;
+    try {
+      await api.synchroniserScans(pending);
+      await marquerToutSynchronise();
+      afficherNotif(`✓ ${pending.length} scan(s) synchronisé(s)`);
+    } catch {
+      // Silencieux — réessayera à la prochaine reconnexion
+    }
+  }, [token]);
+
+  // Écoute le retour du réseau et synchronise automatiquement
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const connecte = state.isConnected && state.isInternetReachable !== false;
+      if (connecte && !etaitConnecte.current) {
+        syncAuto();
+      }
+      etaitConnecte.current = connecte;
+    });
+    return () => unsubscribe();
+  }, [syncAuto]);
 
   function handleConnexion(t, s) {
     setToken(t);
