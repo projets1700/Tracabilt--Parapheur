@@ -42,13 +42,18 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
 
       try {
         await api.enregistrerScan(scanData);
-        // Sauvegarde locale avec statut synchronisé
         await ajouterScanLocal(scanData, 'synchronise');
         setResultat({ success: true, numero, message: 'Scan enregistré avec succès !' });
       } catch (err) {
-        // Sauvegarde locale en attente de sync
-        await ajouterScanLocal(scanData, 'en_attente');
-        setResultat({ success: false, numero, message: 'Hors-ligne — scan sauvegardé localement.' });
+        // Erreur réseau → sauvegarder hors-ligne
+        // Erreur API (4xx) → afficher le message, ne pas sauvegarder
+        const estErreurReseau = !err.message || err.message === 'Network request failed' || err.message.includes('fetch');
+        if (estErreurReseau) {
+          await ajouterScanLocal(scanData, 'en_attente');
+          setResultat({ success: false, numero, message: 'Hors-ligne — scan sauvegardé localement.' });
+        } else {
+          setResultat({ success: false, numero, message: err.message });
+        }
       }
     } finally {
       setScanning(false);
