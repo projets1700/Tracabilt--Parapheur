@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../services/api';
-import { chargerScansEnAttente, viderScansEnAttente } from '../services/stockage';
+import { chargerScansEnAttente, marquerToutSynchronise } from '../services/stockage';
 
 export default function EcranSynchronisation() {
   const [scansEnAttente, setScansEnAttente] = useState([]);
@@ -23,7 +23,7 @@ export default function EcranSynchronisation() {
     setSyncing(true);
     try {
       await api.synchroniserScans(scansEnAttente);
-      await viderScansEnAttente();
+      await marquerToutSynchronise();
       setScansEnAttente([]);
       Alert.alert('Succès', `${scansEnAttente.length} scan(s) synchronisé(s) !`);
     } catch (err) {

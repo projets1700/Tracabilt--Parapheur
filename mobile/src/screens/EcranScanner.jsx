@@ -11,7 +11,7 @@ import {
 
 import { api } from '../services/api';
 import { demanderPermissions, obtenirPosition } from '../services/gps';
-import { ajouterScanEnAttente } from '../services/stockage';
+import { ajouterScanLocal } from '../services/stockage';
 
 export default function EcranScanner({ scanner, onDeconnexion }) {
   const [permission, requestPermission] = useCameraPermissions();
@@ -26,17 +26,28 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
 
     try {
       const numero = data.trim().toUpperCase();
-      let coords = { latitude: 0, longitude: 0, precision_gps: 0 };
+      let coords = { latitude: null, longitude: null, precision_gps: null };
       const hasGps = await demanderPermissions();
-      if (hasGps) coords = await obtenirPosition();
+      if (hasGps) {
+        try { coords = await obtenirPosition(); } catch {}
+      }
 
-      const scanData = { parapheur_numero: numero, ...coords, scanned_at: new Date().toISOString() };
+      const scanData = {
+        parapheur_numero: numero,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        precision_gps: coords.precision_gps,
+        scanned_at: new Date().toISOString(),
+      };
 
       try {
         await api.enregistrerScan(scanData);
+        // Sauvegarde locale avec statut synchronisé
+        await ajouterScanLocal(scanData, 'synchronise');
         setResultat({ success: true, numero, message: 'Scan enregistré avec succès !' });
-      } catch {
-        await ajouterScanEnAttente(scanData);
+      } catch (err) {
+        // Sauvegarde locale en attente de sync
+        await ajouterScanLocal(scanData, 'en_attente');
         setResultat({ success: false, numero, message: 'Hors-ligne — scan sauvegardé localement.' });
       }
     } finally {

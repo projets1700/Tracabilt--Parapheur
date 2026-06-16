@@ -16,16 +16,29 @@ export async function supprimerSession() {
   await AsyncStorage.multiRemove(['token', 'scanner']);
 }
 
-export async function ajouterScanEnAttente(scan) {
-  const existants = await chargerScansEnAttente();
-  await AsyncStorage.setItem('scans_en_attente', JSON.stringify([...existants, scan]));
+// Sauvegarde un scan localement (synchronise ou en_attente)
+export async function ajouterScanLocal(scan, syncStatus = 'en_attente') {
+  const existants = await chargerScansLocaux();
+  const nouveau = { ...scan, sync_status: syncStatus, saved_at: new Date().toISOString() };
+  await AsyncStorage.setItem('scans_locaux', JSON.stringify([nouveau, ...existants]));
 }
 
-export async function chargerScansEnAttente() {
-  const data = await AsyncStorage.getItem('scans_en_attente');
+export async function chargerScansLocaux() {
+  const data = await AsyncStorage.getItem('scans_locaux');
   return data ? JSON.parse(data) : [];
 }
 
-export async function viderScansEnAttente() {
-  await AsyncStorage.removeItem('scans_en_attente');
+// Retourne uniquement les scans non encore synchronisés
+export async function chargerScansEnAttente() {
+  const tous = await chargerScansLocaux();
+  return tous.filter(s => s.sync_status === 'en_attente');
+}
+
+// Marque tous les scans en attente comme synchronisés
+export async function marquerToutSynchronise() {
+  const tous = await chargerScansLocaux();
+  const mis = tous.map(s =>
+    s.sync_status === 'en_attente' ? { ...s, sync_status: 'synchronise' } : s
+  );
+  await AsyncStorage.setItem('scans_locaux', JSON.stringify(mis));
 }
