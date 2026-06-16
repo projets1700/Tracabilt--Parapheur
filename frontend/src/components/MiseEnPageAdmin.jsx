@@ -2,10 +2,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 const LIENS = [
-  { to: '/admin',             label: 'Tableau de bord', icone: '📊', fin: true },
-  { to: '/admin/parapheurs',  label: 'Parapheurs',      icone: '📋' },
-  { to: '/admin/utilisateurs',label: 'Utilisateurs',    icone: '👥' },
-  { to: '/admin/evenements',  label: 'Événements',      icone: '📍' },
+  { to: '/admin',              label: 'Tableau de bord', icone: '📊', fin: true },
+  { to: '/admin/utilisateurs', label: 'Scanners',        icone: '👥' },
+  { to: '/admin/evenements',   label: 'Scans',           icone: '📍' },
 ];
 
 export default function MiseEnPageAdmin() {

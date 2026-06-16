@@ -4,7 +4,6 @@ import PageConnexion from './pages/PageConnexion';
 import PageVisionneur from './pages/PageVisionneur';
 import MiseEnPageAdmin from './components/MiseEnPageAdmin';
 import PageDashboard from './pages/admin/PageDashboard';
-import PageParapheurs from './pages/admin/PageParapheurs';
 import PageUtilisateurs from './pages/admin/PageUtilisateurs';
 import PageEvenements from './pages/admin/PageEvenements';
 
@@ -22,7 +21,6 @@ function AppContenu() {
       <Route path="/connexion" element={<PageConnexion />} />
       <Route path="/admin" element={<RouteAdmin><MiseEnPageAdmin /></RouteAdmin>}>
         <Route index element={<PageDashboard />} />
-        <Route path="parapheurs" element={<PageParapheurs />} />
         <Route path="utilisateurs" element={<PageUtilisateurs />} />
         <Route path="evenements" element={<PageEvenements />} />
       </Route>

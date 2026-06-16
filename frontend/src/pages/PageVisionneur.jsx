@@ -1,17 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import client from '../api/client';
-
-// Fix icône Leaflet avec Vite
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 const STATUTS = {
   en_circulation: { label: 'En circulation', classe: 'badge-vert' },
@@ -51,9 +40,6 @@ export default function PageVisionneur() {
       setChargement(false);
     }
   }
-
-  const scansGPS = resultat?.scans?.filter(s => s.latitude && s.longitude) || [];
-  const pointsCarte = scansGPS.map(s => [parseFloat(s.latitude), parseFloat(s.longitude)]);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
@@ -125,30 +111,6 @@ export default function PageVisionneur() {
                 </div>
               </div>
             </div>
-
-            {pointsCarte.length > 0 && (
-              <div className="carte">
-                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Parcours GPS</h3>
-                <div style={{ height: 260, borderRadius: 10, overflow: 'hidden' }}>
-                  <MapContainer center={pointsCarte[0]} zoom={14} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution="© OpenStreetMap"
-                    />
-                    {pointsCarte.length > 1 && <Polyline positions={pointsCarte} color="var(--bleu)" weight={3} />}
-                    {scansGPS.map(sc => (
-                      <Marker key={sc.id} position={[parseFloat(sc.latitude), parseFloat(sc.longitude)]}>
-                        <Popup>
-                          <strong>Scan</strong><br />
-                          {formaterDate(sc.scanned_at)}<br />
-                          {sc.operateur_nom && <>Opérateur : {sc.operateur_nom}</>}
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </MapContainer>
-                </div>
-              </div>
-            )}
 
             <div className="carte">
               <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
