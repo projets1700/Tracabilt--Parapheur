@@ -22,23 +22,22 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
   async function handleBarcode({ data }) {
     if (cooldown.current || scanning) return;
     cooldown.current = true;
+
+    const numero = data.trim().toUpperCase();
+
+    // Vérification cooldown 5 minutes — HORS du try/finally
+    const { autorise, resteSecondes } = await verifierCooldown(numero);
+    if (!autorise) {
+      const min = Math.floor(resteSecondes / 60);
+      const sec = resteSecondes % 60;
+      const duree = min > 0 ? `${min}m${sec > 0 ? ` ${sec}s` : ''}` : `${sec}s`;
+      setResultat({ success: false, numero, message: `Ce parapheur a déjà été scanné. Réessayez dans ${duree}.` });
+      setTimeout(() => { cooldown.current = false; }, 3000);
+      return;
+    }
+
     setScanning(true);
-
     try {
-      const numero = data.trim().toUpperCase();
-
-      // Vérification cooldown 5 minutes
-      const { autorise, resteSecondes } = await verifierCooldown(numero);
-      if (!autorise) {
-        const min = Math.floor(resteSecondes / 60);
-        const sec = resteSecondes % 60;
-        const duree = min > 0 ? `${min}m${sec > 0 ? ` ${sec}s` : ''}` : `${sec}s`;
-        setResultat({ success: false, numero, message: `Ce parapheur a déjà été scanné. Réessayez dans ${duree}.` });
-        setScanning(false);
-        setTimeout(() => { cooldown.current = false; }, 3000);
-        return;
-      }
-
       let coords = { latitude: null, longitude: null, precision_gps: null };
       const hasGps = await demanderPermissions();
       if (hasGps) {
@@ -59,8 +58,6 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
         await enregistrerDernierScan(numero);
         setResultat({ success: true, numero, message: 'Scan enregistré avec succès !' });
       } catch (err) {
-        // Erreur réseau → sauvegarder hors-ligne
-        // Erreur API (4xx) → afficher le message, ne pas sauvegarder
         const estErreurReseau = !err.message || err.message === 'Network request failed' || err.message.includes('fetch');
         if (estErreurReseau) {
           await ajouterScanLocal(scanData, 'en_attente');
