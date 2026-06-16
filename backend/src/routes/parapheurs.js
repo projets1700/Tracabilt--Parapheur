@@ -4,7 +4,7 @@ const { exigerAdmin } = require('../middleware/auth');
 const { reglesCreerParapheur, reglesModifierParapheur } = require('../middleware/validation');
 
 router.get('/', listerParapheurs);
-router.get('/:reference', obtenirParapheur);
+router.get('/:numero', obtenirParapheur);
 
 router.post('/',    exigerAdmin, reglesCreerParapheur,    creerParapheur);
 router.put('/:id',  exigerAdmin, reglesModifierParapheur, mettreAJourParapheur);

@@ -6,29 +6,36 @@ async function seed() {
   const client = await pool.connect();
   try {
     console.log('Insertion des données de test...');
-
     await client.query('BEGIN');
 
-    // Utilisateurs
+    // Admin
     const hashAdmin = await bcrypt.hash('admin123', 10);
-    const hashOp = await bcrypt.hash('operateur123', 10);
-
-    const admin = await client.query(`
-      INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role)
-      VALUES ('Dupont', 'Marie', 'admin@organisation.fr', $1, 'administrateur')
+    await client.query(`
+      INSERT INTO admins (nom, email, password_hash)
+      VALUES ('Dupont Marie', 'admin@organisation.fr', $1)
       ON CONFLICT (email) DO NOTHING
-      RETURNING id
     `, [hashAdmin]);
 
-    const op = await client.query(`
-      INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role)
-      VALUES ('Martin', 'Jean', 'j.martin@organisation.fr', $1, 'operateur')
-      ON CONFLICT (email) DO NOTHING
+    // Scanners
+    const hashScanner1 = await bcrypt.hash('scanner123', 10);
+    const hashScanner2 = await bcrypt.hash('scanner456', 10);
+
+    const sc1 = await client.query(`
+      INSERT INTO scanners (nom, identifiant, password_hash, device_id)
+      VALUES ('Jean Martin', 'j.martin', $1, 'ANDROID-001')
+      ON CONFLICT (identifiant) DO NOTHING
       RETURNING id
-    `, [hashOp]);
+    `, [hashScanner1]);
+
+    const sc2 = await client.query(`
+      INSERT INTO scanners (nom, identifiant, password_hash, device_id)
+      VALUES ('Sophie Bernard', 's.bernard', $1, 'ANDROID-002')
+      ON CONFLICT (identifiant) DO NOTHING
+      RETURNING id
+    `, [hashScanner2]);
 
     // Parapheurs
-    const refs = [
+    const parapheurs = [
       ['PAR-2025-00001', 'Dossier budget 2025 — Direction financière'],
       ['PAR-2025-00002', 'Contrat prestataire nettoyage'],
       ['PAR-2025-00003', 'Délibération conseil municipal n°12'],
@@ -36,37 +43,38 @@ async function seed() {
     ];
 
     const ids = [];
-    for (const [ref, desc] of refs) {
+    for (const [numero, titre] of parapheurs) {
       const r = await client.query(`
-        INSERT INTO parapheurs (reference, description)
+        INSERT INTO parapheurs (numero, titre)
         VALUES ($1, $2)
-        ON CONFLICT (reference) DO NOTHING
+        ON CONFLICT (numero) DO NOTHING
         RETURNING id
-      `, [ref, desc]);
+      `, [numero, titre]);
       if (r.rows[0]) ids.push(r.rows[0].id);
     }
 
-    // Événements de scan
-    if (ids.length > 0 && op.rows[0]) {
-      const operateurId = op.rows[0].id;
-      const scans = [
-        [ids[0], operateurId, 48.8566, 2.3522, 'Mairie — Hall d\'accueil'],
-        [ids[0], operateurId, 48.8580, 2.3490, 'Service des finances'],
-        [ids[1], operateurId, 48.8600, 2.3500, 'Direction générale'],
-        [ids[3], operateurId, 48.8550, 2.3600, 'Service technique'],
+    // Scans de démonstration
+    if (ids.length > 0 && sc1.rows[0]) {
+      const scannerId = sc1.rows[0].id;
+      const demoScans = [
+        [ids[0], scannerId, 48.8566, 2.3522],
+        [ids[0], scannerId, 48.8580, 2.3490],
+        [ids[1], scannerId, 48.8600, 2.3500],
+        [ids[3], scannerId, 48.8550, 2.3600],
       ];
-      for (const [parapheurId, utilisateurId, lat, lng, nom] of scans) {
+      for (const [parapheurId, sid, lat, lng] of demoScans) {
         await client.query(`
-          INSERT INTO evenements (parapheur_id, utilisateur_id, type, latitude, longitude, precision_gps, localisation_nom)
-          VALUES ($1, $2, 'scan', $3, $4, 5.0, $5)
-        `, [parapheurId, utilisateurId, lat, lng, nom]);
+          INSERT INTO scans (parapheur_id, scanner_id, latitude, longitude, precision_gps)
+          VALUES ($1, $2, $3, $4, 5.0)
+        `, [parapheurId, sid, lat, lng]);
       }
     }
 
     await client.query('COMMIT');
     console.log('Données de test insérées avec succès.');
-    console.log('  Admin    : admin@organisation.fr / admin123');
-    console.log('  Opérateur: j.martin@organisation.fr / operateur123');
+    console.log('  Admin   : admin@organisation.fr / admin123');
+    console.log('  Scanner1: j.martin / scanner123');
+    console.log('  Scanner2: s.bernard / scanner456');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Erreur lors du seed :', err.message);

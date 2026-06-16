@@ -12,7 +12,7 @@ async function listerParapheurs(req, res) {
   }
   if (recherche) {
     params.push(`%${recherche}%`);
-    conditions.push(`(p.reference ILIKE $${params.length} OR p.description ILIKE $${params.length})`);
+    conditions.push(`(p.numero ILIKE $${params.length} OR p.titre ILIKE $${params.length})`);
   }
 
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
@@ -21,11 +21,10 @@ async function listerParapheurs(req, res) {
   try {
     const result = await pool.query(`
       SELECT p.*,
-        (SELECT cree_le FROM evenements WHERE parapheur_id = p.id ORDER BY cree_le DESC LIMIT 1) AS dernier_scan,
-        (SELECT localisation_nom FROM evenements WHERE parapheur_id = p.id ORDER BY cree_le DESC LIMIT 1) AS derniere_position,
-        (SELECT u.prenom || ' ' || u.nom FROM evenements e JOIN utilisateurs u ON e.utilisateur_id = u.id WHERE e.parapheur_id = p.id ORDER BY e.cree_le DESC LIMIT 1) AS dernier_operateur
+        (SELECT scanned_at FROM scans WHERE parapheur_id = p.id ORDER BY scanned_at DESC LIMIT 1) AS dernier_scan,
+        (SELECT s.nom FROM scans sc JOIN scanners s ON sc.scanner_id = s.id WHERE sc.parapheur_id = p.id ORDER BY sc.scanned_at DESC LIMIT 1) AS dernier_operateur
       FROM parapheurs p ${where}
-      ORDER BY p.mis_a_jour_le DESC
+      ORDER BY p.created_at DESC
       LIMIT $${params.length - 1} OFFSET $${params.length}
     `, params);
 
@@ -47,25 +46,25 @@ async function listerParapheurs(req, res) {
 }
 
 async function obtenirParapheur(req, res) {
-  const { reference } = req.params;
+  const { numero } = req.params;
   try {
     const result = await pool.query(
-      'SELECT * FROM parapheurs WHERE reference = $1',
-      [reference.toUpperCase()]
+      'SELECT * FROM parapheurs WHERE numero = $1',
+      [numero.toUpperCase()]
     );
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Parapheur introuvable.' });
     }
     const parapheur = result.rows[0];
-    const evenements = await pool.query(`
-      SELECT e.*, u.prenom || ' ' || u.nom AS operateur_nom
-      FROM evenements e
-      LEFT JOIN utilisateurs u ON e.utilisateur_id = u.id
-      WHERE e.parapheur_id = $1
-      ORDER BY e.cree_le DESC
+    const scans = await pool.query(`
+      SELECT sc.*, s.nom AS operateur_nom
+      FROM scans sc
+      LEFT JOIN scanners s ON sc.scanner_id = s.id
+      WHERE sc.parapheur_id = $1
+      ORDER BY sc.scanned_at DESC
       LIMIT 50
     `, [parapheur.id]);
-    res.json({ ...parapheur, evenements: evenements.rows });
+    res.json({ ...parapheur, scans: scans.rows });
   } catch (err) {
     console.error('Erreur obtention parapheur :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
@@ -73,19 +72,16 @@ async function obtenirParapheur(req, res) {
 }
 
 async function creerParapheur(req, res) {
-  const { reference, description } = req.body;
-  if (!reference) {
-    return res.status(400).json({ message: 'La référence est obligatoire.' });
-  }
+  const { numero, titre } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO parapheurs (reference, description) VALUES ($1, $2) RETURNING *',
-      [reference.toUpperCase().trim(), description || null]
+      'INSERT INTO parapheurs (numero, titre) VALUES ($1, $2) RETURNING *',
+      [numero.toUpperCase().trim(), titre.trim()]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
     if (err.code === '23505') {
-      return res.status(409).json({ message: 'Cette référence existe déjà.' });
+      return res.status(409).json({ message: 'Ce numéro existe déjà.' });
     }
     res.status(500).json({ message: 'Erreur serveur.' });
   }
@@ -93,15 +89,15 @@ async function creerParapheur(req, res) {
 
 async function mettreAJourParapheur(req, res) {
   const { id } = req.params;
-  const { description, statut } = req.body;
+  const { titre, statut, is_active } = req.body;
   try {
     const result = await pool.query(
       `UPDATE parapheurs
-       SET description = COALESCE($1, description),
-           statut = COALESCE($2, statut),
-           mis_a_jour_le = NOW()
-       WHERE id = $3 RETURNING *`,
-      [description, statut, id]
+       SET titre     = COALESCE($1, titre),
+           statut    = COALESCE($2, statut),
+           is_active = COALESCE($3, is_active)
+       WHERE id = $4 RETURNING *`,
+      [titre, statut, is_active, id]
     );
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Parapheur introuvable.' });

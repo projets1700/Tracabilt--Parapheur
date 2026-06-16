@@ -2,89 +2,62 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
-function signerToken(utilisateur) {
-  return jwt.sign(
-    { id: utilisateur.id, email: utilisateur.email, role: utilisateur.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
-}
-
-async function connexion(req, res) {
-  const { email, mot_de_passe } = req.body;
-  if (!email || !mot_de_passe) {
-    return res.status(400).json({ message: 'Email et mot de passe obligatoires.' });
-  }
-  try {
-    const result = await pool.query(
-      'SELECT * FROM utilisateurs WHERE email = $1 AND actif = TRUE',
-      [email.toLowerCase().trim()]
-    );
-    const utilisateur = result.rows[0];
-    if (!utilisateur || !(await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe))) {
-      return res.status(401).json({ message: 'Identifiants incorrects.' });
-    }
-    const { mot_de_passe: _, ...donnees } = utilisateur;
-    res.json({ token: signerToken(utilisateur), utilisateur: donnees });
-  } catch (err) {
-    console.error('Erreur connexion :', err);
-    res.status(500).json({ message: 'Erreur serveur.' });
-  }
+function signerToken(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 }
 
 async function connexionAdmin(req, res) {
   const { email, mot_de_passe } = req.body;
-  if (!email || !mot_de_passe) {
-    return res.status(400).json({ message: 'Email et mot de passe obligatoires.' });
-  }
   try {
     const result = await pool.query(
-      "SELECT * FROM utilisateurs WHERE email = $1 AND role = 'administrateur' AND actif = TRUE",
+      'SELECT * FROM admins WHERE email = $1',
       [email.toLowerCase().trim()]
     );
-    const utilisateur = result.rows[0];
-    if (!utilisateur || !(await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe))) {
-      return res.status(401).json({ message: 'Identifiants incorrects ou accès non autorisé.' });
+    const admin = result.rows[0];
+    if (!admin || !(await bcrypt.compare(mot_de_passe, admin.password_hash))) {
+      return res.status(401).json({ message: 'Identifiants incorrects.' });
     }
-    const { mot_de_passe: _, ...donnees } = utilisateur;
-    res.json({ token: signerToken(utilisateur), utilisateur: donnees });
+    const token = signerToken({ id: admin.id, nom: admin.nom, email: admin.email, role: 'admin' });
+    res.json({ token, utilisateur: { id: admin.id, nom: admin.nom, email: admin.email, role: 'admin' } });
   } catch (err) {
+    console.error('Erreur connexion admin :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 }
 
 async function connexionScanner(req, res) {
-  const { email, mot_de_passe } = req.body;
-  if (!email || !mot_de_passe) {
-    return res.status(400).json({ message: 'Email et mot de passe obligatoires.' });
-  }
+  const { identifiant, mot_de_passe } = req.body;
   try {
     const result = await pool.query(
-      "SELECT * FROM utilisateurs WHERE email = $1 AND role = 'operateur' AND actif = TRUE",
-      [email.toLowerCase().trim()]
+      'SELECT * FROM scanners WHERE identifiant = $1 AND is_active = TRUE',
+      [identifiant.trim()]
     );
-    const utilisateur = result.rows[0];
-    if (!utilisateur || !(await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe))) {
+    const scanner = result.rows[0];
+    if (!scanner || !(await bcrypt.compare(mot_de_passe, scanner.password_hash))) {
       return res.status(401).json({ message: 'Identifiants incorrects.' });
     }
-    const { mot_de_passe: _, ...donnees } = utilisateur;
-    res.json({ token: signerToken(utilisateur), utilisateur: donnees });
+    const token = signerToken({ id: scanner.id, nom: scanner.nom, identifiant: scanner.identifiant, role: 'scanner' });
+    res.json({ token, utilisateur: { id: scanner.id, nom: scanner.nom, identifiant: scanner.identifiant, role: 'scanner' } });
   } catch (err) {
+    console.error('Erreur connexion scanner :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 }
 
 async function moi(req, res) {
   try {
-    const result = await pool.query(
-      'SELECT id, nom, prenom, email, role, actif, cree_le FROM utilisateurs WHERE id = $1',
-      [req.utilisateur.id]
-    );
-    if (!result.rows[0]) return res.status(404).json({ message: 'Utilisateur introuvable.' });
-    res.json(result.rows[0]);
+    const { id, role } = req.utilisateur;
+    if (role === 'admin') {
+      const r = await pool.query('SELECT id, nom, email, created_at FROM admins WHERE id = $1', [id]);
+      if (!r.rows[0]) return res.status(404).json({ message: 'Introuvable.' });
+      return res.json({ ...r.rows[0], role: 'admin' });
+    }
+    const r = await pool.query('SELECT id, nom, identifiant, device_id, is_active, created_at FROM scanners WHERE id = $1', [id]);
+    if (!r.rows[0]) return res.status(404).json({ message: 'Introuvable.' });
+    res.json({ ...r.rows[0], role: 'scanner' });
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 }
 
-module.exports = { connexion, connexionAdmin, connexionScanner, moi };
+module.exports = { connexionAdmin, connexionScanner, moi };

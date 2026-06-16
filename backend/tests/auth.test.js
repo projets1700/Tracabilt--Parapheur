@@ -1,31 +1,31 @@
 const request = require('supertest');
 const app = require('../src/app');
 
-describe('POST /api/auth/connexion', () => {
-  test('champs manquants → 400', async () => {
-    const res = await request(app).post('/api/auth/connexion').send({});
-    expect(res.status).toBe(400);
-  });
-
-  test('email invalide → 400', async () => {
-    const res = await request(app).post('/api/auth/connexion').send({ email: 'pasunemail', mot_de_passe: 'test' });
-    expect(res.status).toBe(400);
-  });
-
-  test('identifiants incorrects → 401', async () => {
-    const res = await request(app).post('/api/auth/connexion').send({ email: 'inconnu@test.fr', mot_de_passe: 'mauvais' });
-    expect(res.status).toBe(401);
-  });
-});
-
 describe('POST /api/auth/admin/connexion', () => {
   test('champs manquants → 400', async () => {
     const res = await request(app).post('/api/auth/admin/connexion').send({ email: 'test@test.fr' });
     expect(res.status).toBe(400);
   });
 
+  test('email invalide → 400', async () => {
+    const res = await request(app).post('/api/auth/admin/connexion').send({ email: 'pasunemail', mot_de_passe: 'test' });
+    expect(res.status).toBe(400);
+  });
+
   test('identifiants incorrects → 401', async () => {
     const res = await request(app).post('/api/auth/admin/connexion').send({ email: 'faux@test.fr', mot_de_passe: 'faux' });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /api/auth/scanner/connexion', () => {
+  test('champs manquants → 400', async () => {
+    const res = await request(app).post('/api/auth/scanner/connexion').send({ identifiant: 'j.martin' });
+    expect(res.status).toBe(400);
+  });
+
+  test('identifiants incorrects → 401', async () => {
+    const res = await request(app).post('/api/auth/scanner/connexion').send({ identifiant: 'inconnu', mot_de_passe: 'faux' });
     expect(res.status).toBe(401);
   });
 });

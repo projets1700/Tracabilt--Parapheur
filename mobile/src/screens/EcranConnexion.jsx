@@ -1,84 +1,106 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { connexionScanner } from '../services/api';
-import { sauvegarderSession } from '../services/stockage';
-import BoutonPrincipal from '../components/BoutonPrincipal';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-export default function EcranConnexion({ navigation }) {
-  const [email, setEmail] = useState('');
+import { api } from '../services/api';
+import { sauvegarderSession } from '../services/stockage';
+
+export default function EcranConnexion({ onConnexion }) {
+  const [identifiant, setIdentifiant] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [chargement, setChargement] = useState(false);
 
   async function handleConnexion() {
-    if (!email.trim() || !motDePasse) {
-      Alert.alert('Champs manquants', 'Veuillez renseigner votre email et mot de passe.');
+    if (!identifiant.trim() || !motDePasse.trim()) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
     }
     setChargement(true);
     try {
-      const data = await connexionScanner(email.trim(), motDePasse);
-      await sauvegarderSession(data.token, data.utilisateur);
-      navigation.replace('Accueil', { utilisateur: data.utilisateur });
+      const data = await api.connexionScanner(identifiant.trim(), motDePasse.trim());
+      await sauvegarderSession(data.token, data.scanner);
+      onConnexion(data.token, data.scanner);
     } catch (err) {
-      Alert.alert('Erreur de connexion', err.response?.data?.message || 'Identifiants incorrects.');
+      Alert.alert('Connexion échouée', err.message || 'Identifiant ou mot de passe incorrect.');
     } finally {
       setChargement(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView style={styles.conteneur} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.entete}>
-        <Text style={styles.icone}>📋</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.inner}>
         <Text style={styles.titre}>TraçaParapheur</Text>
-        <Text style={styles.sousTitre}>Application scanner</Text>
-      </View>
+        <Text style={styles.sousTitre}>Connexion opérateur</Text>
 
-      <View style={styles.formulaire}>
-        <View style={styles.champ}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="prenom.nom@organisation.fr"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-        <View style={styles.champ}>
-          <Text style={styles.label}>Mot de passe</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            value={motDePasse}
-            onChangeText={setMotDePasse}
-            secureTextEntry
-          />
-        </View>
-        <BoutonPrincipal titre="Se connecter" onPress={handleConnexion} chargement={chargement} />
-      </View>
+        <TextInput
+          style={styles.champ}
+          placeholder="Identifiant (ex: j.martin)"
+          placeholderTextColor="rgba(255,255,255,0.5)"
+          value={identifiant}
+          onChangeText={setIdentifiant}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <TextInput
+          style={styles.champ}
+          placeholder="Mot de passe"
+          placeholderTextColor="rgba(255,255,255,0.5)"
+          value={motDePasse}
+          onChangeText={setMotDePasse}
+          secureTextEntry
+        />
 
-      <View style={styles.demo}>
-        <Text style={styles.demoTitre}>COMPTE DE DÉMO</Text>
-        <Text style={styles.demoTexte}>j.martin@organisation.fr / operateur123</Text>
+        <TouchableOpacity
+          style={[styles.bouton, chargement && { opacity: 0.6 }]}
+          onPress={handleConnexion}
+          disabled={chargement}
+        >
+          {chargement
+            ? <ActivityIndicator color="#1e40af" />
+            : <Text style={styles.boutonTexte}>Se connecter</Text>
+          }
+        </TouchableOpacity>
+
+        <Text style={styles.aide}>Démo : j.martin / scanner123</Text>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  conteneur: { flex: 1, backgroundColor: '#F5F5F0', padding: 24, justifyContent: 'center' },
-  entete: { alignItems: 'center', marginBottom: 40 },
-  icone: { fontSize: 48, marginBottom: 12 },
-  titre: { fontSize: 24, fontWeight: '700', color: '#1a1a1a' },
-  sousTitre: { fontSize: 14, color: '#666', marginTop: 4 },
-  formulaire: { backgroundColor: 'white', borderRadius: 16, padding: 20, gap: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
-  champ: { gap: 6 },
-  label: { fontSize: 12, color: '#666', fontWeight: '500' },
-  input: { borderWidth: 1, borderColor: '#E5E5E0', borderRadius: 10, padding: 12, fontSize: 14, backgroundColor: '#FAFAFA' },
-  demo: { backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E5E5E0' },
-  demoTitre: { fontSize: 10, color: '#999', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 },
-  demoTexte: { fontSize: 12, color: '#666' },
+  container: { flex: 1, backgroundColor: '#1e40af' },
+  inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 14 },
+  titre: { fontSize: 28, fontWeight: '700', color: 'white', textAlign: 'center' },
+  sousTitre: { fontSize: 14, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 12 },
+  champ: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    padding: 16,
+    color: 'white',
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  bouton: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  boutonTexte: { color: '#1e40af', fontWeight: '700', fontSize: 16 },
+  aide: { textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 8 },
 });

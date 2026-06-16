@@ -1,34 +1,29 @@
-import axios from 'axios';
-import { getToken } from './stockage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Remplace par l'IP de ta machine sur le réseau local pour tester sur téléphone
-const BASE_URL = 'http://10.0.2.2:3001/api'; // Android émulateur
-// const BASE_URL = 'http://192.168.1.XX:3001/api'; // Vrai téléphone
+// IP du PC sur le réseau WiFi — à changer si besoin
+export const BACKEND_URL = 'http://10.63.45.52:3001/api';
 
-const client = axios.create({ baseURL: BASE_URL, timeout: 10000 });
+async function fetchApi(path, options = {}) {
+  const token = await AsyncStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
-client.interceptors.request.use(async (config) => {
-  const token = await getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-export async function connexionScanner(email, motDePasse) {
-  const { data } = await client.post('/auth/scanner/connexion', { email, mot_de_passe: motDePasse });
+  const response = await fetch(`${BACKEND_URL}${path}`, { ...options, headers });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Erreur serveur');
   return data;
 }
 
-export async function envoyerScan(scan) {
-  const { data } = await client.post('/evenements/scan', scan);
-  return data;
-}
+export const api = {
+  connexionScanner: (identifiant, mot_de_passe) =>
+    fetchApi('/auth/scanner/connexion', {
+      method: 'POST',
+      body: JSON.stringify({ identifiant, mot_de_passe }),
+    }),
 
-export async function synchroniserScans(scans) {
-  const { data } = await client.post('/evenements/sync', { scans });
-  return data;
-}
+  enregistrerScan: (scan) =>
+    fetchApi('/scans', { method: 'POST', body: JSON.stringify(scan) }),
 
-export async function getMonProfil() {
-  const { data } = await client.get('/auth/moi');
-  return data;
-}
+  synchroniserScans: (scans) =>
+    fetchApi('/scans/sync', { method: 'POST', body: JSON.stringify({ scans }) }),
+};

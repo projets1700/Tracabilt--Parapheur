@@ -16,7 +16,7 @@ function verifierToken(req, res, next) {
 
 function exigerAdmin(req, res, next) {
   verifierToken(req, res, () => {
-    if (req.utilisateur.role !== 'administrateur') {
+    if (req.utilisateur.role !== 'admin') {
       return res.status(403).json({ message: 'Accès réservé aux administrateurs.' });
     }
     next();
@@ -25,8 +25,8 @@ function exigerAdmin(req, res, next) {
 
 function exigerScanner(req, res, next) {
   verifierToken(req, res, () => {
-    if (!['administrateur', 'operateur'].includes(req.utilisateur.role)) {
-      return res.status(403).json({ message: 'Accès refusé.' });
+    if (req.utilisateur.role !== 'scanner') {
+      return res.status(403).json({ message: 'Accès réservé aux scanners.' });
     }
     next();
   });

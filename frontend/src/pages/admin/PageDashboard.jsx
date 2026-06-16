@@ -24,7 +24,7 @@ export default function PageDashboard() {
   const [erreur, setErreur] = useState('');
 
   useEffect(() => {
-    client.get('/utilisateurs/statistiques')
+    client.get('/scanners/statistiques')
       .then(({ data }) => setStats(data))
       .catch(() => setErreur('Impossible de charger les statistiques.'))
       .finally(() => setChargement(false));
@@ -45,7 +45,7 @@ export default function PageDashboard() {
           <CarteStats icone="📋" valeur={stats.parapheurs_actifs}  label="Parapheurs actifs"            couleur="#185FA5" />
           <CarteStats icone="📍" valeur={stats.scans_aujourdhui}   label="Scans aujourd'hui"            couleur="#1D9E75" />
           <CarteStats icone="👥" valeur={stats.operateurs_actifs}  label="Opérateurs actifs aujourd'hui" couleur="#BA7517" />
-          <CarteStats icone="📅" valeur={stats.total_evenements}   label="Événements au total"           couleur="#534AB7" />
+          <CarteStats icone="📅" valeur={stats.total_scans}        label="Scans au total"                couleur="#534AB7" />
         </div>
       )}
     </div>

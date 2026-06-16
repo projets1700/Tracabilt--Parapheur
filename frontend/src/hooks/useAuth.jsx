@@ -10,7 +10,7 @@ export function FournisseurAuth({ children }) {
   });
 
   async function connexion(email, motDePasse) {
-    const { data } = await client.post('/auth/connexion', { email, mot_de_passe: motDePasse });
+    const { data } = await client.post('/auth/admin/connexion', { email, mot_de_passe: motDePasse });
     localStorage.setItem('token', data.token);
     localStorage.setItem('utilisateur', JSON.stringify(data.utilisateur));
     setUtilisateur(data.utilisateur);

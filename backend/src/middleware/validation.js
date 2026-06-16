@@ -11,48 +11,56 @@ function verifierValidation(req, res, next) {
   next();
 }
 
-const reglesConnexion = [
+const reglesConnexionAdmin = [
   body('email').isEmail().withMessage('Email invalide.').normalizeEmail(),
   body('mot_de_passe').isLength({ min: 1 }).withMessage('Mot de passe requis.'),
   verifierValidation,
 ];
 
+const reglesConnexionScanner = [
+  body('identifiant').trim().notEmpty().withMessage('Identifiant requis.'),
+  body('mot_de_passe').isLength({ min: 1 }).withMessage('Mot de passe requis.'),
+  verifierValidation,
+];
+
 const reglesCreerParapheur = [
-  body('reference')
-    .trim().notEmpty().withMessage('La référence est obligatoire.')
-    .matches(/^[A-Z0-9\-]+$/i).withMessage('Référence invalide (lettres, chiffres, tirets uniquement).'),
-  body('description').optional().trim().isLength({ max: 500 }).withMessage('Description trop longue.'),
+  body('numero')
+    .trim().notEmpty().withMessage('Le numéro est obligatoire.')
+    .matches(/^[A-Z0-9\-]+$/i).withMessage('Numéro invalide (lettres, chiffres, tirets uniquement).'),
+  body('titre').trim().notEmpty().withMessage('Le titre est obligatoire.').isLength({ max: 255 }),
   verifierValidation,
 ];
 
 const reglesModifierParapheur = [
-  body('statut').optional().isIn(['en_transit', 'livre', 'en_attente', 'archive']).withMessage('Statut invalide.'),
-  body('description').optional().trim().isLength({ max: 500 }).withMessage('Description trop longue.'),
+  body('statut').optional().isIn(['en_circulation', 'archive']).withMessage('Statut invalide.'),
+  body('titre').optional().trim().isLength({ max: 255 }).withMessage('Titre trop long.'),
+  body('is_active').optional().isBoolean().withMessage('is_active doit être un booléen.'),
   param('id').isUUID().withMessage('Identifiant invalide.'),
   verifierValidation,
 ];
 
-const reglesCreerUtilisateur = [
+const reglesCreerScanner = [
   body('nom').trim().notEmpty().withMessage('Le nom est obligatoire.').isLength({ max: 100 }),
-  body('prenom').trim().notEmpty().withMessage('Le prénom est obligatoire.').isLength({ max: 100 }),
-  body('email').isEmail().withMessage('Email invalide.').normalizeEmail(),
+  body('identifiant').trim().notEmpty().withMessage('L\'identifiant est obligatoire.').isLength({ max: 100 }),
   body('mot_de_passe').isLength({ min: 6 }).withMessage('Le mot de passe doit faire au moins 6 caractères.'),
-  body('role').isIn(['administrateur', 'operateur']).withMessage('Rôle invalide.'),
+  body('device_id').optional().trim().isLength({ max: 255 }),
   verifierValidation,
 ];
 
 const reglesScan = [
-  body('parapheur_reference').trim().notEmpty().withMessage('Référence du parapheur obligatoire.'),
+  body('parapheur_numero').trim().notEmpty().withMessage('Numéro du parapheur obligatoire.'),
   body('latitude').optional({ nullable: true }).isFloat({ min: -90, max: 90 }).withMessage('Latitude invalide.'),
   body('longitude').optional({ nullable: true }).isFloat({ min: -180, max: 180 }).withMessage('Longitude invalide.'),
   body('precision_gps').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Précision GPS invalide.'),
+  body('scanned_at').optional({ nullable: true }).isISO8601().withMessage('Date invalide.'),
   verifierValidation,
 ];
 
 module.exports = {
-  reglesConnexion,
+  reglesConnexionAdmin,
+  reglesConnexionScanner,
   reglesCreerParapheur,
   reglesModifierParapheur,
-  reglesCreerUtilisateur,
+  reglesCreerScanner,
   reglesScan,
 };

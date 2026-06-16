@@ -1,97 +1,127 @@
-import { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { getPosition } from '../services/gps';
-import { envoyerScan } from '../services/api';
+import { useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { api } from '../services/api';
+import { demanderPermissions, obtenirPosition } from '../services/gps';
 import { ajouterScanEnAttente } from '../services/stockage';
 
-export default function EcranScanner({ navigation, route }) {
-  const { utilisateur } = route.params;
+export default function EcranScanner({ scanner, onDeconnexion }) {
   const [permission, requestPermission] = useCameraPermissions();
-  const [traitement, setTraitement] = useState(false);
-  const deja_scanne = useRef(false);
+  const [scanning, setScanning] = useState(false);
+  const [resultat, setResultat] = useState(null);
+  const cooldown = useRef(false);
 
-  useEffect(() => {
-    if (!permission?.granted) requestPermission();
-  }, []);
-
-  async function handleScan({ data: qrData }) {
-    if (deja_scanne.current || traitement) return;
-    deja_scanne.current = true;
-    setTraitement(true);
+  async function handleBarcode({ data }) {
+    if (cooldown.current || scanning) return;
+    cooldown.current = true;
+    setScanning(true);
 
     try {
-      const reference = qrData.trim().toUpperCase();
-      const position = await getPosition();
+      const numero = data.trim().toUpperCase();
+      let coords = { latitude: 0, longitude: 0, precision_gps: 0 };
+      const hasGps = await demanderPermissions();
+      if (hasGps) coords = await obtenirPosition();
 
-      const scan = {
-        parapheur_reference: reference,
-        latitude: position?.latitude || null,
-        longitude: position?.longitude || null,
-        precision_gps: position?.precision_gps || null,
-        localisation_nom: null,
-        identifiant_appareil: utilisateur.id,
-        date_scan: new Date().toISOString(),
-      };
+      const scanData = { parapheur_numero: numero, ...coords, scanned_at: new Date().toISOString() };
 
-      let succes = false;
       try {
-        await envoyerScan(scan);
-        succes = true;
+        await api.enregistrerScan(scanData);
+        setResultat({ success: true, numero, message: 'Scan enregistré avec succès !' });
       } catch {
-        await ajouterScanEnAttente(scan);
+        await ajouterScanEnAttente(scanData);
+        setResultat({ success: false, numero, message: 'Hors-ligne — scan sauvegardé localement.' });
       }
-
-      navigation.replace('ScanReussi', { reference, position, succes, utilisateur });
-    } catch (err) {
-      Alert.alert('Erreur', 'Une erreur est survenue lors du scan.');
-      deja_scanne.current = false;
-      setTraitement(false);
+    } finally {
+      setScanning(false);
+      setTimeout(() => { cooldown.current = false; }, 3000);
     }
   }
 
-  if (!permission) return <View style={styles.conteneur} />;
+  if (!permission) {
+    return <View style={styles.center}><ActivityIndicator size="large" color="#1e40af" /></View>;
+  }
 
   if (!permission.granted) {
     return (
-      <View style={styles.conteneur}>
-        <Text style={styles.message}>La caméra est nécessaire pour scanner les QR codes.</Text>
-        <TouchableOpacity style={styles.btnPermission} onPress={requestPermission}>
-          <Text style={styles.txtPermission}>Autoriser la caméra</Text>
+      <View style={styles.center}>
+        <Text style={styles.texteGris}>Accès à la caméra requis pour scanner</Text>
+        <TouchableOpacity style={styles.bouton} onPress={requestPermission}>
+          <Text style={styles.boutonTexte}>Autoriser la caméra</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.conteneur}>
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        onBarcodeScanned={traitement ? undefined : handleScan}
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-      />
-      <View style={styles.overlay}>
-        <Text style={styles.instruction}>Pointez la caméra vers le QR code</Text>
-        <View style={styles.cadre} />
-        {traitement && <Text style={styles.traitement}>Traitement en cours…</Text>}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerNom}>👤 {scanner?.nom}</Text>
+        <TouchableOpacity onPress={onDeconnexion}>
+          <Text style={styles.headerDeconnexion}>Déconnexion</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.btnRetour} onPress={() => navigation.goBack()}>
-        <Text style={styles.txtRetour}>✕ Annuler</Text>
-      </TouchableOpacity>
+
+      <CameraView
+        style={styles.camera}
+        facing="back"
+        onBarcodeScanned={scanning ? undefined : handleBarcode}
+        barcodeScannerSettings={{ barcodeTypes: ['qr', 'code128', 'code39', 'ean13', 'ean8'] }}
+      />
+
+      <View style={styles.overlayBas}>
+        {scanning
+          ? <ActivityIndicator color="white" size="large" />
+          : <Text style={styles.instruction}>Pointez vers un QR code ou code-barres</Text>
+        }
+      </View>
+
+      {resultat && (
+        <Modal transparent animationType="slide" onRequestClose={() => setResultat(null)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalEmoji}>{resultat.success ? '✅' : '💾'}</Text>
+              <Text style={styles.modalNumero}>{resultat.numero}</Text>
+              <Text style={styles.modalMessage}>{resultat.message}</Text>
+              <TouchableOpacity style={styles.bouton} onPress={() => setResultat(null)}>
+                <Text style={styles.boutonTexte}>Scanner un autre</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  conteneur: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
-  message: { color: 'white', textAlign: 'center', margin: 24, fontSize: 15 },
-  btnPermission: { backgroundColor: '#185FA5', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  txtPermission: { color: 'white', fontWeight: '600' },
-  overlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  instruction: { color: 'white', fontSize: 15, marginBottom: 32, textAlign: 'center', paddingHorizontal: 24 },
-  cadre: { width: 240, height: 240, borderWidth: 2, borderColor: 'white', borderRadius: 16 },
-  traitement: { color: 'white', marginTop: 24, fontSize: 14 },
-  btnRetour: { position: 'absolute', top: 56, left: 20, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  txtRetour: { color: 'white', fontSize: 14 },
+  container: { flex: 1, backgroundColor: 'black' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, backgroundColor: '#f9fafb', padding: 32 },
+  texteGris: { fontSize: 16, color: '#374151', textAlign: 'center' },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    padding: 16, paddingTop: 50, backgroundColor: '#1e40af',
+  },
+  headerNom: { color: 'white', fontWeight: '600', fontSize: 15 },
+  headerDeconnexion: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
+  camera: { flex: 1 },
+  overlayBas: { padding: 28, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center' },
+  instruction: { color: 'white', fontSize: 14, textAlign: 'center' },
+  bouton: { backgroundColor: '#1e40af', borderRadius: 12, padding: 16, alignItems: 'center', minWidth: 220 },
+  boutonTexte: { color: 'white', fontWeight: '700', fontSize: 15 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  modalContent: {
+    backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 32, alignItems: 'center', gap: 12,
+  },
+  modalEmoji: { fontSize: 52 },
+  modalNumero: { fontSize: 18, fontWeight: '700', color: '#1e40af' },
+  modalMessage: { fontSize: 14, color: '#374151', textAlign: 'center' },
 });

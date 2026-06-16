@@ -2,10 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import client from '../../api/client';
 
 const STATUTS = {
-  en_transit: { label: 'En transit', classe: 'badge-vert' },
-  livre:      { label: 'Livré',      classe: 'badge-bleu' },
-  en_attente: { label: 'En attente', classe: 'badge-orange' },
-  archive:    { label: 'Archivé',    classe: 'badge-gris' },
+  en_circulation: { label: 'En circulation', classe: 'badge-vert' },
+  archive:        { label: 'Archivé',         classe: 'badge-gris' },
 };
 
 function formaterDate(d) {
@@ -30,8 +28,8 @@ export default function PageParapheurs() {
   const [chargement, setChargement] = useState(true);
   const [recherche, setRecherche] = useState('');
   const [filtreStatut, setFiltreStatut] = useState('');
-  const [modal, setModal] = useState(null); // null | 'ajout' | objet parapheur
-  const [form, setForm] = useState({ reference: '', description: '', statut: 'en_transit' });
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({ numero: '', titre: '', statut: 'en_circulation' });
   const [erreurForm, setErreurForm] = useState('');
   const [envoi, setEnvoi] = useState(false);
 
@@ -53,13 +51,13 @@ export default function PageParapheurs() {
   useEffect(() => { charger(); }, [charger]);
 
   function ouvrirAjout() {
-    setForm({ reference: '', description: '', statut: 'en_transit' });
+    setForm({ numero: '', titre: '', statut: 'en_circulation' });
     setErreurForm('');
     setModal('ajout');
   }
 
   function ouvrirEdit(p) {
-    setForm({ reference: p.reference, description: p.description || '', statut: p.statut });
+    setForm({ numero: p.numero, titre: p.titre || '', statut: p.statut });
     setErreurForm('');
     setModal(p);
   }
@@ -70,9 +68,9 @@ export default function PageParapheurs() {
     setEnvoi(true);
     try {
       if (modal === 'ajout') {
-        await client.post('/parapheurs', { reference: form.reference, description: form.description });
+        await client.post('/parapheurs', { numero: form.numero, titre: form.titre });
       } else {
-        await client.put(`/parapheurs/${modal.id}`, { description: form.description, statut: form.statut });
+        await client.put(`/parapheurs/${modal.id}`, { titre: form.titre, statut: form.statut });
       }
       setModal(null);
       charger();
@@ -84,7 +82,7 @@ export default function PageParapheurs() {
   }
 
   async function handleSupprimer(p) {
-    if (!confirm(`Supprimer le parapheur ${p.reference} ? Cette action est irréversible.`)) return;
+    if (!confirm(`Supprimer le parapheur ${p.numero} ? Cette action est irréversible.`)) return;
     try {
       await client.delete(`/parapheurs/${p.id}`);
       charger();
@@ -103,12 +101,11 @@ export default function PageParapheurs() {
         <button className="btn btn-primaire" onClick={ouvrirAjout}>+ Nouveau</button>
       </div>
 
-      {/* Filtres */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <input
           className="champ"
           style={{ maxWidth: 280 }}
-          placeholder="Rechercher par référence…"
+          placeholder="Rechercher par numéro ou titre…"
           value={recherche}
           onChange={e => setRecherche(e.target.value)}
         />
@@ -120,7 +117,6 @@ export default function PageParapheurs() {
         </select>
       </div>
 
-      {/* Tableau */}
       <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
         {chargement ? (
           <div className="chargement">Chargement…</div>
@@ -130,7 +126,7 @@ export default function PageParapheurs() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
-                {['Référence', 'Description', 'Statut', 'Dernier scan', 'Opérateur', 'Actions'].map(h => (
+                {['Numéro', 'Titre', 'Statut', 'Dernier scan', 'Opérateur', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--texte2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
                 ))}
               </tr>
@@ -138,8 +134,8 @@ export default function PageParapheurs() {
             <tbody>
               {parapheurs.map(p => (
                 <tr key={p.id} style={{ borderBottom: '1px solid var(--bordure)' }}>
-                  <td style={{ padding: '12px 14px', fontWeight: 600, fontSize: 13 }}>{p.reference}</td>
-                  <td style={{ padding: '12px 14px', color: 'var(--texte2)', fontSize: 13, maxWidth: 200 }}>{p.description || '—'}</td>
+                  <td style={{ padding: '12px 14px', fontWeight: 600, fontSize: 13 }}>{p.numero}</td>
+                  <td style={{ padding: '12px 14px', color: 'var(--texte2)', fontSize: 13, maxWidth: 200 }}>{p.titre || '—'}</td>
                   <td style={{ padding: '12px 14px' }}>
                     <span className={`badge ${STATUTS[p.statut]?.classe || 'badge-gris'}`}>
                       {STATUTS[p.statut]?.label || p.statut}
@@ -160,28 +156,28 @@ export default function PageParapheurs() {
         )}
       </div>
 
-      {/* Modal ajout / modification */}
       {modal && (
         <Modal titre={modal === 'ajout' ? 'Nouveau parapheur' : 'Modifier le parapheur'} onFermer={() => setModal(null)}>
           <form onSubmit={handleSoumettre} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label className="label-champ">Référence</label>
+              <label className="label-champ">Numéro</label>
               <input
                 className="champ"
                 placeholder="PAR-2025-00001"
-                value={form.reference}
-                onChange={e => setForm(f => ({ ...f, reference: e.target.value }))}
+                value={form.numero}
+                onChange={e => setForm(f => ({ ...f, numero: e.target.value }))}
                 required
                 disabled={modal !== 'ajout'}
               />
             </div>
             <div>
-              <label className="label-champ">Description</label>
+              <label className="label-champ">Titre</label>
               <input
                 className="champ"
-                placeholder="Description optionnelle"
-                value={form.description}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                placeholder="Dossier budget 2025…"
+                value={form.titre}
+                onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
+                required
               />
             </div>
             {modal !== 'ajout' && (

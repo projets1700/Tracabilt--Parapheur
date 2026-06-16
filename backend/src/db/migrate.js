@@ -4,47 +4,51 @@ const pool = require('../config/db');
 const schema = `
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE IF NOT EXISTS utilisateurs (
+CREATE TABLE IF NOT EXISTS admins (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nom           VARCHAR(100) NOT NULL,
-  prenom        VARCHAR(100) NOT NULL,
   email         VARCHAR(255) UNIQUE NOT NULL,
-  mot_de_passe  VARCHAR(255) NOT NULL,
-  role          VARCHAR(20) NOT NULL CHECK (role IN ('administrateur', 'operateur')),
-  actif         BOOLEAN DEFAULT TRUE,
-  cree_le       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  password_hash VARCHAR(255) NOT NULL,
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS scanners (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nom           VARCHAR(100) NOT NULL,
+  identifiant   VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  device_id     VARCHAR(255),
+  is_active     BOOLEAN DEFAULT TRUE,
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS parapheurs (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  numero     VARCHAR(50) UNIQUE NOT NULL,
+  titre      VARCHAR(255) NOT NULL,
+  statut     VARCHAR(30) NOT NULL DEFAULT 'en_circulation'
+             CHECK (statut IN ('en_circulation', 'archive')),
+  is_active  BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS scans (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  reference     VARCHAR(50) UNIQUE NOT NULL,
-  description   TEXT,
-  statut        VARCHAR(30) NOT NULL DEFAULT 'en_transit'
-                CHECK (statut IN ('en_transit', 'livre', 'en_attente', 'archive')),
-  cree_le       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  mis_a_jour_le TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  parapheur_id  UUID NOT NULL REFERENCES parapheurs(id) ON DELETE CASCADE,
+  scanner_id    UUID REFERENCES scanners(id) ON DELETE SET NULL,
+  latitude      DECIMAL(10, 7),
+  longitude     DECIMAL(10, 7),
+  precision_gps DECIMAL(8, 2),
+  scanned_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  sync_status   VARCHAR(20) NOT NULL DEFAULT 'synchronise'
+                CHECK (sync_status IN ('synchronise', 'en_attente', 'erreur')),
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS evenements (
-  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  parapheur_id         UUID NOT NULL REFERENCES parapheurs(id) ON DELETE CASCADE,
-  utilisateur_id       UUID REFERENCES utilisateurs(id) ON DELETE SET NULL,
-  type                 VARCHAR(20) NOT NULL DEFAULT 'scan'
-                       CHECK (type IN ('scan', 'sync', 'alerte')),
-  latitude             DECIMAL(10, 7),
-  longitude            DECIMAL(10, 7),
-  precision_gps        DECIMAL(8, 2),
-  localisation_nom     VARCHAR(255),
-  identifiant_appareil VARCHAR(100),
-  synchronise          BOOLEAN DEFAULT TRUE,
-  cree_le              TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_evenements_parapheur   ON evenements(parapheur_id);
-CREATE INDEX IF NOT EXISTS idx_evenements_date        ON evenements(cree_le DESC);
-CREATE INDEX IF NOT EXISTS idx_evenements_utilisateur ON evenements(utilisateur_id);
-CREATE INDEX IF NOT EXISTS idx_parapheurs_reference   ON parapheurs(reference);
+CREATE INDEX IF NOT EXISTS idx_scans_parapheur ON scans(parapheur_id);
+CREATE INDEX IF NOT EXISTS idx_scans_scanner   ON scans(scanner_id);
+CREATE INDEX IF NOT EXISTS idx_scans_date      ON scans(scanned_at DESC);
+CREATE INDEX IF NOT EXISTS idx_parapheurs_numero ON parapheurs(numero);
 `;
 
 async function migrate() {

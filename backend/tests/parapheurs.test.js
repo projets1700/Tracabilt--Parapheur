@@ -1,5 +1,10 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const app = require('../src/app');
+
+const SECRET = process.env.JWT_SECRET || 'secret_dev_a_changer';
+const tokenAdmin   = () => jwt.sign({ id: 'uuid-admin', role: 'admin' },    SECRET);
+const tokenScanner = () => jwt.sign({ id: 'uuid-scan',  role: 'scanner' },  SECRET);
 
 describe('GET /api/parapheurs', () => {
   test('accessible sans token → 200', async () => {
@@ -16,8 +21,8 @@ describe('GET /api/parapheurs', () => {
   });
 });
 
-describe('GET /api/parapheurs/:reference', () => {
-  test('référence inexistante → 404', async () => {
+describe('GET /api/parapheurs/:numero', () => {
+  test('numéro inexistant → 404', async () => {
     const res = await request(app).get('/api/parapheurs/INEXISTANT-000');
     expect(res.status).toBe(404);
   });
@@ -25,27 +30,31 @@ describe('GET /api/parapheurs/:reference', () => {
 
 describe('POST /api/parapheurs', () => {
   test('sans token → 401', async () => {
-    const res = await request(app).post('/api/parapheurs').send({ reference: 'TEST-001' });
+    const res = await request(app).post('/api/parapheurs').send({ numero: 'TEST-001', titre: 'Test' });
     expect(res.status).toBe(401);
   });
 
-  test('token non-admin → 403', async () => {
-    const jwt = require('jsonwebtoken');
-    const token = jwt.sign({ id: 'uuid', role: 'operateur' }, process.env.JWT_SECRET || 'secret_dev_a_changer');
+  test('token scanner → 403', async () => {
     const res = await request(app)
       .post('/api/parapheurs')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ reference: 'TEST-001' });
+      .set('Authorization', `Bearer ${tokenScanner()}`)
+      .send({ numero: 'TEST-001', titre: 'Test' });
     expect(res.status).toBe(403);
   });
 
-  test('référence manquante → 400', async () => {
-    const jwt = require('jsonwebtoken');
-    const token = jwt.sign({ id: 'uuid', role: 'administrateur' }, process.env.JWT_SECRET || 'secret_dev_a_changer');
+  test('numéro manquant → 400', async () => {
     const res = await request(app)
       .post('/api/parapheurs')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ description: 'sans référence' });
+      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .send({ titre: 'Sans numéro' });
+    expect(res.status).toBe(400);
+  });
+
+  test('titre manquant → 400', async () => {
+    const res = await request(app)
+      .post('/api/parapheurs')
+      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .send({ numero: 'TEST-001' });
     expect(res.status).toBe(400);
   });
 });

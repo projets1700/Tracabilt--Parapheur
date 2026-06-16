@@ -1,110 +1,92 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { getScansEnAttente, viderScansEnAttente } from '../services/stockage';
-import { synchroniserScans } from '../services/api';
-import BoutonPrincipal from '../components/BoutonPrincipal';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function EcranSynchronisation({ navigation, route }) {
-  const { utilisateur } = route.params;
-  const [scans, setScans] = useState([]);
-  const [etat, setEtat] = useState('attente'); // attente | sync | succes | erreur
-  const [resultat, setResultat] = useState(null);
+import { api } from '../services/api';
+import { chargerScansEnAttente, viderScansEnAttente } from '../services/stockage';
 
-  useEffect(() => {
-    getScansEnAttente().then(setScans);
+export default function EcranSynchronisation() {
+  const [scansEnAttente, setScansEnAttente] = useState([]);
+  const [syncing, setSyncing] = useState(false);
+  const [chargement, setChargement] = useState(true);
+
+  const charger = useCallback(async () => {
+    setChargement(true);
+    const data = await chargerScansEnAttente();
+    setScansEnAttente(data);
+    setChargement(false);
   }, []);
 
+  useEffect(() => { charger(); }, [charger]);
+
   async function handleSync() {
-    if (scans.length === 0) return;
-    setEtat('sync');
+    if (scansEnAttente.length === 0) return;
+    setSyncing(true);
     try {
-      const data = await synchroniserScans(scans);
+      await api.synchroniserScans(scansEnAttente);
       await viderScansEnAttente();
-      setResultat(data);
-      setEtat('succes');
-      setScans([]);
-    } catch {
-      setEtat('erreur');
+      setScansEnAttente([]);
+      Alert.alert('Succès', `${scansEnAttente.length} scan(s) synchronisé(s) !`);
+    } catch (err) {
+      Alert.alert('Erreur', err.message || 'Vérifiez votre connexion réseau.');
+    } finally {
+      setSyncing(false);
     }
   }
 
+  if (chargement) {
+    return <View style={styles.center}><ActivityIndicator size="large" color="#1e40af" /></View>;
+  }
+
   return (
-    <View style={styles.conteneur}>
-      <Text style={styles.titre}>Synchronisation</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.titre}>Synchronisation</Text>
+      </View>
 
-      {etat === 'attente' && (
-        <>
-          {scans.length === 0 ? (
-            <View style={styles.vide}>
-              <Text style={styles.videIcone}>✅</Text>
-              <Text style={styles.videTexte}>Tout est synchronisé</Text>
-              <Text style={styles.videSSTexte}>Aucun scan en attente</Text>
-            </View>
-          ) : (
-            <>
-              <View style={styles.compteur}>
-                <Text style={styles.compteurNb}>{scans.length}</Text>
-                <Text style={styles.compteurLabel}>scan{scans.length > 1 ? 's' : ''} en attente</Text>
-              </View>
-              <View style={styles.listePrevisuBordure}>
-                {scans.slice(0, 5).map((s, i) => (
-                  <View key={s.id_local} style={[styles.itemScan, i > 0 && styles.separateur]}>
-                    <Text style={styles.itemRef}>{s.parapheur_reference}</Text>
-                    <Text style={styles.itemDate}>{new Date(s.date_scan).toLocaleString('fr-FR')}</Text>
-                  </View>
-                ))}
-                {scans.length > 5 && (
-                  <Text style={styles.plusItems}>+ {scans.length - 5} autres…</Text>
-                )}
-              </View>
-              <BoutonPrincipal titre="Synchroniser maintenant" onPress={handleSync} />
-            </>
-          )}
-        </>
-      )}
-
-      {etat === 'sync' && (
-        <BoutonPrincipal titre="Synchronisation en cours…" chargement onPress={() => {}} />
-      )}
-
-      {etat === 'succes' && (
-        <View style={styles.resultat}>
-          <Text style={styles.resultatIcone}>✅</Text>
-          <Text style={styles.resultatTitre}>{resultat.synchronises} / {resultat.total} synchronisés</Text>
-          <BoutonPrincipal titre="Retour à l'accueil" variante="secondaire" onPress={() => navigation.navigate('Accueil', { utilisateur })} />
+      <View style={styles.contenu}>
+        <View style={styles.compteur}>
+          <Text style={styles.compteurNombre}>{scansEnAttente.length}</Text>
+          <Text style={styles.compteurLabel}>scan(s) en attente</Text>
         </View>
-      )}
 
-      {etat === 'erreur' && (
-        <View style={styles.resultat}>
-          <Text style={styles.resultatIcone}>❌</Text>
-          <Text style={styles.resultatTitre}>Erreur réseau</Text>
-          <Text style={styles.resultatSousTitre}>Vérifiez votre connexion et réessayez.</Text>
-          <BoutonPrincipal titre="Réessayer" onPress={() => setEtat('attente')} />
-        </View>
-      )}
+        {scansEnAttente.length > 0 ? (
+          <TouchableOpacity
+            style={[styles.bouton, syncing && { opacity: 0.6 }]}
+            onPress={handleSync}
+            disabled={syncing}
+          >
+            {syncing
+              ? <ActivityIndicator color="white" />
+              : <Text style={styles.boutonTexte}>🔄 Synchroniser maintenant</Text>
+            }
+          </TouchableOpacity>
+        ) : (
+          <View style={{ alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 52 }}>✅</Text>
+            <Text style={{ fontSize: 18, color: '#374151', fontWeight: '500' }}>Tout est synchronisé</Text>
+          </View>
+        )}
+
+        <TouchableOpacity onPress={charger} style={{ padding: 12 }}>
+          <Text style={{ color: '#9ca3af', fontSize: 14 }}>Actualiser</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  conteneur: { flex: 1, backgroundColor: '#F5F5F0', padding: 24 },
-  titre: { fontSize: 22, fontWeight: '700', marginBottom: 24, marginTop: 20 },
-  vide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  videIcone: { fontSize: 48, marginBottom: 16 },
-  videTexte: { fontSize: 18, fontWeight: '600', color: '#1a1a1a' },
-  videSSTexte: { fontSize: 14, color: '#888', marginTop: 6 },
-  compteur: { backgroundColor: '#185FA5', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 16 },
-  compteurNb: { fontSize: 48, fontWeight: '700', color: 'white' },
-  compteurLabel: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
-  listePrevisuBordure: { backgroundColor: 'white', borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#E5E5E0' },
-  itemScan: { paddingVertical: 10 },
-  separateur: { borderTopWidth: 1, borderTopColor: '#F0F0EB' },
-  itemRef: { fontSize: 13, fontWeight: '600' },
-  itemDate: { fontSize: 12, color: '#888', marginTop: 2 },
-  plusItems: { fontSize: 12, color: '#888', marginTop: 8, textAlign: 'center' },
-  resultat: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  resultatIcone: { fontSize: 48, marginBottom: 8 },
-  resultatTitre: { fontSize: 18, fontWeight: '600' },
-  resultatSousTitre: { fontSize: 14, color: '#666', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { padding: 20, paddingTop: 50, backgroundColor: '#1e40af' },
+  titre: { fontSize: 20, fontWeight: '700', color: 'white' },
+  contenu: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 24, padding: 32 },
+  compteur: {
+    alignItems: 'center', backgroundColor: 'white', borderRadius: 16, padding: 32,
+    width: '100%', elevation: 3,
+  },
+  compteurNombre: { fontSize: 72, fontWeight: '700', color: '#1e40af' },
+  compteurLabel: { fontSize: 16, color: '#6b7280', marginTop: 4 },
+  bouton: { backgroundColor: '#1e40af', borderRadius: 12, padding: 18, alignItems: 'center', width: '100%' },
+  boutonTexte: { color: 'white', fontWeight: '700', fontSize: 16 },
 });

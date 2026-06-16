@@ -2,20 +2,20 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const authRoutes        = require('./routes/auth');
-const parapheursRoutes  = require('./routes/parapheurs');
-const evenementsRoutes  = require('./routes/evenements');
-const utilisateursRoutes = require('./routes/utilisateurs');
+const authRoutes      = require('./routes/auth');
+const parapheursRoutes = require('./routes/parapheurs');
+const scansRoutes     = require('./routes/scans');
+const scannersRoutes  = require('./routes/scanners');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth',         authRoutes);
-app.use('/api/parapheurs',   parapheursRoutes);
-app.use('/api/evenements',   evenementsRoutes);
-app.use('/api/utilisateurs', utilisateursRoutes);
+app.use('/api/auth',       authRoutes);
+app.use('/api/parapheurs', parapheursRoutes);
+app.use('/api/scans',      scansRoutes);
+app.use('/api/scanners',   scannersRoutes);
 
 app.get('/api/sante', (req, res) => {
   res.json({ statut: 'ok' });

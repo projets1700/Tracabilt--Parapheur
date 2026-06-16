@@ -16,7 +16,7 @@ export default function PageConnexion() {
     setEnvoi(true);
     try {
       const utilisateur = await connexion(email, motDePasse);
-      if (utilisateur.role === 'administrateur') {
+      if (utilisateur.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/');
@@ -83,7 +83,6 @@ export default function PageConnexion() {
             Comptes de démo
           </p>
           <p style={{ fontSize: 12, color: 'var(--texte2)' }}><strong>Admin :</strong> admin@organisation.fr / admin123</p>
-          <p style={{ fontSize: 12, color: 'var(--texte2)', marginTop: 4 }}><strong>Opérateur :</strong> j.martin@organisation.fr / operateur123</p>
         </div>
 
       </div>

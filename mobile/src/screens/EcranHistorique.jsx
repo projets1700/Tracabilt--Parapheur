@@ -1,78 +1,86 @@
-import { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { getScansEnAttente } from '../services/stockage';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+
+import { chargerScansEnAttente } from '../services/stockage';
 
 function formaterDate(d) {
-  return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(d).toLocaleDateString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 }
 
-export default function EcranHistorique({ navigation }) {
+export default function EcranHistorique() {
   const [scans, setScans] = useState([]);
+  const [chargement, setChargement] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      getScansEnAttente().then(setScans);
-    }, [])
-  );
+  const charger = useCallback(async () => {
+    setChargement(true);
+    const data = await chargerScansEnAttente();
+    setScans([...data].reverse());
+    setChargement(false);
+  }, []);
 
-  if (scans.length === 0) {
-    return (
-      <View style={styles.vide}>
-        <Text style={styles.videIcone}>📋</Text>
-        <Text style={styles.videTexte}>Aucun scan en attente</Text>
-        <Text style={styles.videSSTexte}>Les scans non synchronisés apparaissent ici</Text>
-        <TouchableOpacity style={styles.btnRetour} onPress={() => navigation.goBack()}>
-          <Text style={styles.txtRetour}>← Retour</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  useEffect(() => { charger(); }, [charger]);
 
   return (
-    <View style={styles.conteneur}>
-      <Text style={styles.titre}>Historique local</Text>
-      <Text style={styles.sousTitre}>{scans.length} scan{scans.length > 1 ? 's' : ''} en attente de synchronisation</Text>
-      <FlatList
-        data={[...scans].reverse()}
-        keyExtractor={item => item.id_local}
-        contentContainerStyle={{ gap: 10, paddingBottom: 20 }}
-        renderItem={({ item }) => (
-          <View style={styles.carte}>
-            <View style={styles.carteEntete}>
-              <Text style={styles.reference}>{item.parapheur_reference}</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeTexte}>En attente</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.titre}>Scans hors-ligne</Text>
+        <Text style={styles.sousTitre}>{scans.length} en attente de synchronisation</Text>
+      </View>
+
+      {chargement ? (
+        <View style={styles.center}><ActivityIndicator size="large" color="#1e40af" /></View>
+      ) : scans.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={styles.emoji}>✅</Text>
+          <Text style={styles.vide}>Aucun scan en attente</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={scans}
+          keyExtractor={(_, i) => String(i)}
+          contentContainerStyle={{ padding: 16, gap: 10 }}
+          refreshControl={<RefreshControl refreshing={chargement} onRefresh={charger} />}
+          renderItem={({ item }) => (
+            <View style={styles.item}>
+              <View style={styles.itemHeader}>
+                <Text style={styles.numero}>{item.parapheur_numero}</Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeTexte}>En attente</Text>
+                </View>
               </View>
-            </View>
-            <Text style={styles.date}>{formaterDate(item.date_scan)}</Text>
-            {item.latitude && (
+              <Text style={styles.date}>{formaterDate(item.scanned_at)}</Text>
               <Text style={styles.gps}>
-                GPS : {parseFloat(item.latitude).toFixed(4)}, {parseFloat(item.longitude).toFixed(4)}
+                {item.latitude
+                  ? `📍 ${item.latitude.toFixed(4)}° N, ${item.longitude.toFixed(4)}° E`
+                  : '📍 GPS non disponible'}
               </Text>
-            )}
-          </View>
-        )}
-      />
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  conteneur: { flex: 1, backgroundColor: '#F5F5F0', padding: 24 },
-  titre: { fontSize: 22, fontWeight: '700', marginTop: 20 },
-  sousTitre: { fontSize: 13, color: '#888', marginTop: 4, marginBottom: 20 },
-  carte: { backgroundColor: 'white', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#E5E5E0' },
-  carteEntete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  reference: { fontSize: 15, fontWeight: '700' },
-  badge: { backgroundColor: '#FAEEDA', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
-  badgeTexte: { fontSize: 11, color: '#633806', fontWeight: '600' },
-  date: { fontSize: 12, color: '#666' },
-  gps: { fontSize: 11, color: '#999', marginTop: 4, fontFamily: 'monospace' },
-  vide: { flex: 1, backgroundColor: '#F5F5F0', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  videIcone: { fontSize: 48, marginBottom: 16 },
-  videTexte: { fontSize: 18, fontWeight: '600' },
-  videSSTexte: { fontSize: 14, color: '#888', marginTop: 6, textAlign: 'center' },
-  btnRetour: { marginTop: 24, padding: 12 },
-  txtRetour: { color: '#185FA5', fontSize: 15 },
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  emoji: { fontSize: 48 },
+  header: { padding: 20, paddingTop: 50, backgroundColor: '#1e40af' },
+  titre: { fontSize: 20, fontWeight: '700', color: 'white' },
+  sousTitre: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
+  vide: { fontSize: 15, color: '#9ca3af' },
+  item: {
+    backgroundColor: 'white', borderRadius: 12, padding: 16, gap: 6,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  numero: { fontWeight: '700', fontSize: 15, color: '#1e40af' },
+  badge: { backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  badgeTexte: { color: '#92400e', fontSize: 11, fontWeight: '600' },
+  date: { fontSize: 12, color: '#6b7280' },
+  gps: { fontSize: 11, color: '#9ca3af' },
 });
