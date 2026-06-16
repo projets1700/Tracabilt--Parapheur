@@ -10,7 +10,7 @@ import PageEvenements from './pages/admin/PageEvenements';
 function RouteAdmin({ enfants }) {
   const { utilisateur } = useAuth();
   if (!utilisateur) return <Navigate to="/connexion" replace />;
-  if (utilisateur.role !== 'administrateur') return <Navigate to="/" replace />;
+  if (utilisateur.role !== 'admin') return <Navigate to="/" replace />;
   return enfants;
 }
 
