@@ -1,7 +1,9 @@
 const pool = require('../config/db');
 
 async function listerParapheurs(req, res) {
-  const { statut, recherche, page = 1, limite = 20 } = req.query;
+  const page   = Math.max(1, parseInt(req.query.page,   10) || 1);
+  const limite = Math.min(200, Math.max(1, parseInt(req.query.limite, 10) || 20));
+  const { statut, recherche } = req.query;
   const offset = (page - 1) * limite;
   const conditions = [];
   const params = [];

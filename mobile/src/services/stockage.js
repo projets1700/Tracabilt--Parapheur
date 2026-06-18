@@ -34,29 +34,6 @@ export async function chargerScansEnAttente() {
   return tous.filter(s => s.sync_status === 'en_attente');
 }
 
-const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
-
-// Vérifie si le QR code peut être scanné (cooldown 5 min)
-// Retourne { autorise: bool, resteSecondes: number }
-export async function verifierCooldown(numero) {
-  const data = await AsyncStorage.getItem('derniers_scans');
-  const derniers = data ? JSON.parse(data) : {};
-  const dernierScan = derniers[numero];
-  if (!dernierScan) return { autorise: true, resteSecondes: 0 };
-
-  const ecoule = Date.now() - dernierScan;
-  if (ecoule >= COOLDOWN_MS) return { autorise: true, resteSecondes: 0 };
-
-  return { autorise: false, resteSecondes: Math.ceil((COOLDOWN_MS - ecoule) / 1000) };
-}
-
-export async function enregistrerDernierScan(numero) {
-  const data = await AsyncStorage.getItem('derniers_scans');
-  const derniers = data ? JSON.parse(data) : {};
-  derniers[numero] = Date.now();
-  await AsyncStorage.setItem('derniers_scans', JSON.stringify(derniers));
-}
-
 // Marque tous les scans en attente comme synchronisés
 export async function marquerToutSynchronise() {
   const tous = await chargerScansLocaux();

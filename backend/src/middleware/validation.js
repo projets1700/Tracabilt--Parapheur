@@ -39,6 +39,11 @@ const reglesScan = [
   body('longitude').optional({ nullable: true }).isFloat({ min: -180, max: 180 }).withMessage('Longitude invalide.'),
   body('precision_gps').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Précision GPS invalide.'),
   body('scanned_at').optional({ nullable: true }).isISO8601().withMessage('Date invalide.'),
+  body('lieu.nom_lieu').optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage('Nom du lieu trop long (max 255 caractères).'),
+  body('lieu.adresse').optional({ nullable: true }).isString().isLength({ max: 500 }).withMessage('Adresse trop longue.'),
+  body('lieu.ville').optional({ nullable: true }).isString().isLength({ max: 100 }).withMessage('Ville trop longue.'),
+  body('lieu.code_postal').optional({ nullable: true }).isString().isLength({ max: 20 }).withMessage('Code postal trop long.'),
+  body('lieu.pays').optional({ nullable: true }).isString().isLength({ max: 100 }).withMessage('Pays trop long.'),
   verifierValidation,
 ];
 

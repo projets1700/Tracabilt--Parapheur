@@ -63,7 +63,7 @@ export default function EcranHistorique() {
                 <Text style={styles.gps}>
                   {item.lieu?.nom_lieu
                     ? `📍 ${item.lieu.nom_lieu}`
-                    : item.latitude
+                    : item.latitude != null
                       ? `📍 ${parseFloat(item.latitude).toFixed(4)}° N, ${parseFloat(item.longitude).toFixed(4)}° E`
                       : '📍 GPS non disponible'}
                 </Text>

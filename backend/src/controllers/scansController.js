@@ -133,7 +133,9 @@ async function synchroniserScans(req, res) {
 }
 
 async function listerScans(req, res) {
-  const { parapheur_id, scanner_id, page = 1, limite = 50 } = req.query;
+  const page   = Math.max(1, parseInt(req.query.page,   10) || 1);
+  const limite = Math.min(200, Math.max(1, parseInt(req.query.limite, 10) || 50));
+  const { parapheur_id, scanner_id } = req.query;
   const offset = (page - 1) * limite;
   const conditions = [];
   const params = [];
