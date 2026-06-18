@@ -19,17 +19,22 @@ import { ajouterScanLocal, chargerScansLocaux } from '../services/stockage';
 const COOLDOWN_MS = 5 * 60 * 1000;
 const COOLDOWN_KEY = 'cooldown_scans';
 
-// Cherche un lieu déjà connu dans l'historique local pour ces coordonnées GPS (±~11m)
+function distanceMetres(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Cherche un lieu déjà connu dans l'historique local pour ces coordonnées GPS (rayon 100 m)
 function trouverLieuPourCoords(coords, historique) {
   if (coords.latitude == null || coords.longitude == null) return null;
-  const lat = parseFloat(coords.latitude.toFixed(4));
-  const lon = parseFloat(coords.longitude.toFixed(4));
   for (const scan of historique) {
     if (scan.lieu?.nom_lieu && scan.latitude != null && scan.longitude != null) {
-      if (
-        parseFloat(parseFloat(scan.latitude).toFixed(4)) === lat &&
-        parseFloat(parseFloat(scan.longitude).toFixed(4)) === lon
-      ) {
+      if (distanceMetres(coords.latitude, coords.longitude, parseFloat(scan.latitude), parseFloat(scan.longitude)) <= 100) {
         return scan.lieu.nom_lieu;
       }
     }
