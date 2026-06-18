@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import client from '../api/client';
 
 const STATUTS = {
@@ -46,14 +45,9 @@ export default function PageVisionneur() {
 
       <header style={{ background: 'var(--bleu)', padding: '20px 24px 16px' }}>
         <div className="conteneur">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 600, color: 'white' }}>TraçaParapheur</h1>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>Consultation de la traçabilité</p>
-            </div>
-            <Link to="/connexion" style={{ fontSize: 12, background: 'rgba(255,255,255,0.18)', color: 'white', padding: '6px 14px', borderRadius: 8, fontWeight: 500 }}>
-              Connexion admin
-            </Link>
+          <div style={{ marginBottom: 12 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'white' }}>TraçaParapheur</h1>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>Consultation de la traçabilité</p>
           </div>
           <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8 }}>
             <input
@@ -133,10 +127,13 @@ export default function PageVisionneur() {
                       </div>
                       <div style={{ flex: 1, paddingBottom: 4 }}>
                         <p style={{ fontSize: 13, fontWeight: 500 }}>{sc.operateur_nom || 'Scanner inconnu'}</p>
+                        {sc.nom_lieu && (
+                          <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--bleu)', marginTop: 2 }}>
+                            📍 {sc.nom_lieu}
+                          </p>
+                        )}
                         <p style={{ fontSize: 12, color: 'var(--texte2)', marginTop: 2 }}>
                           {formaterDate(sc.scanned_at)}
-                          {sc.latitude && ` · ${parseFloat(sc.latitude).toFixed(4)}° N, ${parseFloat(sc.longitude).toFixed(4)}° E`}
-                          {sc.precision_gps && ` ±${sc.precision_gps}m`}
                         </p>
                       </div>
                     </div>

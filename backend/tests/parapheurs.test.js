@@ -3,8 +3,7 @@ const jwt = require('jsonwebtoken');
 const app = require('../src/app');
 
 const SECRET = process.env.JWT_SECRET || 'secret_dev_a_changer';
-const tokenAdmin   = () => jwt.sign({ id: 'uuid-admin', role: 'admin' },    SECRET);
-const tokenScanner = () => jwt.sign({ id: 'uuid-scan',  role: 'scanner' },  SECRET);
+const tokenScanner = () => jwt.sign({ id: 'uuid-scan', role: 'scanner' }, SECRET);
 
 describe('GET /api/parapheurs', () => {
   test('accessible sans token → 200', async () => {
@@ -34,18 +33,10 @@ describe('POST /api/parapheurs', () => {
     expect(res.status).toBe(401);
   });
 
-  test('token scanner → 403', async () => {
-    const res = await request(app)
-      .post('/api/parapheurs')
-      .set('Authorization', `Bearer ${tokenScanner()}`)
-      .send({ numero: 'TEST-001', titre: 'Test' });
-    expect(res.status).toBe(403);
-  });
-
   test('numéro manquant → 400', async () => {
     const res = await request(app)
       .post('/api/parapheurs')
-      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .set('Authorization', `Bearer ${tokenScanner()}`)
       .send({ titre: 'Sans numéro' });
     expect(res.status).toBe(400);
   });
@@ -53,7 +44,7 @@ describe('POST /api/parapheurs', () => {
   test('titre manquant → 400', async () => {
     const res = await request(app)
       .post('/api/parapheurs')
-      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .set('Authorization', `Bearer ${tokenScanner()}`)
       .send({ numero: 'TEST-001' });
     expect(res.status).toBe(400);
   });

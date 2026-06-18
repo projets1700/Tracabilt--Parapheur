@@ -57,9 +57,10 @@ async function obtenirParapheur(req, res) {
     }
     const parapheur = result.rows[0];
     const scans = await pool.query(`
-      SELECT sc.*, s.nom AS operateur_nom
+      SELECT sc.*, s.nom AS operateur_nom, l.nom_lieu
       FROM scans sc
       LEFT JOIN scanners s ON sc.scanner_id = s.id
+      LEFT JOIN lieux l ON sc.lieu_id = l.id
       WHERE sc.parapheur_id = $1
       ORDER BY sc.scanned_at DESC
       LIMIT 50

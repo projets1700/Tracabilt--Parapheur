@@ -14,15 +14,6 @@ function verifierToken(req, res, next) {
   }
 }
 
-function exigerAdmin(req, res, next) {
-  verifierToken(req, res, () => {
-    if (req.utilisateur.role !== 'admin') {
-      return res.status(403).json({ message: 'Accès réservé aux administrateurs.' });
-    }
-    next();
-  });
-}
-
 function exigerScanner(req, res, next) {
   verifierToken(req, res, () => {
     if (req.utilisateur.role !== 'scanner') {
@@ -32,4 +23,4 @@ function exigerScanner(req, res, next) {
   });
 }
 
-module.exports = { verifierToken, exigerAdmin, exigerScanner };
+module.exports = { verifierToken, exigerScanner };

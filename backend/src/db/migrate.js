@@ -4,14 +4,6 @@ const pool = require('../config/db');
 const schema = `
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE IF NOT EXISTS admins (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nom           VARCHAR(100) NOT NULL,
-  email         VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS scanners (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nom           VARCHAR(100) NOT NULL,
@@ -32,10 +24,23 @@ CREATE TABLE IF NOT EXISTS parapheurs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS lieux (
+  id          SERIAL PRIMARY KEY,
+  latitude    DECIMAL(10, 7),
+  longitude   DECIMAL(10, 7),
+  nom_lieu    VARCHAR(255) NOT NULL,
+  adresse     TEXT,
+  ville       VARCHAR(100),
+  code_postal VARCHAR(20),
+  pays        VARCHAR(100),
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS scans (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   parapheur_id  UUID NOT NULL REFERENCES parapheurs(id) ON DELETE CASCADE,
   scanner_id    UUID REFERENCES scanners(id) ON DELETE SET NULL,
+  lieu_id       INTEGER REFERENCES lieux(id) ON DELETE SET NULL,
   latitude      DECIMAL(10, 7),
   longitude     DECIMAL(10, 7),
   precision_gps DECIMAL(8, 2),
@@ -45,9 +50,15 @@ CREATE TABLE IF NOT EXISTS scans (
   created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_scans_parapheur ON scans(parapheur_id);
-CREATE INDEX IF NOT EXISTS idx_scans_scanner   ON scans(scanner_id);
-CREATE INDEX IF NOT EXISTS idx_scans_date      ON scans(scanned_at DESC);
+-- Migrations rétrocompatibles si les tables existaient déjà
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS lieu_id INTEGER REFERENCES lieux(id) ON DELETE SET NULL;
+ALTER TABLE scans DROP COLUMN IF EXISTS lieu;
+ALTER TABLE lieux ALTER COLUMN latitude  DROP NOT NULL;
+ALTER TABLE lieux ALTER COLUMN longitude DROP NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_scans_parapheur  ON scans(parapheur_id);
+CREATE INDEX IF NOT EXISTS idx_scans_scanner    ON scans(scanner_id);
+CREATE INDEX IF NOT EXISTS idx_scans_date       ON scans(scanned_at DESC);
 CREATE INDEX IF NOT EXISTS idx_parapheurs_numero ON parapheurs(numero);
 `;
 

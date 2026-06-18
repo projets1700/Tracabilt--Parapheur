@@ -1,40 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { FournisseurAuth, useAuth } from './hooks/useAuth.jsx';
-import PageConnexion from './pages/PageConnexion';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import PageVisionneur from './pages/PageVisionneur';
-import MiseEnPageAdmin from './components/MiseEnPageAdmin';
-import PageDashboard from './pages/admin/PageDashboard';
-import PageUtilisateurs from './pages/admin/PageUtilisateurs';
-import PageEvenements from './pages/admin/PageEvenements';
-
-function RouteAdmin({ enfants }) {
-  const { utilisateur } = useAuth();
-  if (!utilisateur) return <Navigate to="/connexion" replace />;
-  if (utilisateur.role !== 'admin') return <Navigate to="/" replace />;
-  return enfants;
-}
-
-function AppContenu() {
-  return (
-    <Routes>
-      <Route path="/" element={<PageVisionneur />} />
-      <Route path="/connexion" element={<PageConnexion />} />
-      <Route path="/admin" element={<RouteAdmin><MiseEnPageAdmin /></RouteAdmin>}>
-        <Route index element={<PageDashboard />} />
-        <Route path="utilisateurs" element={<PageUtilisateurs />} />
-        <Route path="evenements" element={<PageEvenements />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-}
 
 export default function App() {
   return (
-    <FournisseurAuth>
-      <BrowserRouter>
-        <AppContenu />
-      </BrowserRouter>
-    </FournisseurAuth>
+    <BrowserRouter>
+      <Routes>
+        <Route path="*" element={<PageVisionneur />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

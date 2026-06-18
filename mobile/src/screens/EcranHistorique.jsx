@@ -61,9 +61,11 @@ export default function EcranHistorique() {
                 </View>
                 <Text style={styles.date}>{formaterDate(item.scanned_at)}</Text>
                 <Text style={styles.gps}>
-                  {item.latitude
-                    ? `📍 ${parseFloat(item.latitude).toFixed(4)}° N, ${parseFloat(item.longitude).toFixed(4)}° E`
-                    : '📍 GPS non disponible'}
+                  {item.lieu?.nom_lieu
+                    ? `📍 ${item.lieu.nom_lieu}`
+                    : item.latitude
+                      ? `📍 ${parseFloat(item.latitude).toFixed(4)}° N, ${parseFloat(item.longitude).toFixed(4)}° E`
+                      : '📍 GPS non disponible'}
                 </Text>
               </View>
             );
