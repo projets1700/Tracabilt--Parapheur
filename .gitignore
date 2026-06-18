@@ -24,10 +24,3 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-
-# Claude Code
-.claude/
-
-# Dossiers de travail temporaires
-mobile_bug_sdk56/
-mobile_old/
