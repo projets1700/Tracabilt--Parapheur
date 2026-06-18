@@ -51,16 +51,16 @@ async function enregistrerScan(req, res) {
     );
     const parapheur = await client.query('SELECT id FROM parapheurs WHERE numero = $1', [numero]);
 
-    // Cooldown 5 minutes
+    // Cooldown 1 minute
     const dernierScan = await client.query(
       'SELECT scanned_at FROM scans WHERE parapheur_id = $1 ORDER BY scanned_at DESC LIMIT 1',
       [parapheur.rows[0].id]
     );
     if (dernierScan.rows[0]) {
       const ecouleMs = Date.now() - new Date(dernierScan.rows[0].scanned_at).getTime();
-      const cinqMinutes = 5 * 60 * 1000;
-      if (ecouleMs < cinqMinutes) {
-        const resteSecondes = Math.ceil((cinqMinutes - ecouleMs) / 1000);
+      const uneMinute = 1 * 60 * 1000;
+      if (ecouleMs < uneMinute) {
+        const resteSecondes = Math.ceil((uneMinute - ecouleMs) / 1000);
         const min = Math.floor(resteSecondes / 60);
         const sec = resteSecondes % 60;
         await client.query('ROLLBACK');

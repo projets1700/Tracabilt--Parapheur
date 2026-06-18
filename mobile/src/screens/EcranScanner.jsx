@@ -16,7 +16,7 @@ import { api } from '../services/api';
 import { demanderPermissions, obtenirPosition } from '../services/gps';
 import { ajouterScanLocal, chargerScansLocaux } from '../services/stockage';
 
-const COOLDOWN_MS = 5 * 60 * 1000;
+const COOLDOWN_MS = 1 * 60 * 1000;
 const COOLDOWN_KEY = 'cooldown_scans';
 
 function distanceMetres(lat1, lon1, lat2, lon2) {
@@ -56,7 +56,7 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
 
     const numero = data.trim().toUpperCase();
 
-    // Vérification cooldown 5 minutes
+    // Vérification cooldown 1 minute
     const raw = await AsyncStorage.getItem(COOLDOWN_KEY).catch(() => null);
     const cooldowns = raw ? JSON.parse(raw) : {};
     if (cooldowns[numero] && Date.now() - cooldowns[numero] < COOLDOWN_MS) {
