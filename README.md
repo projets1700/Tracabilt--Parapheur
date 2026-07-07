@@ -83,7 +83,7 @@ Scanner le QR code affiché dans le terminal avec l'application **Expo Go** (And
 
 > Adapter l'adresse IP du backend dans `mobile/src/services/api.js` :
 > ```js
-> const BASE_URL = 'http://192.168.1.XX:3001/api'; // votre IP locale
+> const BASE_URL = 'http://51.38.129.2:3001/api'; // votre IP locale
 > ```
 
 ---
