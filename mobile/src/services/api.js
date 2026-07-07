@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // IP du PC sur le réseau WiFi — à changer si besoin
-export const BACKEND_URL = 'http://10.63.45.52:3001/api';
+export const BACKEND_URL = 'http://51.38.129.2:3001/api';
 
 async function fetchApi(path, options = {}) {
   const token = await AsyncStorage.getItem('token');
