@@ -223,7 +223,7 @@ export default function PageAdmin() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
-                      {['Nom', 'Identifiant', 'Appareil', 'Statut', 'Créé le', ''].map(h => (
+                      {['Nom', 'Identifiant', 'Statut', 'Créé le', ''].map(h => (
                         <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
                       ))}
                     </tr>
@@ -233,7 +233,6 @@ export default function PageAdmin() {
                       <tr key={s.id} style={{ borderBottom: i < scanners.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
                         <td style={{ padding: '12px 16px', fontWeight: 600 }}>{s.nom}</td>
                         <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{s.identifiant}</td>
-                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{s.device_id || '—'}</td>
                         <td style={{ padding: '12px 16px' }}>
                           <span className={`badge ${s.is_active ? 'badge-vert' : 'badge-rouge'}`}>
                             {s.is_active ? 'Actif' : 'Inactif'}
