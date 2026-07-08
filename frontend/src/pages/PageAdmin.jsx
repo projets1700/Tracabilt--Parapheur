@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import client from '../api/client';
 
 function formaterDate(d) {
@@ -277,6 +278,20 @@ export default function PageAdmin() {
                   </a>
                   <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
                     Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
+                  </div>
+                  <div className="sep" />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--texte2)' }}>QR code de téléchargement</p>
+                    <div style={{ background: 'white', padding: 12, borderRadius: 8, border: '1px solid var(--bordure)' }}>
+                      <QRCodeSVG
+                        value={`${window.location.origin}/api/admin/apk/download`}
+                        size={180}
+                        fgColor="#1D1D1B"
+                        bgColor="white"
+                        level="M"
+                      />
+                    </div>
+                    <p style={{ fontSize: 11, color: 'var(--texte3)', textAlign: 'center' }}>Scannez pour télécharger l'APK sur mobile</p>
                   </div>
                 </div>
               ) : (
