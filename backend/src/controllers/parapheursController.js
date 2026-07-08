@@ -24,9 +24,10 @@ async function listerParapheurs(req, res) {
     const result = await pool.query(`
       SELECT p.*,
         (SELECT scanned_at FROM scans WHERE parapheur_id = p.id ORDER BY scanned_at DESC LIMIT 1) AS dernier_scan,
-        (SELECT s.nom FROM scans sc JOIN scanners s ON sc.scanner_id = s.id WHERE sc.parapheur_id = p.id ORDER BY sc.scanned_at DESC LIMIT 1) AS dernier_operateur
+        (SELECT s.nom FROM scans sc JOIN scanners s ON sc.scanner_id = s.id WHERE sc.parapheur_id = p.id ORDER BY sc.scanned_at DESC LIMIT 1) AS dernier_operateur,
+        (SELECT l.nom_lieu FROM scans sc LEFT JOIN lieux l ON sc.lieu_id = l.id WHERE sc.parapheur_id = p.id ORDER BY sc.scanned_at DESC LIMIT 1) AS dernier_lieu
       FROM parapheurs p ${where}
-      ORDER BY p.created_at DESC
+      ORDER BY dernier_scan DESC NULLS LAST
       LIMIT $${params.length - 1} OFFSET $${params.length}
     `, params);
 

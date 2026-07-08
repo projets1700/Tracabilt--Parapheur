@@ -5,7 +5,8 @@ const cors = require('cors');
 const authRoutes       = require('./routes/auth');
 const parapheursRoutes = require('./routes/parapheurs');
 const scansRoutes      = require('./routes/scans');
-const adminRoutes      = require('./routes/admin');
+const adminRoutes       = require('./routes/admin');
+const superviseurRoutes = require('./routes/superviseur');
 
 const app = express();
 
@@ -15,7 +16,8 @@ app.use(express.json());
 app.use('/api/auth',       authRoutes);
 app.use('/api/parapheurs', parapheursRoutes);
 app.use('/api/scans',      scansRoutes);
-app.use('/api/admin',      adminRoutes);
+app.use('/api/admin',       adminRoutes);
+app.use('/api/superviseur', superviseurRoutes);
 
 app.get('/api/sante', (req, res) => {
   res.json({ statut: 'ok' });
