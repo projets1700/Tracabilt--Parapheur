@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import PageVisionneur from './pages/PageVisionneur';
-import PageConnexionAdmin from './pages/PageConnexionAdmin';
 import PageInscriptionAdmin from './pages/PageInscriptionAdmin';
+import PageConnexionAdmin from './pages/PageConnexionAdmin';
 import PageAdmin from './pages/PageAdmin';
 
 export default function App() {

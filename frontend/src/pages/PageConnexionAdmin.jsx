@@ -9,7 +9,10 @@ export default function PageConnexionAdmin() {
   const [chargement, setChargement] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem('admin_token')) navigate('/admin', { replace: true });
+    if (localStorage.getItem('admin_token')) {
+      navigate('/admin', { replace: true });
+      return;
+    }
     client.get('/admin/existe').then(({ data }) => {
       if (!data.existe) navigate('/admin/inscription', { replace: true });
     });

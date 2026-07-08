@@ -15,9 +15,9 @@ function formaterTaille(octets) {
 function clientAdmin() {
   const token = localStorage.getItem('admin_token');
   return {
-    get: (url) => client.get(url, { headers: { Authorization: `Bearer ${token}` } }),
-    post: (url, data) => client.post(url, data, { headers: { Authorization: `Bearer ${token}` } }),
-    delete: (url) => client.delete(url, { headers: { Authorization: `Bearer ${token}` } }),
+    get:    (url)       => client.get(url, { headers: { Authorization: `Bearer ${token}` } }),
+    post:   (url, data) => client.post(url, data, { headers: { Authorization: `Bearer ${token}` } }),
+    delete: (url)       => client.delete(url, { headers: { Authorization: `Bearer ${token}` } }),
   };
 }
 
@@ -25,16 +25,16 @@ export default function PageAdmin() {
   const navigate = useNavigate();
   const admin = JSON.parse(localStorage.getItem('admin_user') || 'null');
 
-  const [onglet, setOnglet] = useState('scanners');
-  const [scanners, setScanners] = useState([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState('');
-  const [succes, setSucces] = useState('');
-  const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
+  const [onglet, setOnglet]           = useState('scanners');
+  const [scanners, setScanners]       = useState([]);
+  const [chargement, setChargement]   = useState(true);
+  const [erreur, setErreur]           = useState('');
+  const [succes, setSucces]           = useState('');
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
-  const [soumission, setSoumission] = useState(false);
-  const [infoApk, setInfoApk] = useState(null);
-  const [uploadApk, setUploadApk] = useState(null);
+  const [soumission, setSoumission]   = useState(false);
+  const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
+  const [infoApk, setInfoApk]         = useState(null);
+  const [uploadApk, setUploadApk]     = useState(null);
   const [uploadEnCours, setUploadEnCours] = useState(false);
   const fileRef = useRef();
 
@@ -82,6 +82,7 @@ export default function PageAdmin() {
 
   async function supprimerScanner(id, nom) {
     if (!confirm(`Supprimer le scanner "${nom}" ?`)) return;
+    setErreur('');
     try {
       await clientAdmin().delete(`/admin/scanners/${id}`);
       afficherSucces('Scanner supprimé.');
@@ -117,22 +118,21 @@ export default function PageAdmin() {
       const token = localStorage.getItem('admin_token');
       const fd = new FormData();
       fd.append('apk', uploadApk);
-      await fetch('/api/admin/apk', {
+      const r = await fetch('/api/admin/apk', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
-      }).then(async r => {
-        if (!r.ok) {
-          const d = await r.json();
-          throw new Error(d.message || 'Erreur upload.');
-        }
       });
+      if (!r.ok) {
+        const d = await r.json();
+        throw new Error(d.message || 'Erreur upload.');
+      }
       afficherSucces('APK mis en ligne avec succès.');
       setUploadApk(null);
       fileRef.current.value = '';
       chargerApk();
     } catch (err) {
-      setErreur(err.message || 'Erreur lors de l\'upload.');
+      setErreur(err.message || "Erreur lors de l'upload.");
     } finally {
       setUploadEnCours(false);
     }
@@ -147,7 +147,7 @@ export default function PageAdmin() {
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Connecté : {admin?.nom}</p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <a href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Visionneur</a>
+            <a href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', textDecoration: 'underline' }}>Visionneur</a>
             <button className="btn" onClick={deconnecter} style={{ fontSize: 12 }}>Déconnexion</button>
           </div>
         </div>
@@ -157,9 +157,8 @@ export default function PageAdmin() {
         {erreur && <div className="message-erreur" style={{ marginBottom: 16 }}>{erreur}</div>}
         {succes && <div className="message-succes" style={{ marginBottom: 16 }}>{succes}</div>}
 
-        {/* Onglets */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--bordure)', paddingBottom: 0 }}>
-          {[{ id: 'scanners', label: '👤 Scanners' }, { id: 'apk', label: '📦 APK' }].map(o => (
+        <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--bordure)' }}>
+          {[{ id: 'scanners', label: 'Scanners' }, { id: 'apk', label: 'APK' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
@@ -174,7 +173,6 @@ export default function PageAdmin() {
           ))}
         </div>
 
-        {/* Onglet Scanners */}
         {onglet === 'scanners' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -256,7 +254,6 @@ export default function PageAdmin() {
           </div>
         )}
 
-        {/* Onglet APK */}
         {onglet === 'apk' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560 }}>
             <div className="carte">

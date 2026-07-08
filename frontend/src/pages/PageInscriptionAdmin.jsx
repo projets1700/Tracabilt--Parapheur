@@ -9,6 +9,10 @@ export default function PageInscriptionAdmin() {
   const [chargement, setChargement] = useState(false);
 
   useEffect(() => {
+    if (localStorage.getItem('admin_token')) {
+      navigate('/admin', { replace: true });
+      return;
+    }
     client.get('/admin/existe').then(({ data }) => {
       if (data.existe) navigate('/admin/connexion', { replace: true });
     });
@@ -50,9 +54,7 @@ export default function PageInscriptionAdmin() {
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🔐</div>
           <h1 style={{ fontSize: 20, fontWeight: 700 }}>Créer le compte administrateur</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 6 }}>
-            Première configuration — ce compte sera unique
-          </p>
+          <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 6 }}>Première configuration — ce compte sera unique</p>
         </div>
 
         {erreur && <div className="message-erreur" style={{ marginBottom: 16 }}>{erreur}</div>}

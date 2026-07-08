@@ -1,35 +1,38 @@
-const router = require('express').Router();
-const path = require('path');
+const express = require('express');
 const multer = require('multer');
-const { exigerAdmin } = require('../middleware/auth');
-const {
-  adminExiste, inscription, connexion,
-  listerScanners, creerScanner, supprimerScanner,
-  uploadApk, infoApk, telechargerApk,
-} = require('../controllers/adminController');
+const exigerAdmin = require('../middleware/exigerAdmin');
+const ctrl = require('../controllers/adminController');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../uploads')),
-  filename: (req, file, cb) => cb(null, 'app-latest.apk'),
-});
+const router = express.Router();
 
 const upload = multer({
-  storage,
+  dest: '/app/uploads/',
+  limits: { fileSize: 200 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.originalname.endsWith('.apk')) cb(null, true);
     else cb(new Error('Seuls les fichiers .apk sont acceptés.'));
   },
-  limits: { fileSize: 200 * 1024 * 1024 },
 });
 
-router.get('/existe',            adminExiste);
-router.post('/inscription',      inscription);
-router.post('/connexion',        connexion);
-router.get('/scanners',          exigerAdmin, listerScanners);
-router.post('/scanners',         exigerAdmin, creerScanner);
-router.delete('/scanners/:id',   exigerAdmin, supprimerScanner);
-router.post('/apk',              exigerAdmin, upload.single('apk'), uploadApk);
-router.get('/apk/info',          exigerAdmin, infoApk);
-router.get('/apk/download',      telechargerApk);
+function handleUpload(req, res, next) {
+  upload.single('apk')(req, res, (err) => {
+    if (err) return res.status(400).json({ message: err.message });
+    if (req.file) {
+      const fs = require('fs');
+      fs.renameSync(req.file.path, '/app/uploads/app-latest.apk');
+    }
+    next();
+  });
+}
+
+router.get('/existe',           ctrl.adminExiste);
+router.post('/inscription',     ctrl.inscription);
+router.post('/connexion',       ctrl.connexion);
+router.get('/scanners',         exigerAdmin, ctrl.listerScanners);
+router.post('/scanners',        exigerAdmin, ctrl.creerScanner);
+router.delete('/scanners/:id',  exigerAdmin, ctrl.supprimerScanner);
+router.post('/apk',             exigerAdmin, handleUpload, ctrl.uploadApk);
+router.get('/apk/info',         exigerAdmin, ctrl.infoApk);
+router.get('/apk/download',     ctrl.telechargerApk);
 
 module.exports = router;
