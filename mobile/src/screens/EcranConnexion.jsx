@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Button,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -19,16 +18,6 @@ export default function EcranConnexion({ onConnexion }) {
   const [identifiant, setIdentifiant] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [chargement, setChargement] = useState(false);
-
-  async function testerApi() {
-    try {
-      const res = await fetch('http://51.38.129.2:3001/api/sante');
-      const text = await res.text();
-      Alert.alert('API OK', text);
-    } catch (err) {
-      Alert.alert('API ERROR', err.message);
-    }
-  }
 
   async function handleConnexion() {
     if (!identifiant.trim() || !motDePasse.trim()) {
@@ -65,26 +54,30 @@ export default function EcranConnexion({ onConnexion }) {
         <Text style={styles.titre}>TraçaParapheur</Text>
         <Text style={styles.sousTitre}>Connexion opérateur</Text>
 
-        <TextInput
-          style={styles.champ}
-          placeholder="Identifiant (ex: j.martin)"
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          value={identifiant}
-          onChangeText={setIdentifiant}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.groupe}>
+          <Text style={styles.label}>Nom du scanner</Text>
+          <TextInput
+            style={styles.champ}
+            placeholder="Ex : j.martin"
+            placeholderTextColor="rgba(255,255,255,0.4)"
+            value={identifiant}
+            onChangeText={setIdentifiant}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
 
-        <TextInput
-          style={styles.champ}
-          placeholder="Mot de passe"
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          value={motDePasse}
-          onChangeText={setMotDePasse}
-          secureTextEntry
-        />
-
-        <Button title="Tester API" onPress={testerApi} />
+        <View style={styles.groupe}>
+          <Text style={styles.label}>Mot de passe</Text>
+          <TextInput
+            style={styles.champ}
+            placeholder="••••••••"
+            placeholderTextColor="rgba(255,255,255,0.4)"
+            value={motDePasse}
+            onChangeText={setMotDePasse}
+            secureTextEntry
+          />
+        </View>
 
         <TouchableOpacity
           style={[styles.bouton, chargement && { opacity: 0.6 }]}
@@ -97,8 +90,6 @@ export default function EcranConnexion({ onConnexion }) {
             <Text style={styles.boutonTexte}>Se connecter</Text>
           )}
         </TouchableOpacity>
-
-        <Text style={styles.aide}>Démo : j.martin / scanner123</Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -106,7 +97,7 @@ export default function EcranConnexion({ onConnexion }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1e40af' },
-  inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 14 },
+  inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 16 },
   titre: {
     fontSize: 28,
     fontWeight: '700',
@@ -117,7 +108,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  groupe: { gap: 6 },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
   },
   champ: {
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -133,17 +130,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
   boutonTexte: {
     color: '#1e40af',
     fontWeight: '700',
     fontSize: 16,
-  },
-  aide: {
-    textAlign: 'center',
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-    marginTop: 8,
   },
 });
