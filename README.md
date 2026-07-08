@@ -1,7 +1,7 @@
 # TraçaParapheur — Système de traçabilité de parapheurs
 
 Application complète de traçabilité de parapheurs physiques via QR Code et GPS.  
-Composée d'un backend API REST, d'une interface web de consultation et d'une application mobile de scan.
+Composée d'un backend API REST, d'une interface web et d'une application mobile de scan.
 
 ---
 
@@ -9,16 +9,49 @@ Composée d'un backend API REST, d'une interface web de consultation et d'une ap
 
 ```
 backend/   → API REST Express + PostgreSQL (port 3001)
-frontend/  → Interface web React/Vite — consultation des scans (port 8080 Docker / 5173 dev)
+frontend/  → Interface web React/Vite (port 8080 Docker / 5173 dev)
 mobile/    → Application mobile Expo React Native — scan QR Code
 ```
 
 ---
 
-## Lancer avec Docker (recommandé)
+## Déploiement VPS (production)
 
-> Nécessite [Docker Desktop](https://www.docker.com/products/docker-desktop/).  
-> PostgreSQL, la migration et le backend sont lancés automatiquement.
+Le projet tourne sur un VPS OVH à l'adresse **51.38.129.2** via Docker Compose.
+
+### Redéployer après un push
+
+```bash
+cd ~/Tracabilt--Parapheur
+git pull
+sudo docker compose build --no-cache
+sudo docker compose up -d
+```
+
+### Vérifier l'état des conteneurs
+
+```bash
+sudo docker compose ps
+```
+
+### URLs de production
+
+| Page | URL |
+|------|-----|
+| Visionneur (public) | http://51.38.129.2:8080 |
+| Connexion superviseur | http://51.38.129.2:8080/superviseur/connexion |
+| Inscription superviseur (1ère fois) | http://51.38.129.2:8080/superviseur/inscription |
+| Liste des parapheurs | http://51.38.129.2:8080/parapheurs |
+| Connexion admin | http://51.38.129.2:8080/admin/connexion |
+| Inscription admin (1ère fois) | http://51.38.129.2:8080/admin/inscription |
+| Tableau de bord admin | http://51.38.129.2:8080/admin |
+| API santé | http://51.38.129.2:3001/api/sante |
+
+---
+
+## Lancer avec Docker (local)
+
+> Nécessite [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 **1. Créer le fichier `.env` à la racine :**
 
@@ -36,13 +69,7 @@ docker compose up --build
 - Frontend : **http://localhost:8080**
 - Backend  : **http://localhost:3001/api/sante** → `{ "statut": "ok" }`
 
-**3. Insérer les données de test (première fois) :**
-
-```bash
-docker compose exec backend node src/db/seed.js
-```
-
-**4. Arrêter :**
+**3. Arrêter :**
 
 ```bash
 docker compose down          # arrêt (données conservées)
@@ -59,7 +86,6 @@ docker compose down -v       # arrêt + suppression de la base
 cd backend
 npm install
 npm run migrate   # créer les tables
-npm run seed      # insérer les données de test
 npm run dev       # serveur sur http://localhost:3001
 ```
 
@@ -81,87 +107,93 @@ npx expo start
 
 Scanner le QR code affiché dans le terminal avec l'application **Expo Go** (Android / iOS).
 
-> Adapter l'adresse IP du backend dans `mobile/src/services/api.js` :
+> Adapter l'adresse IP du backend dans `mobile/src/services/api.js` si besoin :
 > ```js
-> const BASE_URL = 'http://51.38.129.2:3001/api'; // votre IP locale
+> export const BACKEND_URL = 'http://51.38.129.2:3001/api';
 > ```
 
 ---
 
-## Comptes disponibles après le seed
+## Comptes et accès
 
-| Rôle | Identifiant | Mot de passe |
-|------|-------------|--------------|
-| Scanner (Jean Martin) | j.martin | scanner123 |
-| Scanner (Sophie Bernard) | s.bernard | scanner456 |
+Les comptes sont créés directement depuis l'interface, aucun seed n'est nécessaire.
 
-Ces comptes sont utilisés depuis l'application mobile.  
-L'interface web est accessible sans authentification (consultation publique).
+| Rôle | Création | Accès |
+|------|----------|-------|
+| **Admin** | Formulaire `/admin/inscription` (première visite) | Gestion des scanners, upload APK |
+| **Superviseur** | Formulaire `/superviseur/inscription` (première visite) | Consultation de tous les parapheurs |
+| **Scanner** | Créé par l'admin depuis le tableau de bord | Application mobile uniquement |
 
 ---
 
-## Fonctionnalités détaillées
+## Fonctionnalités
 
 ### Application mobile
 
-**Authentification**
-- Connexion par identifiant et mot de passe
-- Token JWT stocké localement, session conservée entre les ouvertures de l'application
+**Connexion**
+- Formulaire de connexion avec identifiant et mot de passe
+- Token JWT stocké localement, session conservée entre les ouvertures
 - Déconnexion manuelle depuis l'écran de scan
 
-**Scan QR Code et code-barres**
+**Scan QR Code**
 - Lecture en temps réel via l'appareil photo
 - Types supportés : QR Code, Code 128, Code 39, EAN-13, EAN-8
 - Le numéro lu est normalisé en majuscules
 
 **Localisation GPS**
-- Les coordonnées GPS sont capturées automatiquement à chaque scan (haute précision)
-- Si la permission GPS est refusée ou indisponible, le scan continue sans coordonnées
+- Coordonnées GPS capturées automatiquement à chaque scan
+- Si la permission est refusée, le scan continue sans coordonnées
 
 **Nommage des lieux**
-- Lors du premier scan dans un endroit, une fenêtre demande le nom du lieu (ex : « Bureau 302 », « Salle de réunion »)
-- Les scans suivants dans un rayon de **100 mètres** réutilisent automatiquement le nom connu, sans afficher la fenêtre (calcul par formule de Haversine)
-- Si le GPS est indisponible, le nom est saisi manuellement à chaque scan
-- Il est possible de continuer sans saisir de lieu
+- Lors du premier scan dans un endroit, saisie du nom du lieu (ex : « Bureau 302 »)
+- Les scans suivants dans un rayon de **100 mètres** réutilisent automatiquement le nom connu
+- Si le GPS est indisponible, le nom est saisi manuellement
 
 **Protection anti-doublon**
 - Un même parapheur ne peut pas être scanné deux fois en moins de **1 minute**
-- Le délai restant est affiché à l'utilisateur (ex : « 42s »)
-- Contrôle côté client et côté serveur
+- Le délai restant est affiché (ex : « 42s »)
 
 **Mode hors ligne**
 - En l'absence de réseau, les scans sont sauvegardés localement
-- Dès que la connexion est rétablie, les scans en attente sont synchronisés automatiquement avec le serveur
-- L'écran Historique indique le statut de chaque scan : synchronisé ou en attente
-
-**Historique local**
-- Liste de tous les scans effectués sur l'appareil
-- Affiche : numéro du parapheur, date et heure, lieu (nom ou coordonnées GPS), statut de synchronisation
-- Actualisable par glisser vers le bas
+- Dès que la connexion est rétablie, synchronisation automatique
+- L'écran Synchronisation indique le statut de chaque scan
 
 ---
 
-### Interface web (frontend)
+### Interface web — Visionneur (public)
 
-- Consultation publique, sans connexion requise
-- Liste des parapheurs avec leur historique de scans
-- Pour chaque scan : nom du lieu affiché en gras, date et heure
-- Mise à jour automatique
+- Accessible sans connexion
+- Recherche d'un parapheur par numéro
+- Affichage de l'historique complet des scans : lieu, date, opérateur
 
 ---
 
-### Backend (API REST)
+### Interface web — Superviseur
 
-**Sécurité**
-- Authentification JWT (expiration 7 jours)
-- Limitation du nombre de requêtes sur les routes sensibles
-- Validation stricte des données entrantes
-- Mots de passe chiffrés avec bcryptjs
+- Connexion requise (`/superviseur/connexion`)
+- Création du compte à la première visite (`/superviseur/inscription`)
+- **Liste de tous les parapheurs** triée du plus récemment scanné au moins récent
+- Pour chaque parapheur : numéro, titre, date du dernier scan, localisation
+- Clic sur un parapheur → historique complet avec tous les scans en tableau
 
-**Base de données**
-- Tables : `scanners`, `parapheurs`, `scans`, `lieux`
-- Les lieux sont dédupliqués par coordonnées GPS si le GPS est disponible, ou par nom sinon
-- Latitude et longitude facultatives (scans sans GPS acceptés)
+---
+
+### Interface web — Administration
+
+- Connexion requise (`/admin/connexion`)
+- Création du compte à la première visite (`/admin/inscription`)
+
+**Onglet Utilisateurs**
+- Liste de tous les scanners (nom, identifiant, statut, date de création)
+- Création d'un scanner (nom, identifiant, mot de passe)
+- Suppression d'un scanner
+- Consultation de la fiche d'un scanner (bouton "Fiche")
+
+**Onglet Application mobile**
+- Informations sur l'APK disponible (taille, date de mise en ligne)
+- Upload d'un nouvel APK (fichier `.apk`)
+- Lien de téléchargement direct
+- QR code de téléchargement (à scanner depuis un téléphone)
 
 ---
 
@@ -169,15 +201,52 @@ L'interface web est accessible sans authentification (consultation publique).
 
 | Méthode | Route | Accès | Description |
 |---------|-------|-------|-------------|
-| POST | `/api/auth/connexion` | public | Connexion scanner, retourne un JWT |
+| GET | `/api/sante` | public | État du serveur |
+| POST | `/api/auth/scanner/connexion` | public | Connexion scanner (JWT) |
 | GET | `/api/parapheurs` | public | Liste paginée des parapheurs |
+| GET | `/api/parapheurs/:numero` | public | Détail + historique d'un parapheur |
 | POST | `/api/parapheurs` | scanner | Créer un parapheur |
 | PUT | `/api/parapheurs/:id` | scanner | Modifier un parapheur |
 | DELETE | `/api/parapheurs/:id` | scanner | Supprimer un parapheur |
-| POST | `/api/scans` | scanner | Enregistrer un scan (avec lieu optionnel) |
-| POST | `/api/scans/sync` | scanner | Synchroniser un lot de scans hors ligne |
-| GET | `/api/scans` | public | Liste paginée des scans |
-| GET | `/api/sante` | public | Vérification de l'état du serveur |
+| POST | `/api/scans` | scanner | Enregistrer un scan |
+| POST | `/api/scans/sync` | scanner | Synchroniser des scans hors ligne |
+| GET | `/api/admin/existe` | public | Vérifie si un admin existe |
+| POST | `/api/admin/inscription` | public | Créer le compte admin (unique) |
+| POST | `/api/admin/connexion` | public | Connexion admin |
+| GET | `/api/admin/scanners` | admin | Liste des scanners |
+| POST | `/api/admin/scanners` | admin | Créer un scanner |
+| DELETE | `/api/admin/scanners/:id` | admin | Supprimer un scanner |
+| POST | `/api/admin/apk` | admin | Upload de l'APK |
+| GET | `/api/admin/apk/info` | admin | Infos sur l'APK disponible |
+| GET | `/api/admin/apk/download` | public | Télécharger l'APK |
+| GET | `/api/superviseur/existe` | public | Vérifie si un superviseur existe |
+| POST | `/api/superviseur/inscription` | public | Créer le compte superviseur (unique) |
+| POST | `/api/superviseur/connexion` | public | Connexion superviseur |
+
+---
+
+## Base de données
+
+Tables PostgreSQL :
+
+| Table | Description |
+|-------|-------------|
+| `scanners` | Opérateurs mobiles (créés par l'admin) |
+| `parapheurs` | Parapheurs physiques identifiés par numéro |
+| `scans` | Chaque passage d'un scanner sur un parapheur |
+| `lieux` | Noms de lieux associés aux coordonnées GPS |
+| `admins` | Compte(s) administrateur |
+| `superviseurs` | Compte(s) superviseur |
+
+---
+
+## Sécurité
+
+- Authentification JWT (expiration 7 jours)
+- Mots de passe chiffrés avec bcryptjs (sel 10)
+- Limitation du nombre de requêtes sur les routes sensibles
+- Validation stricte des données entrantes (express-validator)
+- Middleware de rôle par type d'utilisateur (scanner / admin / superviseur)
 
 ---
 
@@ -188,7 +257,7 @@ cd backend
 npm test
 ```
 
-Suite de tests Jest couvrant l'authentification, les parapheurs et les scans (validation, middleware, accès à la base de données).
+Suite de tests Jest couvrant l'authentification et les routes principales.
 
 ---
 
@@ -197,15 +266,16 @@ Suite de tests Jest couvrant l'authentification, les parapheurs et les scans (va
 | Partie | Description | Statut |
 |--------|-------------|--------|
 | 1 | Backend + base de données | ✅ |
-| 2 | Authentification (JWT + bcrypt) | ✅ |
-| 3 | API publique visiteur | ✅ |
+| 2 | Authentification JWT (scanner) | ✅ |
+| 3 | API publique visionneur | ✅ |
 | 4 | API mobile scanner | ✅ |
-| 5 | Interface web visiteur | ✅ |
-| 6 | Interface web de consultation des parapheurs | ✅ |
-| 7 | Application mobile (scan QR + GPS) | ✅ |
-| 8 | Mode hors ligne + synchronisation automatique | ✅ |
-| 9 | Sécurité (limitation de requêtes, validation, JWT) | ✅ |
-| 10 | Tests automatisés | ✅ |
-| 11 | Déploiement Docker | ✅ |
-| 12 | Localisation par nom de lieu (rayon 100 m) | ✅ |
-| 13 | Corrections et nettoyage du code | ✅ |
+| 5 | Interface web visionneur | ✅ |
+| 6 | Application mobile scan QR + GPS | ✅ |
+| 7 | Mode hors ligne + synchronisation automatique | ✅ |
+| 8 | Sécurité (rate limiting, validation, JWT) | ✅ |
+| 9 | Tests automatisés | ✅ |
+| 10 | Déploiement Docker + VPS OVH | ✅ |
+| 11 | Localisation par nom de lieu (rayon 100 m) | ✅ |
+| 12 | Interface admin (scanners + APK + QR code) | ✅ |
+| 13 | Compte superviseur + liste des parapheurs | ✅ |
+| 14 | Charte graphique et design UI | ✅ |
