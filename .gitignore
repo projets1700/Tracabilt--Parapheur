@@ -27,3 +27,6 @@ Thumbs.db
 
 # Tests — couverture
 coverage/
+
+# Notes locales
+Lien.md
