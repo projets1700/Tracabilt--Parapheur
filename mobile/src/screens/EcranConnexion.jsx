@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Button,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -19,18 +20,37 @@ export default function EcranConnexion({ onConnexion }) {
   const [motDePasse, setMotDePasse] = useState('');
   const [chargement, setChargement] = useState(false);
 
+  async function testerApi() {
+    try {
+      const res = await fetch('http://51.38.129.2:3001/api/sante');
+      const text = await res.text();
+      Alert.alert('API OK', text);
+    } catch (err) {
+      Alert.alert('API ERROR', err.message);
+    }
+  }
+
   async function handleConnexion() {
     if (!identifiant.trim() || !motDePasse.trim()) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
     }
+
     setChargement(true);
+
     try {
-      const data = await api.connexionScanner(identifiant.trim(), motDePasse.trim());
+      const data = await api.connexionScanner(
+        identifiant.trim(),
+        motDePasse.trim()
+      );
+
       await sauvegarderSession(data.token, data.utilisateur);
       onConnexion(data.token, data.utilisateur);
     } catch (err) {
-      Alert.alert('Connexion échouée', err.message || 'Identifiant ou mot de passe incorrect.');
+      Alert.alert(
+        'Connexion échouée',
+        err.message || 'Identifiant ou mot de passe incorrect.'
+      );
     } finally {
       setChargement(false);
     }
@@ -54,6 +74,7 @@ export default function EcranConnexion({ onConnexion }) {
           autoCapitalize="none"
           autoCorrect={false}
         />
+
         <TextInput
           style={styles.champ}
           placeholder="Mot de passe"
@@ -63,15 +84,18 @@ export default function EcranConnexion({ onConnexion }) {
           secureTextEntry
         />
 
+        <Button title="Tester API" onPress={testerApi} />
+
         <TouchableOpacity
           style={[styles.bouton, chargement && { opacity: 0.6 }]}
           onPress={handleConnexion}
           disabled={chargement}
         >
-          {chargement
-            ? <ActivityIndicator color="#1e40af" />
-            : <Text style={styles.boutonTexte}>Se connecter</Text>
-          }
+          {chargement ? (
+            <ActivityIndicator color="#1e40af" />
+          ) : (
+            <Text style={styles.boutonTexte}>Se connecter</Text>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.aide}>Démo : j.martin / scanner123</Text>
@@ -83,8 +107,18 @@ export default function EcranConnexion({ onConnexion }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1e40af' },
   inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 14 },
-  titre: { fontSize: 28, fontWeight: '700', color: 'white', textAlign: 'center' },
-  sousTitre: { fontSize: 14, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 12 },
+  titre: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: 'white',
+    textAlign: 'center',
+  },
+  sousTitre: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
   champ: {
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 12,
@@ -101,6 +135,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
   },
-  boutonTexte: { color: '#1e40af', fontWeight: '700', fontSize: 16 },
-  aide: { textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 8 },
+  boutonTexte: {
+    color: '#1e40af',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  aide: {
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+    marginTop: 8,
+  },
 });
