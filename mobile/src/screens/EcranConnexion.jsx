@@ -85,7 +85,7 @@ export default function EcranConnexion({ onConnexion }) {
           disabled={chargement}
         >
           {chargement ? (
-            <ActivityIndicator color="#1e40af" />
+            <ActivityIndicator color="#007A8A" />
           ) : (
             <Text style={styles.boutonTexte}>Se connecter</Text>
           )}
@@ -96,7 +96,7 @@ export default function EcranConnexion({ onConnexion }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1e40af' },
+  container: { flex: 1, backgroundColor: '#007A8A' },
   inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 16 },
   titre: {
     fontSize: 28,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   boutonTexte: {
-    color: '#1e40af',
+    color: '#007A8A',
     fontWeight: '700',
     fontSize: 16,
   },
