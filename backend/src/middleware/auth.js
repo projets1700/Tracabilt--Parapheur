@@ -23,4 +23,13 @@ function exigerScanner(req, res, next) {
   });
 }
 
-module.exports = { verifierToken, exigerScanner };
+function exigerAdmin(req, res, next) {
+  verifierToken(req, res, () => {
+    if (req.utilisateur.role !== 'admin') {
+      return res.status(403).json({ message: 'Accès réservé aux administrateurs.' });
+    }
+    next();
+  });
+}
+
+module.exports = { verifierToken, exigerScanner, exigerAdmin };

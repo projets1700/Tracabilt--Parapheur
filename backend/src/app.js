@@ -5,6 +5,7 @@ const cors = require('cors');
 const authRoutes       = require('./routes/auth');
 const parapheursRoutes = require('./routes/parapheurs');
 const scansRoutes      = require('./routes/scans');
+const adminRoutes      = require('./routes/admin');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/auth',       authRoutes);
 app.use('/api/parapheurs', parapheursRoutes);
 app.use('/api/scans',      scansRoutes);
+app.use('/api/admin',      adminRoutes);
 
 app.get('/api/sante', (req, res) => {
   res.json({ statut: 'ok' });

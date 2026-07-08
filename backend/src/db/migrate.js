@@ -60,6 +60,14 @@ CREATE INDEX IF NOT EXISTS idx_scans_parapheur  ON scans(parapheur_id);
 CREATE INDEX IF NOT EXISTS idx_scans_scanner    ON scans(scanner_id);
 CREATE INDEX IF NOT EXISTS idx_scans_date       ON scans(scanned_at DESC);
 CREATE INDEX IF NOT EXISTS idx_parapheurs_numero ON parapheurs(numero);
+
+CREATE TABLE IF NOT EXISTS admins (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nom           VARCHAR(100) NOT NULL,
+  identifiant   VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 `;
 
 async function migrate() {

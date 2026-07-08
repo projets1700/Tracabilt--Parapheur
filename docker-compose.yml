@@ -32,6 +32,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-motdepasse}
       JWT_SECRET: ${JWT_SECRET:-secret_a_changer_en_production}
       JWT_EXPIRES_IN: 7d
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,3 +48,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:
