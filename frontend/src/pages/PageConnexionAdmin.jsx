@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
+function LogoCE() {
+  return (
+    <svg width="64" height="72" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M32 64C32 64 6 46 6 26C6 15.5 14 8 24 8C27.6 8 31 9.6 32 12.4C33 9.6 36.4 8 40 8C50 8 58 15.5 58 26C58 46 32 64 32 64Z" fill="white"/>
+      <circle cx="32" cy="28" r="9" fill="#8DC63F"/>
+      <path d="M32 37V48" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 export default function PageConnexionAdmin() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ identifiant: '', mot_de_passe: '' });
@@ -39,29 +49,55 @@ export default function PageConnexionAdmin() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bleu)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: 'white', borderRadius: 16, padding: 36, width: '100%', maxWidth: 380 }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>🏛️</div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Administration</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 6 }}>TraçaParapheur</p>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+
+      {/* Panneau gauche – branding */}
+      <div style={{
+        flex: '0 0 400px',
+        background: 'linear-gradient(160deg, #007A8A 0%, #005060 100%)',
+        display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', alignItems: 'center',
+        padding: '48px 40px', gap: 24,
+      }}>
+        <LogoCE />
+        <div style={{ textAlign: 'center', color: 'white' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, opacity: 0.65, textTransform: 'uppercase', marginBottom: 4 }}>Coeur d'Essonne</p>
+          <p style={{ fontSize: 10, letterSpacing: 2, opacity: 0.5, textTransform: 'uppercase' }}>Agglomération</p>
         </div>
+        <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
+        <div style={{ textAlign: 'center', color: 'white' }}>
+          <p style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>TraçaParapheur</p>
+          <p style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.6 }}>Système de traçabilité{'\n'}des parapheurs</p>
+        </div>
+      </div>
 
-        {erreur && <div className="message-erreur" style={{ marginBottom: 16 }}>{erreur}</div>}
+      {/* Panneau droit – formulaire */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F6F8', padding: 40 }}>
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1D1D1B', marginBottom: 6 }}>Connexion</h1>
+          <p style={{ fontSize: 13, color: 'var(--texte2)', marginBottom: 32 }}>Espace administrateur</p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label className="label-champ">Identifiant</label>
-            <input className="champ" name="identifiant" value={form.identifiant} onChange={changer} autoCapitalize="none" required />
-          </div>
-          <div>
-            <label className="label-champ">Mot de passe</label>
-            <input className="champ" type="password" name="mot_de_passe" value={form.mot_de_passe} onChange={changer} required />
-          </div>
-          <button className="btn btn-primaire" type="submit" disabled={chargement} style={{ marginTop: 6, padding: '12px 0', fontSize: 14, justifyContent: 'center' }}>
-            {chargement ? 'Connexion…' : 'Se connecter'}
-          </button>
-        </form>
+          {erreur && <div className="message-erreur" style={{ marginBottom: 20 }}>{erreur}</div>}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label className="label-champ">Identifiant</label>
+              <input className="champ" name="identifiant" value={form.identifiant} onChange={changer} autoCapitalize="none" autoFocus required />
+            </div>
+            <div>
+              <label className="label-champ">Mot de passe</label>
+              <input className="champ" type="password" name="mot_de_passe" value={form.mot_de_passe} onChange={changer} required />
+            </div>
+            <button
+              className="btn btn-primaire"
+              type="submit"
+              disabled={chargement}
+              style={{ padding: '13px 0', fontSize: 14, justifyContent: 'center', marginTop: 8, borderRadius: 10 }}
+            >
+              {chargement ? 'Connexion…' : 'Se connecter'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

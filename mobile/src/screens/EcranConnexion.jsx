@@ -58,7 +58,7 @@ export default function EcranConnexion({ onConnexion }) {
           <Text style={styles.label}>Nom du scanner</Text>
           <TextInput
             style={styles.champ}
-            placeholder="Ex : j.martin"
+            placeholder="Votre identifiant"
             placeholderTextColor="rgba(255,255,255,0.4)"
             value={identifiant}
             onChangeText={setIdentifiant}

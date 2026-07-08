@@ -3,7 +3,7 @@ const app = require('../src/app');
 
 describe('POST /api/auth/scanner/connexion', () => {
   test('champs manquants → 400', async () => {
-    const res = await request(app).post('/api/auth/scanner/connexion').send({ identifiant: 'j.martin' });
+    const res = await request(app).post('/api/auth/scanner/connexion').send({ identifiant: 'test.user' });
     expect(res.status).toBe(400);
   });
 

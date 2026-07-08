@@ -13,6 +13,47 @@ function formaterTaille(octets) {
   return `${(octets / 1024).toFixed(0)} Ko`;
 }
 
+function ModalFiche({ scanner, onFermer }) {
+  if (!scanner) return null;
+  return (
+    <div
+      onClick={onFermer}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="carte"
+        style={{ width: '100%', maxWidth: 420, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>{scanner.nom}</h2>
+            <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 2 }}>{scanner.identifiant}</p>
+          </div>
+          <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--texte3)', lineHeight: 1 }}>✕</button>
+        </div>
+
+        <div className="sep" style={{ margin: 0 }} />
+
+        {[
+          { label: 'Statut',        valeur: <span className={`badge ${scanner.is_active ? 'badge-vert' : 'badge-rouge'}`}>{scanner.is_active ? 'Actif' : 'Inactif'}</span> },
+          { label: 'Identifiant',   valeur: scanner.identifiant },
+          { label: 'ID appareil',   valeur: scanner.device_id || '—' },
+          { label: 'Créé le',       valeur: formaterDate(scanner.created_at) },
+        ].map(({ label, valeur }) => (
+          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+            <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>{label}</span>
+            <span style={{ fontWeight: 600 }}>{valeur}</span>
+          </div>
+        ))}
+
+        <div className="sep" style={{ margin: 0 }} />
+        <button className="btn" onClick={onFermer} style={{ justifyContent: 'center' }}>Fermer</button>
+      </div>
+    </div>
+  );
+}
+
 function clientAdmin() {
   const token = localStorage.getItem('admin_token');
   return {
@@ -31,6 +72,7 @@ export default function PageAdmin() {
   const [chargement, setChargement]   = useState(true);
   const [erreur, setErreur]           = useState('');
   const [succes, setSucces]           = useState('');
+  const [scannerFiche, setScannerFiche]   = useState(null);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
   const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
@@ -141,38 +183,71 @@ export default function PageAdmin() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
-      <header style={{ background: 'var(--bleu)', padding: '16px 24px' }}>
-        <div className="conteneur" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <ModalFiche scanner={scannerFiche} onFermer={() => setScannerFiche(null)} />
+
+      {/* Header sombre */}
+      <header style={{ background: '#1D1D1B', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Logo simplifié */}
+          <svg width="32" height="36" viewBox="0 0 64 72" fill="none">
+            <path d="M32 64C32 64 6 46 6 26C6 15.5 14 8 24 8C27.6 8 31 9.6 32 12.4C33 9.6 36.4 8 40 8C50 8 58 15.5 58 26C58 46 32 64 32 64Z" fill="white"/>
+            <circle cx="32" cy="28" r="9" fill="#8DC63F"/>
+            <path d="M32 37V48" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
+          </svg>
           <div>
-            <h1 style={{ fontSize: 18, fontWeight: 700, color: 'white' }}>Administration</h1>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Connecté : {admin?.nom}</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>TraçaParapheur</p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', letterSpacing: 1, textTransform: 'uppercase' }}>Administration</p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <a href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', textDecoration: 'underline' }}>Visionneur</a>
-            <button className="btn" onClick={deconnecter} style={{ fontSize: 12 }}>Déconnexion</button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <a href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>
+            ← Visionneur
+          </a>
+          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.15)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--bleu)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
+              {admin?.nom?.charAt(0).toUpperCase()}
+            </div>
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{admin?.nom}</span>
           </div>
+          <button
+            onClick={deconnecter}
+            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '6px 14px', color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer' }}
+          >
+            Déconnexion
+          </button>
         </div>
       </header>
 
-      <div className="conteneur" style={{ padding: '24px 24px' }}>
-        {erreur && <div className="message-erreur" style={{ marginBottom: 16 }}>{erreur}</div>}
-        {succes && <div className="message-succes" style={{ marginBottom: 16 }}>{succes}</div>}
-
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--bordure)' }}>
-          {[{ id: 'scanners', label: 'Scanners' }, { id: 'apk', label: 'APK' }].map(o => (
+      {/* Sous-header avec titre de page et onglets */}
+      <div style={{ background: 'white', borderBottom: '1px solid var(--bordure)', padding: '0 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, paddingBottom: 0 }}>
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1D1D1B' }}>Tableau de bord</h1>
+            <p style={{ fontSize: 12, color: 'var(--texte3)', marginTop: 2 }}>Gestion des scanners et de l'application mobile</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
+          {[{ id: 'scanners', label: 'Utilisateurs' }, { id: 'apk', label: 'Application mobile' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
               style={{
                 padding: '10px 20px', border: 'none', background: 'none', cursor: 'pointer',
-                fontWeight: onglet === o.id ? 700 : 400,
+                fontWeight: onglet === o.id ? 600 : 400,
                 color: onglet === o.id ? 'var(--bleu)' : 'var(--texte2)',
                 borderBottom: onglet === o.id ? '2px solid var(--bleu)' : '2px solid transparent',
-                marginBottom: -2, fontSize: 14,
+                fontSize: 13, marginBottom: -1,
               }}
             >{o.label}</button>
           ))}
         </div>
+      </div>
+
+      <div style={{ padding: '28px 32px' }}>
+        {erreur && <div className="message-erreur" style={{ marginBottom: 16 }}>{erreur}</div>}
+        {succes && <div className="message-succes" style={{ marginBottom: 16 }}>{succes}</div>}
 
         {onglet === 'scanners' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -189,11 +264,11 @@ export default function PageAdmin() {
                 <form onSubmit={handleCreerScanner} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label className="label-champ">Nom complet *</label>
-                    <input className="champ" value={formScanner.nom} onChange={e => setFormScanner(f => ({ ...f, nom: e.target.value }))} placeholder="Jean Martin" required />
+                    <input className="champ" value={formScanner.nom} onChange={e => setFormScanner(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
                   </div>
                   <div>
                     <label className="label-champ">Identifiant *</label>
-                    <input className="champ" value={formScanner.identifiant} onChange={e => setFormScanner(f => ({ ...f, identifiant: e.target.value }))} placeholder="j.martin" required />
+                    <input className="champ" value={formScanner.identifiant} onChange={e => setFormScanner(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" required />
                   </div>
                   <div>
                     <label className="label-champ">Mot de passe *</label>
@@ -241,9 +316,14 @@ export default function PageAdmin() {
                         </td>
                         <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(s.created_at)}</td>
                         <td style={{ padding: '12px 16px' }}>
-                          <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerScanner(s.id, s.nom)}>
-                            Supprimer
-                          </button>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setScannerFiche(s)}>
+                              Fiche
+                            </button>
+                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerScanner(s.id, s.nom)}>
+                              Supprimer
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
