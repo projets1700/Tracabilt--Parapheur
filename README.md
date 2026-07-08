@@ -1,127 +1,135 @@
-# TraçaParapheur — Système de traçabilité de parapheurs
+# TraçaParapheur
 
-Application complète de traçabilité de parapheurs physiques via QR Code et GPS.  
-Composée d'un backend API REST, d'une interface web et d'une application mobile de scan.
+> Système de traçabilité de parapheurs physiques via QR Code et GPS.  
+> Backend API REST · Interface web · Application mobile de scan.
+
+---
+
+## Table des matières
+
+1. [Structure du projet](#structure-du-projet)
+2. [Déploiement VPS](#déploiement-vps-production)
+3. [Lancer en local](#lancer-en-local)
+4. [Comptes et accès](#comptes-et-accès)
+5. [Fonctionnalités](#fonctionnalités)
+6. [API REST](#api-rest)
+7. [Base de données](#base-de-données)
+8. [Sécurité](#sécurité)
+9. [Tests](#tests)
+10. [Avancement](#avancement)
 
 ---
 
 ## Structure du projet
 
 ```
-backend/   → API REST Express + PostgreSQL (port 3001)
-frontend/  → Interface web React/Vite (port 8080 Docker / 5173 dev)
-mobile/    → Application mobile Expo React Native — scan QR Code
+backend/   → API REST Express + PostgreSQL  (port 3001)
+frontend/  → Interface web React/Vite       (port 8080 Docker / 5173 dev)
+mobile/    → Application mobile Expo        (scan QR Code)
 ```
 
 ---
 
 ## Déploiement VPS (production)
 
-Le projet tourne sur un VPS OVH à l'adresse **51.38.129.2** via Docker Compose.
+Le projet tourne sur un VPS OVH via Docker Compose.
 
-### Redéployer après un push
+### Pages accessibles
+
+| Page | Chemin |
+|------|--------|
+| Visionneur (public) | `/` |
+| Connexion superviseur | `/superviseur/connexion` |
+| Inscription superviseur *(1ère fois)* | `/superviseur/inscription` |
+| Liste des parapheurs | `/parapheurs` |
+| Connexion admin | `/admin/connexion` |
+| Inscription admin *(1ère fois)* | `/admin/inscription` |
+| Tableau de bord admin | `/admin` |
+| Santé de l'API | `/api/sante` *(port 3001)* |
+
+### Commandes utiles sur le serveur
 
 ```bash
+# Mettre à jour et relancer
 cd ~/Tracabilt--Parapheur
 git pull
 sudo docker compose build --no-cache
 sudo docker compose up -d
-```
 
-### Vérifier l'état des conteneurs
-
-```bash
+# Vérifier l'état des conteneurs
 sudo docker compose ps
 ```
 
-### URLs de production
-
-| Page | URL |
-|------|-----|
-| Visionneur (public) | http://51.38.129.2:8080 |
-| Connexion superviseur | http://51.38.129.2:8080/superviseur/connexion |
-| Inscription superviseur (1ère fois) | http://51.38.129.2:8080/superviseur/inscription |
-| Liste des parapheurs | http://51.38.129.2:8080/parapheurs |
-| Connexion admin | http://51.38.129.2:8080/admin/connexion |
-| Inscription admin (1ère fois) | http://51.38.129.2:8080/admin/inscription |
-| Tableau de bord admin | http://51.38.129.2:8080/admin |
-| API santé | http://51.38.129.2:3001/api/sante |
-
 ---
 
-## Lancer avec Docker (local)
+## Lancer en local
+
+### Avec Docker *(recommandé)*
 
 > Nécessite [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 **1. Créer le fichier `.env` à la racine :**
-
 ```env
 DB_PASSWORD=motdepasse
 JWT_SECRET=secret_a_changer_en_production
 ```
 
 **2. Lancer tous les services :**
-
 ```bash
 docker compose up --build
 ```
 
-- Frontend : **http://localhost:8080**
-- Backend  : **http://localhost:3001/api/sante** → `{ "statut": "ok" }`
+- Frontend : http://localhost:8080
+- Backend  : http://localhost:3001/api/sante
 
 **3. Arrêter :**
-
 ```bash
-docker compose down          # arrêt (données conservées)
-docker compose down -v       # arrêt + suppression de la base
+docker compose down      # données conservées
+docker compose down -v   # supprime aussi la base de données
 ```
 
 ---
 
-## Lancer en développement
+### En développement (sans Docker)
 
-### Backend
-
+**Backend**
 ```bash
 cd backend
 npm install
 npm run migrate   # créer les tables
-npm run dev       # serveur sur http://localhost:3001
+npm run dev       # http://localhost:3001
 ```
 
-### Frontend
-
+**Frontend**
 ```bash
 cd frontend
 npm install
-npm run dev       # interface sur http://localhost:5173
+npm run dev       # http://localhost:5173
 ```
 
-### Application mobile
-
+**Application mobile**
 ```bash
 cd mobile
 npm install
 npx expo start
 ```
+Scanner le QR code dans le terminal avec **Expo Go** (Android / iOS).
 
-Scanner le QR code affiché dans le terminal avec l'application **Expo Go** (Android / iOS).
-
-> Adapter l'adresse IP du backend dans `mobile/src/services/api.js` si besoin :
+> Si besoin, adapter l'URL du backend dans `mobile/src/services/api.js` :
 > ```js
-> export const BACKEND_URL = 'http://51.38.129.2:3001/api';
+> export const BACKEND_URL = 'http://<IP_DU_SERVEUR>:3001/api';
 > ```
 
 ---
 
 ## Comptes et accès
 
-Les comptes sont créés directement depuis l'interface, aucun seed n'est nécessaire.
+Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Rôle | Création | Accès |
 |------|----------|-------|
-| **Admin** | Formulaire `/admin/inscription` (première visite) | Gestion des scanners, upload APK |
-| **Superviseur** | Formulaire `/superviseur/inscription` (première visite) | Consultation de tous les parapheurs |
+| **Admin** | `/admin/inscription` *(première visite)* | Gestion des scanners, upload APK |
+| **Superviseur** | `/superviseur/inscription` *(première visite)* | Consultation de tous les parapheurs |
 | **Scanner** | Créé par l'admin depuis le tableau de bord | Application mobile uniquement |
 
 ---
@@ -130,98 +138,92 @@ Les comptes sont créés directement depuis l'interface, aucun seed n'est néces
 
 ### Application mobile
 
-**Connexion**
-- Formulaire de connexion avec identifiant et mot de passe
-- Token JWT stocké localement, session conservée entre les ouvertures
-- Déconnexion manuelle depuis l'écran de scan
-
-**Scan QR Code**
-- Lecture en temps réel via l'appareil photo
-- Types supportés : QR Code, Code 128, Code 39, EAN-13, EAN-8
-- Le numéro lu est normalisé en majuscules
-
-**Localisation GPS**
-- Coordonnées GPS capturées automatiquement à chaque scan
-- Si la permission est refusée, le scan continue sans coordonnées
-
-**Nommage des lieux**
-- Lors du premier scan dans un endroit, saisie du nom du lieu (ex : « Bureau 302 »)
-- Les scans suivants dans un rayon de **100 mètres** réutilisent automatiquement le nom connu
-- Si le GPS est indisponible, le nom est saisi manuellement
-
-**Protection anti-doublon**
-- Un même parapheur ne peut pas être scanné deux fois en moins de **1 minute**
-- Le délai restant est affiché (ex : « 42s »)
-
-**Mode hors ligne**
-- En l'absence de réseau, les scans sont sauvegardés localement
-- Dès que la connexion est rétablie, synchronisation automatique
-- L'écran Synchronisation indique le statut de chaque scan
+| Fonctionnalité | Détail |
+|---------------|--------|
+| Connexion | JWT stocké localement, session persistante |
+| Scan QR Code | QR Code, Code 128, Code 39, EAN-13, EAN-8 — numéro normalisé en majuscules |
+| GPS | Coordonnées capturées à chaque scan (optionnel) |
+| Nommage des lieux | Nom saisi au 1er scan, réutilisé dans un rayon de **100 m** |
+| Anti-doublon | Cooldown de **1 minute** par parapheur, délai affiché |
+| Mode hors ligne | Scans sauvegardés localement et synchronisés à la reconnexion |
 
 ---
 
-### Interface web — Visionneur (public)
+### Interface web — Visionneur *(public)*
 
 - Accessible sans connexion
 - Recherche d'un parapheur par numéro
-- Affichage de l'historique complet des scans : lieu, date, opérateur
+- Historique complet des scans : lieu, date, opérateur
 
 ---
 
 ### Interface web — Superviseur
 
-- Connexion requise (`/superviseur/connexion`)
-- Création du compte à la première visite (`/superviseur/inscription`)
-- **Liste de tous les parapheurs** triée du plus récemment scanné au moins récent
-- Pour chaque parapheur : numéro, titre, date du dernier scan, localisation
-- Clic sur un parapheur → historique complet avec tous les scans en tableau
+- Connexion requise : `/superviseur/connexion`
+- Liste de tous les parapheurs, triée du plus récent au moins récent
+- Colonnes : numéro, titre, date du dernier scan, localisation
+- Clic sur un parapheur → historique complet en tableau
 
 ---
 
 ### Interface web — Administration
 
-- Connexion requise (`/admin/connexion`)
-- Création du compte à la première visite (`/admin/inscription`)
+- Connexion requise : `/admin/connexion`
 
 **Onglet Utilisateurs**
-- Liste de tous les scanners (nom, identifiant, statut, date de création)
-- Création d'un scanner (nom, identifiant, mot de passe)
-- Suppression d'un scanner
-- Consultation de la fiche d'un scanner (bouton "Fiche")
+- Liste des scanners (nom, identifiant, date de création)
+- Créer / supprimer un scanner
+- Consulter la fiche d'un scanner
 
 **Onglet Application mobile**
-- Informations sur l'APK disponible (taille, date de mise en ligne)
-- Upload d'un nouvel APK (fichier `.apk`)
-- Lien de téléchargement direct
-- QR code de téléchargement (à scanner depuis un téléphone)
+- Informations sur l'APK disponible (taille, date)
+- Upload d'un nouvel APK
+- Lien de téléchargement + QR code
 
 ---
 
 ## API REST
 
-| Méthode | Route | Accès | Description |
-|---------|-------|-------|-------------|
-| GET | `/api/sante` | public | État du serveur |
-| POST | `/api/auth/scanner/connexion` | public | Connexion scanner (JWT) |
-| GET | `/api/parapheurs` | public | Liste paginée des parapheurs |
-| GET | `/api/parapheurs/:numero` | public | Détail + historique d'un parapheur |
-| POST | `/api/parapheurs` | scanner | Créer un parapheur |
-| PUT | `/api/parapheurs/:id` | scanner | Modifier un parapheur |
-| DELETE | `/api/parapheurs/:id` | scanner | Supprimer un parapheur |
-| POST | `/api/scans` | scanner | Enregistrer un scan |
-| POST | `/api/scans/sync` | scanner | Synchroniser des scans hors ligne |
-| GET | `/api/admin/existe` | public | Vérifie si un admin existe |
-| POST | `/api/admin/inscription` | public | Créer le compte admin (unique) |
-| POST | `/api/admin/connexion` | public | Connexion admin |
-| GET | `/api/admin/scanners` | admin | Liste des scanners |
-| POST | `/api/admin/scanners` | admin | Créer un scanner |
-| DELETE | `/api/admin/scanners/:id` | admin | Supprimer un scanner |
-| POST | `/api/admin/apk` | admin | Upload de l'APK |
-| GET | `/api/admin/apk/info` | admin | Infos sur l'APK disponible |
-| GET | `/api/admin/apk/download` | public | Télécharger l'APK |
-| GET | `/api/superviseur/existe` | public | Vérifie si un superviseur existe |
-| POST | `/api/superviseur/inscription` | public | Créer le compte superviseur (unique) |
-| POST | `/api/superviseur/connexion` | public | Connexion superviseur |
+### Public
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/sante` | État du serveur |
+| GET | `/api/parapheurs` | Liste paginée des parapheurs |
+| GET | `/api/parapheurs/:numero` | Détail + historique d'un parapheur |
+| GET | `/api/admin/apk/download` | Télécharger l'APK |
+
+### Scanner *(JWT requis)*
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/api/auth/scanner/connexion` | Connexion scanner |
+| POST | `/api/parapheurs` | Créer un parapheur |
+| PUT | `/api/parapheurs/:id` | Modifier un parapheur |
+| DELETE | `/api/parapheurs/:id` | Supprimer un parapheur |
+| POST | `/api/scans` | Enregistrer un scan |
+| POST | `/api/scans/sync` | Synchroniser des scans hors ligne |
+
+### Admin *(JWT admin requis)*
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/admin/existe` | Vérifie si un admin existe |
+| POST | `/api/admin/inscription` | Créer le compte admin |
+| POST | `/api/admin/connexion` | Connexion admin |
+| GET | `/api/admin/scanners` | Liste des scanners |
+| POST | `/api/admin/scanners` | Créer un scanner |
+| DELETE | `/api/admin/scanners/:id` | Supprimer un scanner |
+| POST | `/api/admin/apk` | Upload de l'APK |
+| GET | `/api/admin/apk/info` | Infos sur l'APK |
+
+### Superviseur *(JWT superviseur requis)*
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/superviseur/existe` | Vérifie si un superviseur existe |
+| POST | `/api/superviseur/inscription` | Créer le compte superviseur |
+| POST | `/api/superviseur/connexion` | Connexion superviseur |
 
 ---
 
@@ -233,10 +235,10 @@ Tables PostgreSQL :
 |-------|-------------|
 | `scanners` | Opérateurs mobiles (créés par l'admin) |
 | `parapheurs` | Parapheurs physiques identifiés par numéro |
-| `scans` | Chaque passage d'un scanner sur un parapheur |
+| `scans` | Historique de chaque passage d'un scanner sur un parapheur |
 | `lieux` | Noms de lieux associés aux coordonnées GPS |
-| `admins` | Compte(s) administrateur |
-| `superviseurs` | Compte(s) superviseur |
+| `admins` | Compte administrateur |
+| `superviseurs` | Compte superviseur |
 
 ---
 
@@ -244,9 +246,9 @@ Tables PostgreSQL :
 
 - Authentification JWT (expiration 7 jours)
 - Mots de passe chiffrés avec bcryptjs (sel 10)
-- Limitation du nombre de requêtes sur les routes sensibles
-- Validation stricte des données entrantes (express-validator)
-- Middleware de rôle par type d'utilisateur (scanner / admin / superviseur)
+- Rate limiting sur les routes sensibles
+- Validation des données avec express-validator
+- Middleware de rôle : `scanner` / `admin` / `superviseur`
 
 ---
 
@@ -257,14 +259,14 @@ cd backend
 npm test
 ```
 
-Suite de tests Jest couvrant l'authentification et les routes principales.
+Suite Jest couvrant l'authentification et les routes principales.
 
 ---
 
-## Avancement du projet
+## Avancement
 
-| Partie | Description | Statut |
-|--------|-------------|--------|
+| # | Description | Statut |
+|---|-------------|--------|
 | 1 | Backend + base de données | ✅ |
 | 2 | Authentification JWT (scanner) | ✅ |
 | 3 | API publique visionneur | ✅ |
