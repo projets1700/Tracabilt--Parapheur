@@ -11,6 +11,7 @@ import EcranSynchronisation from './src/screens/EcranSynchronisation';
 import { chargerSession, supprimerSession } from './src/services/stockage';
 import { chargerScansEnAttente, marquerToutSynchronise } from './src/services/stockage';
 import { api } from './src/services/api';
+import { theme } from './src/theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -76,8 +77,8 @@ export default function App() {
 
   if (chargement) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#009DBF' }}>
-        <ActivityIndicator size="large" color="white" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.fond }}>
+        <ActivityIndicator size="large" color={theme.teal} />
       </View>
     );
   }
@@ -91,9 +92,19 @@ export default function App() {
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: '#009DBF',
-          tabBarInactiveTintColor: '#9ca3af',
-          tabBarStyle: { paddingBottom: 4, paddingTop: 4 },
+          tabBarActiveTintColor: theme.teal,
+          tabBarInactiveTintColor: theme.texte,
+          tabBarStyle: {
+            paddingBottom: 4,
+            paddingTop: 4,
+            backgroundColor: theme.blanc,
+            borderTopColor: theme.bordure,
+            borderTopWidth: 1,
+            elevation: 8,
+            shadowColor: '#000',
+            shadowOpacity: 0.06,
+            shadowRadius: 8,
+          },
         }}
       >
         <Tab.Screen

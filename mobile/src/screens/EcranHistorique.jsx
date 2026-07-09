@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { chargerScansLocaux } from '../services/stockage';
+import { theme } from '../theme';
 
 function formaterDate(d) {
   return new Date(d).toLocaleDateString('fr-FR', {
@@ -36,7 +37,7 @@ export default function EcranHistorique() {
       </View>
 
       {chargement ? (
-        <View style={styles.center}><ActivityIndicator size="large" color="#009DBF" /></View>
+        <View style={styles.center}><ActivityIndicator size="large" color={theme.teal} /></View>
       ) : scans.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emoji}>📋</Text>
@@ -47,7 +48,7 @@ export default function EcranHistorique() {
           data={scans}
           keyExtractor={(_, i) => String(i)}
           contentContainerStyle={{ padding: 16, gap: 10 }}
-          refreshControl={<RefreshControl refreshing={chargement} onRefresh={charger} />}
+          refreshControl={<RefreshControl refreshing={chargement} onRefresh={charger} tintColor={theme.teal} />}
           renderItem={({ item }) => {
             const estSync = item.sync_status === 'synchronise';
             return (
@@ -78,26 +79,40 @@ export default function EcranHistorique() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: theme.fond },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   emoji: { fontSize: 48 },
-  header: { padding: 20, paddingTop: 50, backgroundColor: '#009DBF' },
+  header: {
+    padding: 20,
+    paddingTop: 50,
+    backgroundColor: theme.blanc,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.bordure,
+  },
   logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 10 },
-  titre: { fontSize: 20, fontWeight: '700', color: 'white' },
-  sousTitre: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
-  vide: { fontSize: 15, color: '#9ca3af' },
+  titre: { fontSize: 20, fontWeight: '700', color: theme.bleu },
+  sousTitre: { fontSize: 13, color: theme.texte, marginTop: 4 },
+  vide: { fontSize: 15, color: theme.placeholder },
   item: {
-    backgroundColor: 'white', borderRadius: 12, padding: 16, gap: 6,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    backgroundColor: theme.blanc,
+    borderRadius: 12,
+    padding: 16,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: theme.bordure,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  numero: { fontWeight: '700', fontSize: 15, color: '#009DBF' },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  badgeVert: { backgroundColor: '#d1fae5' },
-  badgeOrange: { backgroundColor: '#fef3c7' },
+  numero: { fontWeight: '700', fontSize: 15, color: theme.teal },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  badgeVert: { backgroundColor: theme.vertClair },
+  badgeOrange: { backgroundColor: theme.orangeClair },
   badgeTexte: { fontSize: 11, fontWeight: '600' },
-  badgeTexteVert: { color: '#065f46' },
-  badgeTexteOrange: { color: '#92400e' },
-  date: { fontSize: 12, color: '#6b7280' },
-  gps: { fontSize: 11, color: '#9ca3af' },
+  badgeTexteVert: { color: theme.vertFonce },
+  badgeTexteOrange: { color: theme.orangeFonce },
+  date: { fontSize: 12, color: theme.texte },
+  gps: { fontSize: 11, color: theme.placeholder },
 });

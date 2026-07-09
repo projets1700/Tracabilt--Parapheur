@@ -16,6 +16,7 @@ import {
 import { api } from '../services/api';
 import { demanderPermissions, obtenirPosition } from '../services/gps';
 import { ajouterScanLocal, chargerScansLocaux } from '../services/stockage';
+import { theme } from '../theme';
 
 const COOLDOWN_MS = 1 * 60 * 1000;
 const COOLDOWN_KEY = 'cooldown_scans';
@@ -147,7 +148,7 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
   }
 
   if (!permission) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#009DBF" /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color={theme.teal} /></View>;
   }
 
   if (!permission.granted) {
@@ -198,7 +199,7 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
               <TextInput
                 style={styles.input}
                 placeholder="Ex : Bureau 302, Salle de réunion..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={theme.placeholder}
                 value={lieuInput}
                 onChangeText={setLieuInput}
                 autoFocus
@@ -240,32 +241,46 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, backgroundColor: '#f9fafb', padding: 32 },
-  texteGris: { fontSize: 16, color: '#374151', textAlign: 'center' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, backgroundColor: theme.fond, padding: 32 },
+  texteGris: { fontSize: 16, color: theme.texte, textAlign: 'center' },
   header: {
     flexDirection: 'column',
-    padding: 16, paddingTop: 50, backgroundColor: '#009DBF',
+    padding: 16,
+    paddingTop: 50,
+    backgroundColor: theme.blanc,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.bordure,
   },
   logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 8 },
-  headerNom: { color: 'white', fontWeight: '600', fontSize: 15 },
-  headerDeconnexion: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
+  headerNom: { color: theme.bleu, fontWeight: '600', fontSize: 15 },
+  headerDeconnexion: { color: theme.teal, fontSize: 13, fontWeight: '500' },
   camera: { flex: 1 },
-  overlayBas: { padding: 28, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center' },
-  instruction: { color: 'white', fontSize: 14, textAlign: 'center' },
-  bouton: { backgroundColor: '#009DBF', borderRadius: 12, padding: 16, alignItems: 'center', width: '100%' },
-  boutonTexte: { color: 'white', fontWeight: '700', fontSize: 15 },
+  overlayBas: { padding: 28, backgroundColor: 'rgba(0, 87, 165, 0.75)', alignItems: 'center' },
+  instruction: { color: theme.blanc, fontSize: 14, textAlign: 'center' },
+  bouton: { backgroundColor: theme.teal, borderRadius: 10, padding: 16, alignItems: 'center', width: '100%' },
+  boutonTexte: { color: theme.blanc, fontWeight: '700', fontSize: 15 },
   boutonSecondaire: { padding: 12, alignItems: 'center' },
-  boutonSecondaireTexte: { color: '#6b7280', fontSize: 13 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  boutonSecondaireTexte: { color: theme.texte, fontSize: 13 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 87, 165, 0.45)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 32, alignItems: 'center', gap: 12,
+    backgroundColor: theme.blanc,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    gap: 12,
   },
   modalEmoji: { fontSize: 48 },
-  modalNumero: { fontSize: 18, fontWeight: '700', color: '#009DBF' },
-  modalMessage: { fontSize: 14, color: '#374151', textAlign: 'center' },
+  modalNumero: { fontSize: 18, fontWeight: '700', color: theme.teal },
+  modalMessage: { fontSize: 14, color: theme.texte, textAlign: 'center' },
   input: {
-    width: '100%', borderWidth: 1.5, borderColor: '#d1d5db', borderRadius: 10,
-    padding: 14, fontSize: 15, color: '#111827', backgroundColor: '#f9fafb',
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: theme.bordure,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 15,
+    color: theme.texteFonce,
+    backgroundColor: theme.fond,
   },
 });

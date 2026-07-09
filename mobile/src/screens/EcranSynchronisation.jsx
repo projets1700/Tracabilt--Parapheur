@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, Vi
 
 import { api } from '../services/api';
 import { chargerScansEnAttente, marquerToutSynchronise } from '../services/stockage';
+import { theme } from '../theme';
 
 export default function EcranSynchronisation() {
   const [scansEnAttente, setScansEnAttente] = useState([]);
@@ -34,7 +35,11 @@ export default function EcranSynchronisation() {
   }
 
   if (chargement) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#009DBF" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={theme.teal} />
+      </View>
+    );
   }
 
   return (
@@ -57,19 +62,19 @@ export default function EcranSynchronisation() {
             disabled={syncing}
           >
             {syncing
-              ? <ActivityIndicator color="white" />
+              ? <ActivityIndicator color={theme.blanc} />
               : <Text style={styles.boutonTexte}>🔄 Synchroniser maintenant</Text>
             }
           </TouchableOpacity>
         ) : (
           <View style={{ alignItems: 'center', gap: 8 }}>
             <Text style={{ fontSize: 52 }}>✅</Text>
-            <Text style={{ fontSize: 18, color: '#374151', fontWeight: '500' }}>Tout est synchronisé</Text>
+            <Text style={{ fontSize: 18, color: theme.texteFonce, fontWeight: '500' }}>Tout est synchronisé</Text>
           </View>
         )}
 
         <TouchableOpacity onPress={charger} style={{ padding: 12 }}>
-          <Text style={{ color: '#9ca3af', fontSize: 14 }}>Actualiser</Text>
+          <Text style={{ color: theme.placeholder, fontSize: 14 }}>Actualiser</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -77,18 +82,29 @@ export default function EcranSynchronisation() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 20, paddingTop: 50, backgroundColor: '#009DBF' },
+  container: { flex: 1, backgroundColor: theme.fond },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.fond },
+  header: {
+    padding: 20,
+    paddingTop: 50,
+    backgroundColor: theme.blanc,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.bordure,
+  },
   logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 10 },
-  titre: { fontSize: 20, fontWeight: '700', color: 'white' },
+  titre: { fontSize: 20, fontWeight: '700', color: theme.bleu },
   contenu: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 24, padding: 32 },
   compteur: {
-    alignItems: 'center', backgroundColor: 'white', borderRadius: 16, padding: 32,
-    width: '100%', elevation: 3,
+    alignItems: 'center',
+    backgroundColor: theme.fondClair,
+    borderRadius: 16,
+    padding: 32,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: theme.bordure,
   },
-  compteurNombre: { fontSize: 72, fontWeight: '700', color: '#009DBF' },
-  compteurLabel: { fontSize: 16, color: '#6b7280', marginTop: 4 },
-  bouton: { backgroundColor: '#009DBF', borderRadius: 12, padding: 18, alignItems: 'center', width: '100%' },
-  boutonTexte: { color: 'white', fontWeight: '700', fontSize: 16 },
+  compteurNombre: { fontSize: 72, fontWeight: '700', color: theme.teal },
+  compteurLabel: { fontSize: 16, color: theme.texte, marginTop: 4 },
+  bouton: { backgroundColor: theme.teal, borderRadius: 10, padding: 18, alignItems: 'center', width: '100%' },
+  boutonTexte: { color: theme.blanc, fontWeight: '700', fontSize: 16 },
 });

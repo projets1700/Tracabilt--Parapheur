@@ -14,6 +14,7 @@ import {
 
 import { api } from '../services/api';
 import { sauvegarderSession } from '../services/stockage';
+import { theme } from '../theme';
 
 export default function EcranConnexion({ onConnexion }) {
   const [identifiant, setIdentifiant] = useState('');
@@ -60,7 +61,7 @@ export default function EcranConnexion({ onConnexion }) {
           <TextInput
             style={styles.champ}
             placeholder="Votre identifiant"
-            placeholderTextColor="rgba(255,255,255,0.4)"
+            placeholderTextColor={theme.placeholder}
             value={identifiant}
             onChangeText={setIdentifiant}
             autoCapitalize="none"
@@ -73,7 +74,7 @@ export default function EcranConnexion({ onConnexion }) {
           <TextInput
             style={styles.champ}
             placeholder="••••••••"
-            placeholderTextColor="rgba(255,255,255,0.4)"
+            placeholderTextColor={theme.placeholder}
             value={motDePasse}
             onChangeText={setMotDePasse}
             secureTextEntry
@@ -86,7 +87,7 @@ export default function EcranConnexion({ onConnexion }) {
           disabled={chargement}
         >
           {chargement ? (
-            <ActivityIndicator color="#007A8A" />
+            <ActivityIndicator color={theme.blanc} />
           ) : (
             <Text style={styles.boutonTexte}>Se connecter</Text>
           )}
@@ -97,39 +98,40 @@ export default function EcranConnexion({ onConnexion }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#009DBF' },
+  container: { flex: 1, backgroundColor: theme.fond },
   inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 16 },
   logo: { width: 200, height: 80, resizeMode: 'contain', alignSelf: 'center', marginBottom: 8 },
   sousTitre: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
+    color: theme.texte,
     textAlign: 'center',
     marginBottom: 8,
+    fontWeight: '500',
   },
   groupe: { gap: 6 },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
+    color: theme.bleu,
   },
   champ: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
+    backgroundColor: theme.blanc,
+    borderRadius: 10,
     padding: 16,
-    color: 'white',
+    color: theme.texteFonce,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: theme.bordure,
   },
   bouton: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: theme.teal,
+    borderRadius: 10,
     padding: 16,
     alignItems: 'center',
     marginTop: 4,
   },
   boutonTexte: {
-    color: '#009DBF',
+    color: theme.blanc,
     fontWeight: '700',
     fontSize: 16,
   },
