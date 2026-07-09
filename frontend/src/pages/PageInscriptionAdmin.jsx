@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function LogoCE() {
-  return <img src="/Logo_app.png" alt="CoeurTrace" style={{ width: 260, height: 'auto', objectFit: 'contain' }} />;
+  return <img src="/Logo_app.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />;
 }
 
 export default function PageInscriptionAdmin() {

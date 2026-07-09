@@ -43,24 +43,22 @@ export default function PageVisionneur() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
 
-      <header style={{ background: 'white', borderBottom: '1px solid var(--bordure)', padding: '20px 24px 16px' }}>
-        <div className="conteneur" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <div style={{ marginBottom: 12 }}>
-            <img src="/Logo_app.png" alt="CoeurTrace" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
-          </div>
-          <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, width: '100%' }}>
-            <input
-              className="champ"
-              style={{ flex: 1 }}
-              placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
-              value={recherche}
-              onChange={e => setRecherche(e.target.value)}
-            />
-            <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
-              Rechercher
-            </button>
-          </form>
+      <header style={{ background: 'white', borderBottom: '1px solid var(--bordure)', padding: '20px 24px' }}>
+        <div style={{ marginBottom: 16 }}>
+          <img src="/Logo_app.png" alt="CoeurTrace" style={{ height: 120, width: 'auto', objectFit: 'contain' }} />
         </div>
+        <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, maxWidth: 640 }}>
+          <input
+            className="champ"
+            style={{ flex: 1 }}
+            placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
+            value={recherche}
+            onChange={e => setRecherche(e.target.value)}
+          />
+          <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
+            Rechercher
+          </button>
+        </form>
       </header>
 
       <main className="conteneur" style={{ padding: '24px 24px' }}>
