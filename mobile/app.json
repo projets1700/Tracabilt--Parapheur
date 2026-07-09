@@ -18,7 +18,7 @@
       "package": "com.adam_91.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/Logo_app.png",
-        "backgroundColor": "#009D8F"
+        "backgroundColor": "#07AA93"
       },
       "permissions": [
         "android.permission.CAMERA",
