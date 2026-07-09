@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function LogoCE() {
-  return <img src="/Logo_Parapheur.png" alt="Logo" style={{ width: 180, height: 'auto', maxHeight: 80, objectFit: 'contain' }} />;
+  return <img src="/Logo_app.png" alt="Logo" style={{ width: 180, height: 'auto', maxHeight: 80, objectFit: 'contain' }} />;
 }
 
 export default function PageConnexionAdmin() {
@@ -60,7 +60,7 @@ export default function PageConnexionAdmin() {
         </div>
         <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
         <div style={{ textAlign: 'center', color: 'white' }}>
-          <img src="/Logo_Parapheur.png" alt="TraçaParapheur" style={{ width: 190, height: 'auto', maxHeight: 72, objectFit: 'contain' }} />
+          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ width: 190, height: 'auto', maxHeight: 72, objectFit: 'contain' }} />
           <p style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.6 }}>Système de traçabilité{'\n'}des parapheurs</p>
         </div>
       </div>

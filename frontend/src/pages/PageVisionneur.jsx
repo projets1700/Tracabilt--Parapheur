@@ -46,7 +46,7 @@ export default function PageVisionneur() {
       <header style={{ background: 'var(--bleu)', padding: '20px 24px 16px' }}>
         <div className="conteneur">
           <div style={{ marginBottom: 12 }}>
-            <img src="/Logo_Parapheur.png" alt="TraçaParapheur" style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
+            <img src="/Logo_app.png" alt="TraçaParapheur" style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
           </div>
           <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8 }}>
             <input
