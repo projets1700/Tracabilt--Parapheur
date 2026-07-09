@@ -80,6 +80,27 @@ async function listerAdmins(req, res) {
   }
 }
 
+async function supprimerAdmin(req, res) {
+  try {
+    const { id } = req.params;
+    if (id === req.utilisateur.id) {
+      return res.status(400).json({ message: 'Vous ne pouvez pas supprimer votre propre compte.' });
+    }
+    const compte = await pool.query('SELECT COUNT(*) FROM admins');
+    if (parseInt(compte.rows[0].count, 10) <= 1) {
+      return res.status(400).json({ message: 'Impossible de supprimer le dernier administrateur.' });
+    }
+    const r = await pool.query('DELETE FROM admins WHERE id = $1 RETURNING id', [id]);
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: 'Administrateur introuvable.' });
+    }
+    res.json({ message: 'Administrateur supprimé.' });
+  } catch (err) {
+    console.error('supprimerAdmin :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
 async function listerScanners(req, res) {
   try {
     const r = await pool.query(
@@ -213,4 +234,4 @@ async function supprimerSuperviseur(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, listerAdmins, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
+module.exports = { adminExiste, inscription, connexion, listerAdmins, supprimerAdmin, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };

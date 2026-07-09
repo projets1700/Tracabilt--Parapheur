@@ -198,6 +198,18 @@ export default function PageAdmin() {
     }
   }
 
+  async function supprimerAdmin(id, nom) {
+    if (!confirm(`Supprimer l'administrateur "${nom}" ?`)) return;
+    setErreur('');
+    try {
+      await clientAdmin().delete(`/admin/admins/${id}`);
+      afficherSucces('Administrateur supprimé.');
+      chargerAdmins();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
+    }
+  }
+
   async function supprimerSuperviseur(id, nom) {
     if (!confirm(`Supprimer le superviseur "${nom}" ?`)) return;
     setErreur('');
@@ -501,24 +513,34 @@ export default function PageAdmin() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
-                    {['Nom', 'Identifiant', 'Créé le'].map(h => (
+                    {['Nom', 'Identifiant', 'Créé le', ''].map(h => (
                       <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {admins.map((a, i) => (
-                    <tr key={a.id} style={{ borderBottom: i < admins.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
-                      <td style={{ padding: '12px 16px', fontWeight: 600 }}>
-                        {a.nom}
-                        {a.identifiant === admin?.identifiant && (
-                          <span style={{ marginLeft: 8, fontSize: 10, background: 'var(--bleu-clair)', color: 'var(--bleu)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Vous</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{a.identifiant}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
-                    </tr>
-                  ))}
+                  {admins.map((a, i) => {
+                    const estMoi = a.identifiant === admin?.identifiant;
+                    return (
+                      <tr key={a.id} style={{ borderBottom: i < admins.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                          {a.nom}
+                          {estMoi && (
+                            <span style={{ marginLeft: 8, fontSize: 10, background: 'var(--bleu-clair)', color: 'var(--bleu)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Vous</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{a.identifiant}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {!estMoi && admins.length > 1 && (
+                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
+                              Supprimer
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
