@@ -43,11 +43,12 @@ export default function PageVisionneur() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
 
-      <header style={{ background: 'white', borderBottom: '1px solid var(--bordure)', padding: '20px 24px' }}>
-        <div style={{ marginBottom: 16 }}>
-          <img src="/Logo_app.png" alt="CoeurTrace" style={{ height: 120, width: 'auto', objectFit: 'contain' }} />
-        </div>
-        <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, maxWidth: 640 }}>
+      <header style={{
+        background: 'white', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+      }}>
+        <img src="/Logo_app.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
+        <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, width: 480, maxWidth: '100%' }}>
           <input
             className="champ"
             style={{ flex: 1 }}
