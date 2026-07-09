@@ -38,13 +38,13 @@ export default function PageListeParapheurs() {
 
       {/* Header */}
       <header style={{
-        background: 'white', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        background: 'var(--vert-clair)', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link to="/" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>Recherche</Link>
-          <Link to="/admin" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>Administration</Link>
+          <Link to="/" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>Recherche</Link>
+          <Link to="/admin" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>Administration</Link>
         </div>
       </header>
 

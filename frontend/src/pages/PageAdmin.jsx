@@ -266,13 +266,13 @@ export default function PageAdmin() {
 
       {/* Header */}
       <header style={{
-        background: 'white', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        background: 'var(--vert-clair)', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="/" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>
+          <a href="/" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>
             ← Visionneur
           </a>
           <div style={{ width: 1, height: 20, background: 'var(--bordure)' }} />

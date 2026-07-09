@@ -38,6 +38,15 @@ body {
   line-height: 1.5;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--bleu) 0%, var(--vert) 100%);
+  z-index: 1000;
+}
+
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
