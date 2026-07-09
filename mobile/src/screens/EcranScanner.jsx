@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     padding: 16,
     paddingTop: 50,
-    backgroundColor: theme.blanc,
+    backgroundColor: theme.vertBandeau,
     borderBottomWidth: 1,
     borderBottomColor: theme.bordure,
   },
