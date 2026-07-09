@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -51,7 +52,7 @@ export default function EcranConnexion({ onConnexion }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Text style={styles.titre}>TraçaParapheur</Text>
+        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
         <Text style={styles.sousTitre}>Connexion opérateur</Text>
 
         <View style={styles.groupe}>
@@ -96,14 +97,9 @@ export default function EcranConnexion({ onConnexion }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#007A8A' },
+  container: { flex: 1, backgroundColor: '#009DBF' },
   inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 16 },
-  titre: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
-    textAlign: 'center',
-  },
+  logo: { width: 200, height: 80, resizeMode: 'contain', alignSelf: 'center', marginBottom: 8 },
   sousTitre: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.7)',
@@ -133,7 +129,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   boutonTexte: {
-    color: '#007A8A',
+    color: '#009DBF',
     fontWeight: '700',
     fontSize: 16,
   },

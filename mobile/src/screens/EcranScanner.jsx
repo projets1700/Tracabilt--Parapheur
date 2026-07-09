@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   StyleSheet,
   Text,
@@ -163,10 +164,13 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerNom}>👤 {scanner?.nom}</Text>
-        <TouchableOpacity onPress={onDeconnexion}>
-          <Text style={styles.headerDeconnexion}>Déconnexion</Text>
-        </TouchableOpacity>
+        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.headerNom}>👤 {scanner?.nom}</Text>
+          <TouchableOpacity onPress={onDeconnexion}>
+            <Text style={styles.headerDeconnexion}>Déconnexion</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <CameraView
@@ -239,9 +243,10 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, backgroundColor: '#f9fafb', padding: 32 },
   texteGris: { fontSize: 16, color: '#374151', textAlign: 'center' },
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    flexDirection: 'column',
     padding: 16, paddingTop: 50, backgroundColor: '#009DBF',
   },
+  logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 8 },
   headerNom: { color: 'white', fontWeight: '600', fontSize: 15 },
   headerDeconnexion: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
   camera: { flex: 1 },

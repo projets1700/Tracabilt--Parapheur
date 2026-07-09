@@ -3,13 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function LogoCE() {
-  return (
-    <svg width="64" height="72" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M32 64C32 64 6 46 6 26C6 15.5 14 8 24 8C27.6 8 31 9.6 32 12.4C33 9.6 36.4 8 40 8C50 8 58 15.5 58 26C58 46 32 64 32 64Z" fill="white"/>
-      <circle cx="32" cy="28" r="9" fill="#95C11F"/>
-      <path d="M32 37V48" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
-    </svg>
-  );
+  return <img src="/Logo_coeuressone.png" alt="Logo" style={{ width: 180, height: 'auto', maxHeight: 80, objectFit: 'contain' }} />;
 }
 
 export default function PageInscriptionAdmin() {

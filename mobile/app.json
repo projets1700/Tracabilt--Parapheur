@@ -4,12 +4,12 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Logo_coeuressone.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/Logo_coeuressone.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1e40af"
+      "backgroundColor": "#009DBF"
     },
     "ios": {
       "supportsTablet": false
@@ -18,8 +18,8 @@
       "package": "com.adam_91.mobile",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundColor": "#1e40af"
+        "foregroundImage": "./assets/Logo_coeuressone.png",
+        "backgroundColor": "#009DBF"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -29,7 +29,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/Logo_coeuressone.png"
     },
     "plugins": [
       [

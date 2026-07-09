@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../services/api';
 import { chargerScansEnAttente, marquerToutSynchronise } from '../services/stockage';
@@ -40,6 +40,7 @@ export default function EcranSynchronisation() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
         <Text style={styles.titre}>Synchronisation</Text>
       </View>
 
@@ -79,6 +80,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { padding: 20, paddingTop: 50, backgroundColor: '#009DBF' },
+  logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 10 },
   titre: { fontSize: 20, fontWeight: '700', color: 'white' },
   contenu: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 24, padding: 32 },
   compteur: {
