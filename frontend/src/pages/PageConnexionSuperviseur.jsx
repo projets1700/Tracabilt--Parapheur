@@ -46,7 +46,7 @@ export default function PageConnexionSuperviseur() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <div style={{
         flex: '0 0 400px',
-        background: 'var(--vert-clair)',
+        background: 'var(--vert-bandeau)',
         borderRight: '1px solid var(--bordure)',
         display: 'flex', flexDirection: 'column',
         justifyContent: 'center', alignItems: 'center',
