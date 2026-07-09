@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import client from '../api/client';
@@ -119,9 +119,6 @@ export default function PageAdmin() {
   const [soumission, setSoumission]   = useState(false);
   const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
   const [infoApk, setInfoApk]         = useState(null);
-  const [uploadApk, setUploadApk]     = useState(null);
-  const [uploadEnCours, setUploadEnCours] = useState(false);
-  const fileRef = useRef();
 
   useEffect(() => {
     if (!localStorage.getItem('admin_token')) navigate('/admin/connexion', { replace: true });
@@ -248,35 +245,6 @@ export default function PageAdmin() {
       setErreur(err.response?.data?.message || 'Erreur lors de la création.');
     } finally {
       setSoumission(false);
-    }
-  }
-
-  async function handleUploadApk(e) {
-    e.preventDefault();
-    if (!uploadApk) return;
-    setUploadEnCours(true);
-    setErreur('');
-    try {
-      const token = localStorage.getItem('admin_token');
-      const fd = new FormData();
-      fd.append('apk', uploadApk);
-      const r = await fetch('/api/admin/apk', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      if (!r.ok) {
-        const d = await r.json();
-        throw new Error(d.message || 'Erreur upload.');
-      }
-      afficherSucces('APK mis en ligne avec succès.');
-      setUploadApk(null);
-      fileRef.current.value = '';
-      chargerApk();
-    } catch (err) {
-      setErreur(err.message || "Erreur lors de l'upload.");
-    } finally {
-      setUploadEnCours(false);
     }
   }
 
@@ -600,34 +568,6 @@ export default function PageAdmin() {
               </div>
             </div>
 
-            <div className="carte">
-              <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Mettre en ligne un nouvel APK</h3>
-              <form onSubmit={handleUploadApk} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <label className="label-champ">Fichier APK</label>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".apk"
-                    onChange={e => setUploadApk(e.target.files[0])}
-                    style={{ fontSize: 13, width: '100%' }}
-                  />
-                </div>
-                {uploadApk && (
-                  <p style={{ fontSize: 12, color: 'var(--texte2)' }}>
-                    {uploadApk.name} — {formaterTaille(uploadApk.size)}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  className="btn btn-primaire"
-                  disabled={!uploadApk || uploadEnCours}
-                  style={{ justifyContent: 'center' }}
-                >
-                  {uploadEnCours ? 'Upload en cours…' : 'Mettre en ligne'}
-                </button>
-              </form>
-            </div>
           </div>
         )}
       </div>
