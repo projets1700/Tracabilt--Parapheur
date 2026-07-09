@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function LogoCE() {
-  return <img src="/Logo_app.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />;
+  return <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />;
 }
 
 export default function PageInscriptionAdmin() {
@@ -76,7 +76,7 @@ export default function PageInscriptionAdmin() {
       {/* Panneau droit – formulaire */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F7FA', padding: 40, overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1D1D1B', marginBottom: 6 }}>Créer le compte admin</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--bleu)', marginBottom: 6 }}>Créer le compte admin</h1>
           <p style={{ fontSize: 13, color: 'var(--texte2)', marginBottom: 32 }}>Ce compte sera le seul administrateur du système.</p>
 
           {erreur && <div className="message-erreur" style={{ marginBottom: 20 }}>{erreur}</div>}

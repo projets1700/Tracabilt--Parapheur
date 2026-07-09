@@ -264,27 +264,27 @@ export default function PageAdmin() {
       <ModalFiche scanner={scannerFiche} onFermer={() => setScannerFiche(null)} />
       <ModalFicheSuperviseur superviseur={superviseurFiche} onFermer={() => setSuperviseurFiche(null)} />
 
-      {/* Header sombre */}
-      <header style={{ background: '#1D1D1B', padding: '0 24px', height: 84, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {/* Logo simplifié */}
-          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
-        </div>
+      {/* Header */}
+      <header style={{
+        background: 'white', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+      }}>
+        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>
+          <a href="/" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>
             ← Visionneur
           </a>
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.15)' }} />
+          <div style={{ width: 1, height: 20, background: 'var(--bordure)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--bleu)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
               {admin?.nom?.charAt(0).toUpperCase()}
             </div>
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{admin?.nom}</span>
+            <span style={{ fontSize: 13, color: 'var(--texte2)', fontWeight: 500 }}>{admin?.nom}</span>
           </div>
           <button
             onClick={deconnecter}
-            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '6px 14px', color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer' }}
+            style={{ background: 'none', border: '1px solid var(--bordure)', borderRadius: 8, padding: '6px 14px', color: 'var(--texte2)', fontSize: 12, cursor: 'pointer' }}
           >
             Déconnexion
           </button>
@@ -295,7 +295,7 @@ export default function PageAdmin() {
       <div style={{ background: 'white', borderBottom: '1px solid var(--bordure)', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, paddingBottom: 0 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1D1D1B' }}>Tableau de bord</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--bleu)' }}>Tableau de bord</h1>
             <p style={{ fontSize: 12, color: 'var(--texte3)', marginTop: 2 }}>Gestion des scanners et de l'application mobile</p>
           </div>
         </div>
@@ -516,7 +516,7 @@ export default function PageAdmin() {
                       <QRCodeSVG
                         value={`${window.location.origin}/api/admin/apk/download`}
                         size={180}
-                        fgColor="#1D1D1B"
+                        fgColor="var(--bleu)"
                         bgColor="white"
                         level="M"
                       />

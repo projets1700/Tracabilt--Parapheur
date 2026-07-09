@@ -33,7 +33,7 @@
 body {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--fond-page);
-  color: #1D1D1B;
+  color: var(--bleu);
   font-size: 14px;
   line-height: 1.5;
 }

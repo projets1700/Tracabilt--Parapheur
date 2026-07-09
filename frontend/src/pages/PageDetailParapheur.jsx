@@ -35,13 +35,14 @@ export default function PageDetailParapheur() {
     <div style={{ minHeight: '100vh', background: '#F4F7FA' }}>
 
       {/* Header */}
-      <header style={{ background: '#1D1D1B', padding: '0 24px', height: 84, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
-        </div>
+      <header style={{
+        background: 'white', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+      }}>
+        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link to="/parapheurs" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>← Liste des parapheurs</Link>
-          <Link to="/admin" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Administration</Link>
+          <Link to="/parapheurs" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>← Liste des parapheurs</Link>
+          <Link to="/admin" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>Administration</Link>
         </div>
       </header>
 
@@ -58,7 +59,7 @@ export default function PageDetailParapheur() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <p style={{ fontSize: 12, color: '#9AA3AE', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600, marginBottom: 4 }}>Parapheur</p>
-                  <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1D1D1B' }}>{parapheur.numero}</h1>
+                  <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--bleu)' }}>{parapheur.numero}</h1>
                   {parapheur.titre && <p style={{ fontSize: 14, color: '#5A6472', marginTop: 4 }}>{parapheur.titre}</p>}
                   <p style={{ fontSize: 12, color: '#9AA3AE', marginTop: 6 }}>Créé le {formaterDate(parapheur.created_at)}</p>
                 </div>
@@ -73,15 +74,15 @@ export default function PageDetailParapheur() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                     <div style={{ background: '#F4F7FA', borderRadius: 10, padding: '12px 16px' }}>
                       <p style={{ fontSize: 11, color: '#9AA3AE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Dernier scan</p>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B', marginTop: 4 }}>{formaterDate(parapheur.scans[0].scanned_at)}</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--bleu)', marginTop: 4 }}>{formaterDate(parapheur.scans[0].scanned_at)}</p>
                     </div>
                     <div style={{ background: '#F4F7FA', borderRadius: 10, padding: '12px 16px' }}>
                       <p style={{ fontSize: 11, color: '#9AA3AE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Opérateur</p>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B', marginTop: 4 }}>{parapheur.scans[0].operateur_nom || '—'}</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--bleu)', marginTop: 4 }}>{parapheur.scans[0].operateur_nom || '—'}</p>
                     </div>
                     <div style={{ background: '#F4F7FA', borderRadius: 10, padding: '12px 16px' }}>
                       <p style={{ fontSize: 11, color: '#9AA3AE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Localisation</p>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B', marginTop: 4 }}>{parapheur.scans[0].nom_lieu || '—'}</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--bleu)', marginTop: 4 }}>{parapheur.scans[0].nom_lieu || '—'}</p>
                     </div>
                   </div>
                 </>
@@ -91,7 +92,7 @@ export default function PageDetailParapheur() {
             {/* Historique complet */}
             <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E6EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B' }}>Historique complet</h2>
+                <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--bleu)' }}>Historique complet</h2>
                 <span style={{ fontSize: 12, color: '#9AA3AE' }}>{parapheur.scans?.length || 0} scan(s)</span>
               </div>
 
@@ -122,11 +123,11 @@ export default function PageDetailParapheur() {
                             {i + 1}
                           </div>
                         </td>
-                        <td style={{ padding: '13px 20px', fontWeight: i === 0 ? 700 : 400, color: '#1D1D1B' }}>
+                        <td style={{ padding: '13px 20px', fontWeight: i === 0 ? 700 : 400, color: 'var(--bleu)' }}>
                           {formaterDate(sc.scanned_at)}
                           {i === 0 && <span style={{ marginLeft: 8, fontSize: 10, background: 'var(--bleu-clair)', color: 'var(--bleu)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Dernier</span>}
                         </td>
-                        <td style={{ padding: '13px 20px', color: '#1D1D1B' }}>{sc.operateur_nom || '—'}</td>
+                        <td style={{ padding: '13px 20px', color: 'var(--bleu)' }}>{sc.operateur_nom || '—'}</td>
                         <td style={{ padding: '13px 20px', color: '#5A6472' }}>
                           {sc.nom_lieu ? `📍 ${sc.nom_lieu}` : '—'}
                         </td>

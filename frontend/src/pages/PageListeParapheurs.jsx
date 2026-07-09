@@ -37,19 +37,20 @@ export default function PageListeParapheurs() {
     <div style={{ minHeight: '100vh', background: '#F4F7FA' }}>
 
       {/* Header */}
-      <header style={{ background: '#1D1D1B', padding: '0 24px', height: 84, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
-        </div>
+      <header style={{
+        background: 'white', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+      }}>
+        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link to="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Recherche</Link>
-          <Link to="/admin" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Administration</Link>
+          <Link to="/" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>Recherche</Link>
+          <Link to="/admin" style={{ fontSize: 12, color: 'var(--texte2)', textDecoration: 'none' }}>Administration</Link>
         </div>
       </header>
 
       {/* Sous-header */}
       <div style={{ background: 'white', borderBottom: '1px solid #E2E6EA', padding: '20px 32px 0' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1D1D1B', marginBottom: 4 }}>Parapheurs</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--bleu)', marginBottom: 4 }}>Parapheurs</h1>
         <p style={{ fontSize: 12, color: '#9AA3AE', marginBottom: 16 }}>
           {chargement ? '…' : `${parapheurs.length} parapheur(s) — triés du plus récemment scanné au moins récent`}
         </p>
@@ -103,7 +104,7 @@ export default function PageListeParapheurs() {
                     onMouseLeave={e => e.currentTarget.style.background = 'white'}
                   >
                     <td style={{ padding: '14px 20px' }}>
-                      <p style={{ fontWeight: 700, color: '#1D1D1B' }}>{p.numero}</p>
+                      <p style={{ fontWeight: 700, color: 'var(--bleu)' }}>{p.numero}</p>
                       {p.titre && <p style={{ fontSize: 12, color: '#5A6472', marginTop: 2 }}>{p.titre}</p>}
                     </td>
                     <td style={{ padding: '14px 20px' }}>
@@ -111,7 +112,7 @@ export default function PageListeParapheurs() {
                         {STATUTS[p.statut]?.label || p.statut}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 20px', color: p.dernier_scan ? '#1D1D1B' : '#9AA3AE' }}>
+                    <td style={{ padding: '14px 20px', color: p.dernier_scan ? 'var(--bleu)' : '#9AA3AE' }}>
                       {formaterDate(p.dernier_scan)}
                     </td>
                     <td style={{ padding: '14px 20px', color: '#5A6472' }}>
