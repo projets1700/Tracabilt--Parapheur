@@ -68,6 +68,18 @@ async function connexion(req, res) {
   }
 }
 
+async function listerAdmins(req, res) {
+  try {
+    const r = await pool.query(
+      'SELECT id, nom, identifiant, created_at FROM admins ORDER BY created_at ASC'
+    );
+    res.json({ admins: r.rows });
+  } catch (err) {
+    console.error('listerAdmins :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
 async function listerScanners(req, res) {
   try {
     const r = await pool.query(
@@ -201,4 +213,4 @@ async function supprimerSuperviseur(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
+module.exports = { adminExiste, inscription, connexion, listerAdmins, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };

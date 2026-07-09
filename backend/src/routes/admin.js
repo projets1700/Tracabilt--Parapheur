@@ -28,6 +28,7 @@ function handleUpload(req, res, next) {
 router.get('/existe',           ctrl.adminExiste);
 router.post('/inscription',     ctrl.inscription);
 router.post('/connexion',       ctrl.connexion);
+router.get('/admins',           exigerAdmin, ctrl.listerAdmins);
 router.get('/scanners',         exigerAdmin, ctrl.listerScanners);
 router.post('/scanners',        exigerAdmin, ctrl.creerScanner);
 router.delete('/scanners/:id',  exigerAdmin, ctrl.supprimerScanner);

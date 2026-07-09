@@ -104,6 +104,7 @@ export default function PageAdmin() {
   const admin = JSON.parse(localStorage.getItem('admin_user') || 'null');
 
   const [onglet, setOnglet]           = useState('scanners');
+  const [admins, setAdmins]           = useState([]);
   const [scanners, setScanners]       = useState([]);
   const [chargement, setChargement]   = useState(true);
   const [erreur, setErreur]           = useState('');
@@ -148,6 +149,13 @@ export default function PageAdmin() {
     } catch {}
   }, []);
 
+  const chargerAdmins = useCallback(async () => {
+    try {
+      const { data } = await clientAdmin().get('/admin/admins');
+      setAdmins(data.admins);
+    } catch {}
+  }, []);
+
   const chargerApk = useCallback(async () => {
     try {
       const { data } = await clientAdmin().get('/admin/apk/info');
@@ -158,8 +166,9 @@ export default function PageAdmin() {
   useEffect(() => {
     chargerScanners();
     chargerSuperviseurs();
+    chargerAdmins();
     chargerApk();
-  }, [chargerScanners, chargerSuperviseurs, chargerApk]);
+  }, [chargerScanners, chargerSuperviseurs, chargerAdmins, chargerApk]);
 
   function deconnecter() {
     localStorage.removeItem('admin_token');
@@ -300,7 +309,7 @@ export default function PageAdmin() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
-          {[{ id: 'scanners', label: 'Utilisateurs' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'apk', label: 'Application mobile' }].map(o => (
+          {[{ id: 'scanners', label: 'Scannaire' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'admins', label: 'Administrateurs' }, { id: 'apk', label: 'Application mobile' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
@@ -480,6 +489,44 @@ export default function PageAdmin() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {onglet === 'admins' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{admins.length} administrateur(s) sur 2 maximum</p>
+
+            <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
+                    {['Nom', 'Identifiant', 'Créé le'].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {admins.map((a, i) => (
+                    <tr key={a.id} style={{ borderBottom: i < admins.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                        {a.nom}
+                        {a.identifiant === admin?.identifiant && (
+                          <span style={{ marginLeft: 8, fontSize: 10, background: 'var(--bleu-clair)', color: 'var(--bleu)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Vous</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{a.identifiant}</td>
+                      <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {admins.length < 2 && (
+              <p style={{ fontSize: 12, color: 'var(--texte3)' }}>
+                Un second administrateur peut être créé depuis la page d'inscription (/admin/inscription).
+              </p>
             )}
           </div>
         )}
