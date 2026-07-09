@@ -4,7 +4,6 @@ import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Modal,
   StyleSheet,
   Text,
@@ -165,7 +164,6 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={require('../../assets/Logo_app.png')} style={styles.logo} />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={styles.headerNom}>👤 {scanner?.nom}</Text>
           <TouchableOpacity onPress={onDeconnexion}>
@@ -251,7 +249,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.bordure,
   },
-  logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 8 },
   headerNom: { color: theme.bleu, fontWeight: '600', fontSize: 15 },
   headerDeconnexion: { color: theme.teal, fontSize: 13, fontWeight: '500' },
   camera: { flex: 1 },

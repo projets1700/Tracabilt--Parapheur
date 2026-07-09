@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -53,7 +52,6 @@ export default function EcranConnexion({ onConnexion }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Image source={require('../../assets/Logo_app.png')} style={styles.logo} />
         <Text style={styles.sousTitre}>Connexion opérateur</Text>
 
         <View style={styles.groupe}>
@@ -100,7 +98,6 @@ export default function EcranConnexion({ onConnexion }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.fond },
   inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 16 },
-  logo: { width: 200, height: 80, resizeMode: 'contain', alignSelf: 'center', marginBottom: 8 },
   sousTitre: {
     fontSize: 14,
     color: theme.texte,

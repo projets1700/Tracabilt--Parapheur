@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { chargerScansLocaux } from '../services/stockage';
 import { theme } from '../theme';
@@ -29,7 +29,6 @@ export default function EcranHistorique() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={require('../../assets/Logo_app.png')} style={styles.logo} />
         <Text style={styles.titre}>Historique des scans</Text>
         <Text style={styles.sousTitre}>
           {scans.length} scan(s) · {enAttente} en attente de sync
@@ -89,7 +88,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.bordure,
   },
-  logo: { width: 140, height: 50, resizeMode: 'contain', marginBottom: 10 },
   titre: { fontSize: 20, fontWeight: '700', color: theme.bleu },
   sousTitre: { fontSize: 13, color: theme.texte, marginTop: 4 },
   vide: { fontSize: 15, color: theme.placeholder },
