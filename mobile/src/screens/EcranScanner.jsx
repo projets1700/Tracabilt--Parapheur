@@ -146,7 +146,7 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
   }
 
   if (!permission) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#1e40af" /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color="#009DBF" /></View>;
   }
 
   if (!permission.granted) {
@@ -240,14 +240,14 @@ const styles = StyleSheet.create({
   texteGris: { fontSize: 16, color: '#374151', textAlign: 'center' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: 16, paddingTop: 50, backgroundColor: '#1e40af',
+    padding: 16, paddingTop: 50, backgroundColor: '#009DBF',
   },
   headerNom: { color: 'white', fontWeight: '600', fontSize: 15 },
   headerDeconnexion: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
   camera: { flex: 1 },
   overlayBas: { padding: 28, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center' },
   instruction: { color: 'white', fontSize: 14, textAlign: 'center' },
-  bouton: { backgroundColor: '#1e40af', borderRadius: 12, padding: 16, alignItems: 'center', width: '100%' },
+  bouton: { backgroundColor: '#009DBF', borderRadius: 12, padding: 16, alignItems: 'center', width: '100%' },
   boutonTexte: { color: 'white', fontWeight: '700', fontSize: 15 },
   boutonSecondaire: { padding: 12, alignItems: 'center' },
   boutonSecondaireTexte: { color: '#6b7280', fontSize: 13 },
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     padding: 32, alignItems: 'center', gap: 12,
   },
   modalEmoji: { fontSize: 48 },
-  modalNumero: { fontSize: 18, fontWeight: '700', color: '#1e40af' },
+  modalNumero: { fontSize: 18, fontWeight: '700', color: '#009DBF' },
   modalMessage: { fontSize: 14, color: '#374151', textAlign: 'center' },
   input: {
     width: '100%', borderWidth: 1.5, borderColor: '#d1d5db', borderRadius: 10,

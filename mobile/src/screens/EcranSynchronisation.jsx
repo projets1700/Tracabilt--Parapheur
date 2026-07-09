@@ -34,7 +34,7 @@ export default function EcranSynchronisation() {
   }
 
   if (chargement) {
-    return <View style={styles.center}><ActivityIndicator size="large" color="#1e40af" /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color="#009DBF" /></View>;
   }
 
   return (
@@ -78,15 +78,15 @@ export default function EcranSynchronisation() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 20, paddingTop: 50, backgroundColor: '#1e40af' },
+  header: { padding: 20, paddingTop: 50, backgroundColor: '#009DBF' },
   titre: { fontSize: 20, fontWeight: '700', color: 'white' },
   contenu: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 24, padding: 32 },
   compteur: {
     alignItems: 'center', backgroundColor: 'white', borderRadius: 16, padding: 32,
     width: '100%', elevation: 3,
   },
-  compteurNombre: { fontSize: 72, fontWeight: '700', color: '#1e40af' },
+  compteurNombre: { fontSize: 72, fontWeight: '700', color: '#009DBF' },
   compteurLabel: { fontSize: 16, color: '#6b7280', marginTop: 4 },
-  bouton: { backgroundColor: '#1e40af', borderRadius: 12, padding: 18, alignItems: 'center', width: '100%' },
+  bouton: { backgroundColor: '#009DBF', borderRadius: 12, padding: 18, alignItems: 'center', width: '100%' },
   boutonTexte: { color: 'white', fontWeight: '700', fontSize: 16 },
 });

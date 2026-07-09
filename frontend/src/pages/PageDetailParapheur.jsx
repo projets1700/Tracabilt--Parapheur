@@ -32,14 +32,14 @@ export default function PageDetailParapheur() {
   }, [numero]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F8' }}>
+    <div style={{ minHeight: '100vh', background: '#F4F7FA' }}>
 
       {/* Header */}
       <header style={{ background: '#1D1D1B', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <svg width="32" height="36" viewBox="0 0 64 72" fill="none">
             <path d="M32 64C32 64 6 46 6 26C6 15.5 14 8 24 8C27.6 8 31 9.6 32 12.4C33 9.6 36.4 8 40 8C50 8 58 15.5 58 26C58 46 32 64 32 64Z" fill="white"/>
-            <circle cx="32" cy="28" r="9" fill="#8DC63F"/>
+            <circle cx="32" cy="28" r="9" fill="#95C11F"/>
             <path d="M32 37V48" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
           </svg>
           <div>
@@ -79,15 +79,15 @@ export default function PageDetailParapheur() {
                 <>
                   <div className="sep" />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                    <div style={{ background: '#F4F6F8', borderRadius: 10, padding: '12px 16px' }}>
+                    <div style={{ background: '#F4F7FA', borderRadius: 10, padding: '12px 16px' }}>
                       <p style={{ fontSize: 11, color: '#9AA3AE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Dernier scan</p>
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B', marginTop: 4 }}>{formaterDate(parapheur.scans[0].scanned_at)}</p>
                     </div>
-                    <div style={{ background: '#F4F6F8', borderRadius: 10, padding: '12px 16px' }}>
+                    <div style={{ background: '#F4F7FA', borderRadius: 10, padding: '12px 16px' }}>
                       <p style={{ fontSize: 11, color: '#9AA3AE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Opérateur</p>
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B', marginTop: 4 }}>{parapheur.scans[0].operateur_nom || '—'}</p>
                     </div>
-                    <div style={{ background: '#F4F6F8', borderRadius: 10, padding: '12px 16px' }}>
+                    <div style={{ background: '#F4F7FA', borderRadius: 10, padding: '12px 16px' }}>
                       <p style={{ fontSize: 11, color: '#9AA3AE', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Localisation</p>
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B', marginTop: 4 }}>{parapheur.scans[0].nom_lieu || '—'}</p>
                     </div>
@@ -110,7 +110,7 @@ export default function PageDetailParapheur() {
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
-                    <tr style={{ background: '#F4F6F8', borderBottom: '1px solid #E2E6EA' }}>
+                    <tr style={{ background: '#F4F7FA', borderBottom: '1px solid #E2E6EA' }}>
                       {['#', 'Date et heure', 'Opérateur', 'Localisation', 'Coordonnées GPS'].map(h => (
                         <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontWeight: 600, color: '#5A6472', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>{h}</th>
                       ))}

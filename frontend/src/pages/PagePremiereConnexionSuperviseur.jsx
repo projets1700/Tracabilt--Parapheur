@@ -6,7 +6,7 @@ function LogoCE() {
   return (
     <svg width="64" height="72" viewBox="0 0 64 72" fill="none">
       <path d="M32 64C32 64 6 46 6 26C6 15.5 14 8 24 8C27.6 8 31 9.6 32 12.4C33 9.6 36.4 8 40 8C50 8 58 15.5 58 26C58 46 32 64 32 64Z" fill="white"/>
-      <circle cx="32" cy="28" r="9" fill="#8DC63F"/>
+      <circle cx="32" cy="28" r="9" fill="#95C11F"/>
       <path d="M32 37V48" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
     </svg>
   );
@@ -60,7 +60,7 @@ export default function PagePremiereConnexionSuperviseur() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <div style={{
         flex: '0 0 400px',
-        background: 'linear-gradient(160deg, #007A8A 0%, #005060 100%)',
+        background: 'linear-gradient(160deg, #009DBF 0%, #0067A5 100%)',
         display: 'flex', flexDirection: 'column',
         justifyContent: 'center', alignItems: 'center',
         padding: '48px 40px', gap: 24,
@@ -73,7 +73,7 @@ export default function PagePremiereConnexionSuperviseur() {
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F6F8', padding: 40, overflowY: 'auto' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F7FA', padding: 40, overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1D1D1B', marginBottom: 6 }}>Première connexion</h1>
           <p style={{ fontSize: 13, color: 'var(--texte2)', marginBottom: 32 }}>

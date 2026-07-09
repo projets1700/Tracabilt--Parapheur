@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -5,31 +7,31 @@
 }
 
 :root {
-  --bleu: #007A8A;
-  --bleu-clair: #E0F2F4;
-  --bleu-moyen: #009AB0;
-  --bleu-fonce: #005F6B;
-  --vert: #8DC63F;
-  --vert-clair: #EEF7E0;
-  --vert-fonce: #5A7D28;
+  --bleu: #009DBF;
+  --bleu-clair: #E6F4F1;
+  --bleu-moyen: #00B4D8;
+  --bleu-fonce: #0067A5;
+  --vert: #95C11F;
+  --vert-clair: #EEF6D6;
+  --vert-fonce: #5A7410;
   --orange: #E07B20;
   --orange-clair: #FDF0E3;
   --rouge: #D94040;
   --rouge-clair: #FDEAEA;
   --violet: #6A3FA0;
   --violet-clair: #EDE8F8;
-  --gris: #7A8590;
-  --gris-clair: #F0F2F4;
+  --gris: #65707D;
+  --gris-clair: #F4F7FA;
   --gris-fonce: #3A4148;
-  --bordure: #E2E6EA;
-  --fond2: #F4F6F8;
-  --texte2: #5A6472;
-  --texte3: #9AA3AE;
-  --fond-page: #F4F6F8;
+  --bordure: #E2E8EE;
+  --fond2: #F4F7FA;
+  --texte2: #65707D;
+  --texte3: #9AA5AE;
+  --fond-page: #F4F7FA;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--fond-page);
   color: #1D1D1B;
   font-size: 14px;

@@ -35,7 +35,7 @@ export default function EcranHistorique() {
       </View>
 
       {chargement ? (
-        <View style={styles.center}><ActivityIndicator size="large" color="#1e40af" /></View>
+        <View style={styles.center}><ActivityIndicator size="large" color="#009DBF" /></View>
       ) : scans.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emoji}>📋</Text>
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   emoji: { fontSize: 48 },
-  header: { padding: 20, paddingTop: 50, backgroundColor: '#1e40af' },
+  header: { padding: 20, paddingTop: 50, backgroundColor: '#009DBF' },
   titre: { fontSize: 20, fontWeight: '700', color: 'white' },
   sousTitre: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
   vide: { fontSize: 15, color: '#9ca3af' },
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  numero: { fontWeight: '700', fontSize: 15, color: '#1e40af' },
+  numero: { fontWeight: '700', fontSize: 15, color: '#009DBF' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeVert: { backgroundColor: '#d1fae5' },
   badgeOrange: { backgroundColor: '#fef3c7' },

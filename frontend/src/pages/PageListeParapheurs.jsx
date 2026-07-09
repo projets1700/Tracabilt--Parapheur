@@ -34,14 +34,14 @@ export default function PageListeParapheurs() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F8' }}>
+    <div style={{ minHeight: '100vh', background: '#F4F7FA' }}>
 
       {/* Header */}
       <header style={{ background: '#1D1D1B', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <svg width="32" height="36" viewBox="0 0 64 72" fill="none">
             <path d="M32 64C32 64 6 46 6 26C6 15.5 14 8 24 8C27.6 8 31 9.6 32 12.4C33 9.6 36.4 8 40 8C50 8 58 15.5 58 26C58 46 32 64 32 64Z" fill="white"/>
-            <circle cx="32" cy="28" r="9" fill="#8DC63F"/>
+            <circle cx="32" cy="28" r="9" fill="#95C11F"/>
             <path d="M32 37V48" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
           </svg>
           <div>
@@ -69,7 +69,7 @@ export default function PageListeParapheurs() {
             placeholder="Filtrer par numéro ou titre…"
             value={recherche}
             onChange={e => setRecherche(e.target.value)}
-            style={{ background: '#F4F6F8' }}
+            style={{ background: '#F4F7FA' }}
           />
         </div>
 
@@ -96,7 +96,7 @@ export default function PageListeParapheurs() {
           <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#F4F6F8', borderBottom: '1px solid #E2E6EA' }}>
+                <tr style={{ background: '#F4F7FA', borderBottom: '1px solid #E2E6EA' }}>
                   {['Numéro / Titre', 'Statut', 'Dernier scan', 'Localisation', ''].map(h => (
                     <th key={h} style={{ padding: '11px 20px', textAlign: 'left', fontWeight: 600, color: '#5A6472', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>{h}</th>
                   ))}
@@ -107,7 +107,7 @@ export default function PageListeParapheurs() {
                   <tr
                     key={p.id}
                     style={{ borderBottom: i < filtres.length - 1 ? '1px solid #E2E6EA' : 'none', transition: 'background 0.1s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F4F6F8'}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F4F7FA'}
                     onMouseLeave={e => e.currentTarget.style.background = 'white'}
                   >
                     <td style={{ padding: '14px 20px' }}>
