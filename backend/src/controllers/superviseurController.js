@@ -55,11 +55,41 @@ async function connexion(req, res) {
       return res.status(401).json({ message: 'Identifiants incorrects.' });
     }
     const token = signerToken({ id: sup.id, nom: sup.nom, identifiant: sup.identifiant, role: 'superviseur' });
-    res.json({ token, utilisateur: { id: sup.id, nom: sup.nom, identifiant: sup.identifiant, role: 'superviseur' } });
+    res.json({ token, utilisateur: { id: sup.id, nom: sup.nom, identifiant: sup.identifiant, role: 'superviseur', premiere_connexion: sup.premiere_connexion } });
   } catch (err) {
     console.error('connexion superviseur :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 }
 
-module.exports = { superviseurExiste, inscription, connexion };
+async function changerIdentifiants(req, res) {
+  try {
+    const { identifiant, mot_de_passe } = req.body;
+    if (!identifiant || !mot_de_passe) {
+      return res.status(400).json({ message: 'Identifiant et mot de passe requis.' });
+    }
+    if (mot_de_passe.length < 6) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    }
+    const doublon = await pool.query(
+      'SELECT id FROM superviseurs WHERE identifiant = $1 AND id != $2',
+      [identifiant.trim().toLowerCase(), req.utilisateur.id]
+    );
+    if (doublon.rows.length > 0) {
+      return res.status(409).json({ message: 'Cet identifiant est déjà utilisé.' });
+    }
+    const hash = await bcrypt.hash(mot_de_passe, 10);
+    const r = await pool.query(
+      'UPDATE superviseurs SET identifiant = $1, password_hash = $2, premiere_connexion = FALSE WHERE id = $3 RETURNING id, nom, identifiant',
+      [identifiant.trim().toLowerCase(), hash, req.utilisateur.id]
+    );
+    const sup = r.rows[0];
+    const token = signerToken({ id: sup.id, nom: sup.nom, identifiant: sup.identifiant, role: 'superviseur' });
+    res.json({ token, utilisateur: { ...sup, role: 'superviseur', premiere_connexion: false } });
+  } catch (err) {
+    console.error('changerIdentifiants :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+module.exports = { superviseurExiste, inscription, connexion, changerIdentifiants };

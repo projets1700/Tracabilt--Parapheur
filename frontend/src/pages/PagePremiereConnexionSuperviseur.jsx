@@ -12,20 +12,22 @@ function LogoCE() {
   );
 }
 
-export default function PageInscriptionSuperviseur() {
+export default function PagePremiereConnexionSuperviseur() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ nom: '', identifiant: '', mot_de_passe: '', confirmer: '' });
+  const [form, setForm] = useState({ identifiant: '', mot_de_passe: '', confirmer: '' });
   const [erreur, setErreur] = useState('');
   const [chargement, setChargement] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem('superviseur_token')) {
-      navigate('/parapheurs', { replace: true });
+    const token = localStorage.getItem('superviseur_token');
+    const user = JSON.parse(localStorage.getItem('superviseur_user') || 'null');
+    if (!token) {
+      navigate('/superviseur/connexion', { replace: true });
       return;
     }
-    client.get('/superviseur/existe').then(({ data }) => {
-      if (data.existe) navigate('/superviseur/connexion', { replace: true });
-    });
+    if (user && user.premiere_connexion === false) {
+      navigate('/parapheurs', { replace: true });
+    }
   }, [navigate]);
 
   function changer(e) {
@@ -39,16 +41,16 @@ export default function PageInscriptionSuperviseur() {
     if (form.mot_de_passe.length < 6) return setErreur('Le mot de passe doit contenir au moins 6 caractères.');
     setChargement(true);
     try {
-      const { data } = await client.post('/superviseur/inscription', {
-        nom: form.nom,
+      const token = localStorage.getItem('superviseur_token');
+      const { data } = await client.put('/superviseur/moi', {
         identifiant: form.identifiant,
         mot_de_passe: form.mot_de_passe,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       localStorage.setItem('superviseur_token', data.token);
       localStorage.setItem('superviseur_user', JSON.stringify(data.utilisateur));
       navigate('/parapheurs', { replace: true });
     } catch (err) {
-      setErreur(err.response?.data?.message || 'Erreur lors de la création du compte.');
+      setErreur(err.response?.data?.message || 'Erreur lors de la mise à jour.');
     } finally {
       setChargement(false);
     }
@@ -64,35 +66,29 @@ export default function PageInscriptionSuperviseur() {
         padding: '48px 40px', gap: 24,
       }}>
         <LogoCE />
-        <div style={{ textAlign: 'center', color: 'white' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, opacity: 0.65, textTransform: 'uppercase', marginBottom: 4 }}>Coeur d'Essonne</p>
-          <p style={{ fontSize: 10, letterSpacing: 2, opacity: 0.5, textTransform: 'uppercase' }}>Agglomération</p>
-        </div>
         <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
         <div style={{ textAlign: 'center', color: 'white' }}>
           <p style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>TraçaParapheur</p>
-          <p style={{ fontSize: 13, opacity: 0.65 }}>Création du compte superviseur</p>
+          <p style={{ fontSize: 13, opacity: 0.65 }}>Espace superviseur</p>
         </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F6F8', padding: 40, overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1D1D1B', marginBottom: 6 }}>Créer le compte superviseur</h1>
-          <p style={{ fontSize: 13, color: 'var(--texte2)', marginBottom: 32 }}>Ce compte donne accès à la consultation de tous les parapheurs.</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1D1D1B', marginBottom: 6 }}>Première connexion</h1>
+          <p style={{ fontSize: 13, color: 'var(--texte2)', marginBottom: 32 }}>
+            Choisissez votre identifiant et votre mot de passe personnel avant de continuer.
+          </p>
 
           {erreur && <div className="message-erreur" style={{ marginBottom: 20 }}>{erreur}</div>}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className="label-champ">Nom complet</label>
-              <input className="champ" name="nom" value={form.nom} onChange={changer} placeholder="Ex : Marie Dupont" autoFocus required />
+              <label className="label-champ">Nouvel identifiant</label>
+              <input className="champ" name="identifiant" value={form.identifiant} onChange={changer} autoCapitalize="none" autoFocus required />
             </div>
             <div>
-              <label className="label-champ">Identifiant de connexion</label>
-              <input className="champ" name="identifiant" value={form.identifiant} onChange={changer} placeholder="Ex : superviseur" autoCapitalize="none" required />
-            </div>
-            <div>
-              <label className="label-champ">Mot de passe</label>
+              <label className="label-champ">Nouveau mot de passe</label>
               <input className="champ" type="password" name="mot_de_passe" value={form.mot_de_passe} onChange={changer} placeholder="6 caractères minimum" required />
             </div>
             <div>
@@ -100,7 +96,7 @@ export default function PageInscriptionSuperviseur() {
               <input className="champ" type="password" name="confirmer" value={form.confirmer} onChange={changer} placeholder="Répétez le mot de passe" required />
             </div>
             <button className="btn btn-primaire" type="submit" disabled={chargement} style={{ padding: '13px 0', fontSize: 14, justifyContent: 'center', marginTop: 8, borderRadius: 10 }}>
-              {chargement ? 'Création…' : 'Créer le compte'}
+              {chargement ? 'Enregistrement…' : 'Confirmer'}
             </button>
           </form>
         </div>

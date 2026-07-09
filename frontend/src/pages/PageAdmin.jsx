@@ -13,6 +13,42 @@ function formaterTaille(octets) {
   return `${(octets / 1024).toFixed(0)} Ko`;
 }
 
+function ModalFicheSuperviseur({ superviseur, onFermer }) {
+  if (!superviseur) return null;
+  return (
+    <div
+      onClick={onFermer}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="carte"
+        style={{ width: '100%', maxWidth: 420, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>{superviseur.nom}</h2>
+            <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 2 }}>{superviseur.identifiant}</p>
+          </div>
+          <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--texte3)', lineHeight: 1 }}>✕</button>
+        </div>
+        <div className="sep" style={{ margin: 0 }} />
+        {[
+          { label: 'Identifiant', valeur: superviseur.identifiant },
+          { label: 'Créé le',     valeur: formaterDate(superviseur.created_at) },
+        ].map(({ label, valeur }) => (
+          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+            <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>{label}</span>
+            <span style={{ fontWeight: 600 }}>{valeur}</span>
+          </div>
+        ))}
+        <div className="sep" style={{ margin: 0 }} />
+        <button className="btn" onClick={onFermer} style={{ justifyContent: 'center' }}>Fermer</button>
+      </div>
+    </div>
+  );
+}
+
 function ModalFiche({ scanner, onFermer }) {
   if (!scanner) return null;
   return (
@@ -72,7 +108,12 @@ export default function PageAdmin() {
   const [chargement, setChargement]   = useState(true);
   const [erreur, setErreur]           = useState('');
   const [succes, setSucces]           = useState('');
-  const [scannerFiche, setScannerFiche]   = useState(null);
+  const [scannerFiche, setScannerFiche]         = useState(null);
+  const [superviseurs, setSuperviseurs]               = useState([]);
+  const [superviseurFiche, setSuperviseurFiche]       = useState(null);
+  const [ajoutSupOuvert, setAjoutSupOuvert]           = useState(false);
+  const [formSuperviseur, setFormSuperviseur]         = useState({ nom: '', identifiant: '', mot_de_passe: '' });
+  const [soumissionSup, setSoumissionSup]             = useState(false);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
   const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
@@ -100,6 +141,13 @@ export default function PageAdmin() {
     }
   }, [navigate]);
 
+  const chargerSuperviseurs = useCallback(async () => {
+    try {
+      const { data } = await clientAdmin().get('/admin/superviseurs');
+      setSuperviseurs(data.superviseurs);
+    } catch {}
+  }, []);
+
   const chargerApk = useCallback(async () => {
     try {
       const { data } = await clientAdmin().get('/admin/apk/info');
@@ -109,8 +157,9 @@ export default function PageAdmin() {
 
   useEffect(() => {
     chargerScanners();
+    chargerSuperviseurs();
     chargerApk();
-  }, [chargerScanners, chargerApk]);
+  }, [chargerScanners, chargerSuperviseurs, chargerApk]);
 
   function deconnecter() {
     localStorage.removeItem('admin_token');
@@ -121,6 +170,35 @@ export default function PageAdmin() {
   function afficherSucces(msg) {
     setSucces(msg);
     setTimeout(() => setSucces(''), 3000);
+  }
+
+  async function handleCreerSuperviseur(e) {
+    e.preventDefault();
+    setErreur('');
+    setSoumissionSup(true);
+    try {
+      await clientAdmin().post('/admin/superviseurs', formSuperviseur);
+      afficherSucces(`Superviseur "${formSuperviseur.nom}" créé avec succès.`);
+      setFormSuperviseur({ nom: '', identifiant: '', mot_de_passe: '' });
+      setAjoutSupOuvert(false);
+      chargerSuperviseurs();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la création.');
+    } finally {
+      setSoumissionSup(false);
+    }
+  }
+
+  async function supprimerSuperviseur(id, nom) {
+    if (!confirm(`Supprimer le superviseur "${nom}" ?`)) return;
+    setErreur('');
+    try {
+      await clientAdmin().delete(`/admin/superviseurs/${id}`);
+      afficherSucces('Superviseur supprimé.');
+      chargerSuperviseurs();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
+    }
   }
 
   async function supprimerScanner(id, nom) {
@@ -184,6 +262,7 @@ export default function PageAdmin() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
       <ModalFiche scanner={scannerFiche} onFermer={() => setScannerFiche(null)} />
+      <ModalFicheSuperviseur superviseur={superviseurFiche} onFermer={() => setSuperviseurFiche(null)} />
 
       {/* Header sombre */}
       <header style={{ background: '#1D1D1B', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -229,7 +308,7 @@ export default function PageAdmin() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
-          {[{ id: 'scanners', label: 'Utilisateurs' }, { id: 'apk', label: 'Application mobile' }].map(o => (
+          {[{ id: 'scanners', label: 'Utilisateurs' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'apk', label: 'Application mobile' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
@@ -321,6 +400,85 @@ export default function PageAdmin() {
                               Fiche
                             </button>
                             <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerScanner(s.id, s.nom)}>
+                              Supprimer
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {onglet === 'superviseurs' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{superviseurs.length} superviseur(s) enregistré(s)</p>
+              <button className="btn btn-primaire" onClick={() => setAjoutSupOuvert(o => !o)}>
+                {ajoutSupOuvert ? '✕ Annuler' : '+ Nouveau superviseur'}
+              </button>
+            </div>
+
+            {ajoutSupOuvert && (
+              <div className="carte">
+                <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Nouveau superviseur</h3>
+                <form onSubmit={handleCreerSuperviseur} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label-champ">Nom complet *</label>
+                    <input className="champ" value={formSuperviseur.nom} onChange={e => setFormSuperviseur(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
+                  </div>
+                  <div>
+                    <label className="label-champ">Identifiant provisoire *</label>
+                    <input className="champ" value={formSuperviseur.identifiant} onChange={e => setFormSuperviseur(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" required />
+                  </div>
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <label className="label-champ">Mot de passe provisoire *</label>
+                    <input className="champ" type="password" value={formSuperviseur.mot_de_passe} onChange={e => setFormSuperviseur(f => ({ ...f, mot_de_passe: e.target.value }))} placeholder="••••••••" required />
+                  </div>
+                  <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                    <button type="button" className="btn" onClick={() => setAjoutSupOuvert(false)}>Annuler</button>
+                    <button type="submit" className="btn btn-primaire" disabled={soumissionSup}>
+                      {soumissionSup ? 'Création…' : 'Créer le superviseur'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {superviseurs.length === 0 ? (
+              <div className="carte" style={{ textAlign: 'center', padding: 40, color: 'var(--texte3)' }}>
+                Aucun superviseur enregistré
+              </div>
+            ) : (
+              <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
+                      {['Nom', 'Identifiant', 'Statut', 'Créé le', ''].map(h => (
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {superviseurs.map((s, i) => (
+                      <tr key={s.id} style={{ borderBottom: i < superviseurs.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{s.nom}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{s.identifiant}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span className={`badge ${s.premiere_connexion ? 'badge-orange' : 'badge-vert'}`}>
+                            {s.premiere_connexion ? 'En attente' : 'Actif'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(s.created_at)}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setSuperviseurFiche(s)}>
+                              Fiche
+                            </button>
+                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerSuperviseur(s.id, s.nom)}>
                               Supprimer
                             </button>
                           </div>

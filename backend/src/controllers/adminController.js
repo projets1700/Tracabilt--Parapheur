@@ -151,4 +151,52 @@ async function telechargerApk(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk };
+async function listerSuperviseurs(req, res) {
+  try {
+    const r = await pool.query(
+      'SELECT id, nom, identifiant, premiere_connexion, created_at FROM superviseurs ORDER BY created_at DESC'
+    );
+    res.json({ superviseurs: r.rows });
+  } catch (err) {
+    console.error('listerSuperviseurs :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+async function creerSuperviseur(req, res) {
+  try {
+    const { nom, identifiant, mot_de_passe } = req.body;
+    if (!nom || !identifiant || !mot_de_passe) {
+      return res.status(400).json({ message: 'Nom, identifiant et mot de passe sont obligatoires.' });
+    }
+    const existe = await pool.query('SELECT id FROM superviseurs WHERE identifiant = $1', [identifiant.trim().toLowerCase()]);
+    if (existe.rows.length > 0) {
+      return res.status(409).json({ message: 'Cet identifiant est déjà utilisé.' });
+    }
+    const hash = await bcrypt.hash(mot_de_passe, 10);
+    const r = await pool.query(
+      'INSERT INTO superviseurs (nom, identifiant, password_hash) VALUES ($1, $2, $3) RETURNING id, nom, identifiant, premiere_connexion, created_at',
+      [nom.trim(), identifiant.trim().toLowerCase(), hash]
+    );
+    res.status(201).json({ superviseur: r.rows[0] });
+  } catch (err) {
+    console.error('creerSuperviseur :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+async function supprimerSuperviseur(req, res) {
+  try {
+    const { id } = req.params;
+    const r = await pool.query('DELETE FROM superviseurs WHERE id = $1 RETURNING id', [id]);
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: 'Superviseur introuvable.' });
+    }
+    res.json({ message: 'Superviseur supprimé.' });
+  } catch (err) {
+    console.error('supprimerSuperviseur :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+module.exports = { adminExiste, inscription, connexion, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };

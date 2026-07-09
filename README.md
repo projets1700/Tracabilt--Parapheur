@@ -40,7 +40,7 @@ Le projet tourne sur un VPS OVH via Docker Compose.
 |------|--------|
 | Visionneur (public) | `/` |
 | Connexion superviseur | `/superviseur/connexion` |
-| Inscription superviseur *(1ère fois)* | `/superviseur/inscription` |
+| Première connexion superviseur | `/superviseur/premiere-connexion` |
 | Liste des parapheurs | `/parapheurs` |
 | Connexion admin | `/admin/connexion` |
 | Inscription admin *(1ère fois)* | `/admin/inscription` |
@@ -128,8 +128,8 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Rôle | Création | Accès |
 |------|----------|-------|
-| **Admin** | `/admin/inscription` *(première visite)* | Gestion des scanners, upload APK |
-| **Superviseur** | `/superviseur/inscription` *(première visite)* | Consultation de tous les parapheurs |
+| **Admin** | `/admin/inscription` *(première visite)* | Gestion des scanners, superviseurs, upload APK |
+| **Superviseur** | Créé par l'admin depuis le tableau de bord | Consultation de tous les parapheurs |
 | **Scanner** | Créé par l'admin depuis le tableau de bord | Application mobile uniquement |
 
 ---
@@ -159,7 +159,9 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ### Interface web — Superviseur
 
-- Connexion requise : `/superviseur/connexion`
+- Compte créé par l'admin depuis le tableau de bord
+- Connexion : `/superviseur/connexion`
+- Première connexion → formulaire pour choisir son identifiant et mot de passe personnel
 - Liste de tous les parapheurs, triée du plus récent au moins récent
 - Colonnes : numéro, titre, date du dernier scan, localisation
 - Clic sur un parapheur → historique complet en tableau
@@ -174,6 +176,12 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 - Liste des scanners (nom, identifiant, date de création)
 - Créer / supprimer un scanner
 - Consulter la fiche d'un scanner
+
+**Onglet Superviseurs**
+- Liste des superviseurs avec statut (En attente / Actif)
+- Créer un superviseur (identifiant et mot de passe provisoires)
+- Supprimer un superviseur
+- Consulter la fiche d'un superviseur
 
 **Onglet Application mobile**
 - Informations sur l'APK disponible (taille, date)
@@ -214,6 +222,9 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | GET | `/api/admin/scanners` | Liste des scanners |
 | POST | `/api/admin/scanners` | Créer un scanner |
 | DELETE | `/api/admin/scanners/:id` | Supprimer un scanner |
+| GET | `/api/admin/superviseurs` | Liste des superviseurs |
+| POST | `/api/admin/superviseurs` | Créer un superviseur |
+| DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
 | POST | `/api/admin/apk` | Upload de l'APK |
 | GET | `/api/admin/apk/info` | Infos sur l'APK |
 
@@ -221,9 +232,8 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/api/superviseur/existe` | Vérifie si un superviseur existe |
-| POST | `/api/superviseur/inscription` | Créer le compte superviseur |
 | POST | `/api/superviseur/connexion` | Connexion superviseur |
+| PUT | `/api/superviseur/moi` | Changer identifiant et mot de passe |
 
 ---
 

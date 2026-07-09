@@ -21,11 +21,7 @@ export default function PageConnexionSuperviseur() {
   useEffect(() => {
     if (localStorage.getItem('superviseur_token')) {
       navigate('/parapheurs', { replace: true });
-      return;
     }
-    client.get('/superviseur/existe').then(({ data }) => {
-      if (!data.existe) navigate('/superviseur/inscription', { replace: true });
-    });
   }, [navigate]);
 
   function changer(e) {
@@ -40,7 +36,11 @@ export default function PageConnexionSuperviseur() {
       const { data } = await client.post('/superviseur/connexion', form);
       localStorage.setItem('superviseur_token', data.token);
       localStorage.setItem('superviseur_user', JSON.stringify(data.utilisateur));
-      navigate('/parapheurs', { replace: true });
+      if (data.utilisateur.premiere_connexion) {
+        navigate('/superviseur/premiere-connexion', { replace: true });
+      } else {
+        navigate('/parapheurs', { replace: true });
+      }
     } catch (err) {
       setErreur(err.response?.data?.message || 'Identifiants incorrects.');
     } finally {
