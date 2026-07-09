@@ -5,6 +5,7 @@ const path = require('path');
 const pool = require('../config/db');
 
 const APK_PATH = '/app/uploads/app-latest.apk';
+const MAX_ADMINS = 2;
 
 function signerToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -13,7 +14,8 @@ function signerToken(payload) {
 async function adminExiste(req, res) {
   try {
     const r = await pool.query('SELECT COUNT(*) FROM admins');
-    res.json({ existe: parseInt(r.rows[0].count, 10) > 0 });
+    const nombre = parseInt(r.rows[0].count, 10);
+    res.json({ existe: nombre > 0, max_atteint: nombre >= MAX_ADMINS });
   } catch (err) {
     console.error('adminExiste :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
@@ -23,8 +25,8 @@ async function adminExiste(req, res) {
 async function inscription(req, res) {
   try {
     const r = await pool.query('SELECT COUNT(*) FROM admins');
-    if (parseInt(r.rows[0].count, 10) > 0) {
-      return res.status(409).json({ message: 'Un administrateur existe déjà.' });
+    if (parseInt(r.rows[0].count, 10) >= MAX_ADMINS) {
+      return res.status(409).json({ message: `Le nombre maximum d'administrateurs (${MAX_ADMINS}) est atteint.` });
     }
     const { nom, identifiant, mot_de_passe } = req.body;
     if (!nom || !identifiant || !mot_de_passe) {

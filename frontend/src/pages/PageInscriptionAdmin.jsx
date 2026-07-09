@@ -18,7 +18,7 @@ export default function PageInscriptionAdmin() {
       return;
     }
     client.get('/admin/existe').then(({ data }) => {
-      if (data.existe) navigate('/admin/connexion', { replace: true });
+      if (data.max_atteint) navigate('/admin/connexion', { replace: true });
     });
   }, [navigate]);
 
