@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const pool = require('../config/db');
@@ -64,6 +65,43 @@ async function connexion(req, res) {
     res.json({ token, utilisateur: { id: admin.id, nom: admin.nom, identifiant: admin.identifiant, role: 'admin' } });
   } catch (err) {
     console.error('connexion admin :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+async function easWebhook(req, res) {
+  try {
+    const secret = process.env.EAS_WEBHOOK_SECRET;
+    const signature = req.headers['expo-signature'];
+    if (!secret || !signature || !req.rawBody) {
+      return res.status(401).json({ message: 'Signature manquante.' });
+    }
+    const attendu = crypto.createHmac('sha1', secret).update(req.rawBody).digest('hex');
+    const recu = Buffer.from(signature);
+    const valide = recu.length === attendu.length && crypto.timingSafeEqual(recu, Buffer.from(attendu));
+    if (!valide) {
+      return res.status(401).json({ message: 'Signature invalide.' });
+    }
+
+    const payload = req.body;
+    if (payload.platform !== 'android' || payload.status !== 'finished') {
+      return res.status(200).json({ message: 'Ignoré (statut ou plateforme non concernée).' });
+    }
+    const url = payload.artifacts?.buildUrl;
+    if (!url) {
+      return res.status(200).json({ message: "Pas d'artefact à récupérer." });
+    }
+
+    const dl = await fetch(url);
+    if (!dl.ok) {
+      throw new Error(`Téléchargement APK échoué : ${dl.status}`);
+    }
+    const buf = Buffer.from(await dl.arrayBuffer());
+    fs.writeFileSync(APK_PATH, buf);
+    console.log(`APK mis à jour automatiquement depuis le build EAS ${payload.id}`);
+    res.status(200).json({ message: 'APK mis à jour.' });
+  } catch (err) {
+    console.error('easWebhook :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 }
@@ -234,4 +272,4 @@ async function supprimerSuperviseur(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, listerAdmins, supprimerAdmin, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
+module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, supprimerAdmin, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };

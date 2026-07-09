@@ -7,17 +7,21 @@ const parapheursRoutes = require('./routes/parapheurs');
 const scansRoutes      = require('./routes/scans');
 const adminRoutes       = require('./routes/admin');
 const superviseurRoutes = require('./routes/superviseur');
+const webhookRoutes     = require('./routes/webhook');
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => { req.rawBody = buf; },
+}));
 
 app.use('/api/auth',       authRoutes);
 app.use('/api/parapheurs', parapheursRoutes);
 app.use('/api/scans',      scansRoutes);
 app.use('/api/admin',       adminRoutes);
 app.use('/api/superviseur', superviseurRoutes);
+app.use('/api/webhooks',    webhookRoutes);
 
 app.get('/api/sante', (req, res) => {
   res.json({ statut: 'ok' });
