@@ -557,45 +557,47 @@ export default function PageAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560 }}>
             <div className="carte">
               <h3 style={{ fontWeight: 600, marginBottom: 16 }}>APK actuel</h3>
-              {infoApk?.disponible ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--texte2)' }}>Taille</span>
-                    <span style={{ fontWeight: 600 }}>{formaterTaille(infoApk.taille)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--texte2)' }}>Mis en ligne le</span>
-                    <span style={{ fontWeight: 600 }}>{formaterDate(infoApk.modifie)}</span>
-                  </div>
-                  <div className="sep" />
-                  <a
-                    href="/api/admin/apk/download"
-                    className="btn btn-primaire"
-                    style={{ justifyContent: 'center', padding: '10px 0', textDecoration: 'none' }}
-                  >
-                    Télécharger l'APK
-                  </a>
-                  <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
-                    Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
-                  </div>
-                  <div className="sep" />
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--texte2)' }}>QR code de téléchargement</p>
-                    <div style={{ background: 'white', padding: 12, borderRadius: 8, border: '1px solid var(--bordure)' }}>
-                      <QRCodeSVG
-                        value={`${window.location.origin}/api/admin/apk/download`}
-                        size={180}
-                        fgColor="var(--bleu)"
-                        bgColor="white"
-                        level="M"
-                      />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {infoApk?.disponible ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <span style={{ color: 'var(--texte2)' }}>Taille</span>
+                      <span style={{ fontWeight: 600 }}>{formaterTaille(infoApk.taille)}</span>
                     </div>
-                    <p style={{ fontSize: 11, color: 'var(--texte3)', textAlign: 'center' }}>Scannez pour télécharger l'APK sur mobile</p>
-                  </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <span style={{ color: 'var(--texte2)' }}>Mis en ligne le</span>
+                      <span style={{ fontWeight: 600 }}>{formaterDate(infoApk.modifie)}</span>
+                    </div>
+                    <div className="sep" />
+                    <a
+                      href="/api/admin/apk/download"
+                      className="btn btn-primaire"
+                      style={{ justifyContent: 'center', padding: '10px 0', textDecoration: 'none' }}
+                    >
+                      Télécharger l'APK
+                    </a>
+                  </>
+                ) : (
+                  <p style={{ color: 'var(--texte3)', fontSize: 13 }}>Aucun APK disponible pour le moment. Uploadez-en un ci-dessous — le lien et le QR code ci-dessous seront valides dès la mise en ligne.</p>
+                )}
+                <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
+                  Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
                 </div>
-              ) : (
-                <p style={{ color: 'var(--texte3)', fontSize: 13 }}>Aucun APK disponible. Uploadez-en un ci-dessous.</p>
-              )}
+                <div className="sep" />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--texte2)' }}>QR code de téléchargement</p>
+                  <div style={{ background: 'white', padding: 12, borderRadius: 8, border: '1px solid var(--bordure)' }}>
+                    <QRCodeSVG
+                      value={`${window.location.origin}/api/admin/apk/download`}
+                      size={180}
+                      fgColor="var(--bleu)"
+                      bgColor="white"
+                      level="M"
+                    />
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--texte3)', textAlign: 'center' }}>Scannez pour télécharger l'APK sur mobile</p>
+                </div>
+              </div>
             </div>
 
             <div className="carte">
