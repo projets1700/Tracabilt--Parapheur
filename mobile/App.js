@@ -76,7 +76,7 @@ export default function App() {
 
   if (chargement) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#007A8A' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#009DBF' }}>
         <ActivityIndicator size="large" color="white" />
       </View>
     );
@@ -91,7 +91,7 @@ export default function App() {
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: '#007A8A',
+          tabBarActiveTintColor: '#009DBF',
           tabBarInactiveTintColor: '#9ca3af',
           tabBarStyle: { paddingBottom: 4, paddingTop: 4 },
         }}

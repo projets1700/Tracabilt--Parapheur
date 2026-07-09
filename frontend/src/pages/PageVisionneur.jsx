@@ -46,8 +46,7 @@ export default function PageVisionneur() {
       <header style={{ background: 'var(--bleu)', padding: '20px 24px 16px' }}>
         <div className="conteneur">
           <div style={{ marginBottom: 12 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'white' }}>TraçaParapheur</h1>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>Consultation de la traçabilité</p>
+            <img src="/Logo_Parapheur.png" alt="TraçaParapheur" style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
           </div>
           <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8 }}>
             <input

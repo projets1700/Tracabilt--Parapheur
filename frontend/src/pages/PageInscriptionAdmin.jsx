@@ -70,7 +70,7 @@ export default function PageInscriptionAdmin() {
         </div>
         <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
         <div style={{ textAlign: 'center', color: 'white' }}>
-          <p style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>TraçaParapheur</p>
+          <img src="/Logo_Parapheur.png" alt="TraçaParapheur" style={{ width: 190, height: 'auto', maxHeight: 72, objectFit: 'contain' }} />
           <p style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.6 }}>Première configuration{'\n'}du compte administrateur</p>
         </div>
       </div>
