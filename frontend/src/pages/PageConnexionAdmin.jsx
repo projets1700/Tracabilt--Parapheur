@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function LogoCE() {
-  return <img src="/Logo_app.png" alt="Logo" style={{ width: 180, height: 'auto', maxHeight: 80, objectFit: 'contain' }} />;
+  return <img src="/Logo_app.png" alt="CoeurTrace" style={{ width: 260, height: 'auto', objectFit: 'contain' }} />;
 }
 
 export default function PageConnexionAdmin() {
@@ -48,21 +48,19 @@ export default function PageConnexionAdmin() {
       {/* Panneau gauche – branding */}
       <div style={{
         flex: '0 0 400px',
-        background: 'linear-gradient(160deg, #009DBF 0%, #0067A5 100%)',
+        background: 'white',
+        borderRight: '1px solid var(--bordure)',
         display: 'flex', flexDirection: 'column',
         justifyContent: 'center', alignItems: 'center',
         padding: '48px 40px', gap: 24,
       }}>
         <LogoCE />
-        <div style={{ textAlign: 'center', color: 'white' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, opacity: 0.65, textTransform: 'uppercase', marginBottom: 4 }}>Coeur d'Essonne</p>
-          <p style={{ fontSize: 10, letterSpacing: 2, opacity: 0.5, textTransform: 'uppercase' }}>Agglomération</p>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4, color: 'var(--bleu)' }}>Coeur d'Essonne</p>
+          <p style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--texte3)' }}>Agglomération</p>
         </div>
-        <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 2 }} />
-        <div style={{ textAlign: 'center', color: 'white' }}>
-          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ width: 190, height: 'auto', maxHeight: 72, objectFit: 'contain' }} />
-          <p style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.6 }}>Système de traçabilité{'\n'}des parapheurs</p>
-        </div>
+        <div style={{ width: 36, height: 2, background: 'var(--bordure)', borderRadius: 2 }} />
+        <p style={{ fontSize: 13, color: 'var(--texte2)', textAlign: 'center', lineHeight: 1.6 }}>Système de traçabilité{'\n'}des parapheurs</p>
       </div>
 
       {/* Panneau droit – formulaire */}

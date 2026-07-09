@@ -39,7 +39,7 @@ export default function PageListeParapheurs() {
       {/* Header */}
       <header style={{ background: '#1D1D1B', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+          <img src="/Logo_app.png" alt="TraçaParapheur" style={{ height: 56, width: 'auto', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <Link to="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Recherche</Link>
