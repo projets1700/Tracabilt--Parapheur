@@ -16,7 +16,6 @@
     },
     "android": {
       "package": "com.adam_91.mobile",
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/Logo_app.png",
         "backgroundColor": "#009D8F"
@@ -42,6 +41,14 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Nécessaire pour enregistrer la position GPS lors du scan."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ]
     ],
