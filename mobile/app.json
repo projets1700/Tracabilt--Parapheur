@@ -4,10 +4,10 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/Logo_coeuressone.png",
+    "icon": "./assets/Logo_Parapheur.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/Logo_coeuressone.png",
+      "image": "./assets/Logo_Parapheur.png",
       "resizeMode": "contain",
       "backgroundColor": "#009DBF"
     },
@@ -18,7 +18,7 @@
       "package": "com.adam_91.mobile",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/Logo_coeuressone.png",
+        "foregroundImage": "./assets/Logo_Parapheur.png",
         "backgroundColor": "#009DBF"
       },
       "permissions": [
@@ -29,7 +29,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/Logo_coeuressone.png"
+      "favicon": "./assets/Logo_Parapheur.png"
     },
     "plugins": [
       [

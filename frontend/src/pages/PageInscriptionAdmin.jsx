@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function LogoCE() {
-  return <img src="/Logo_coeuressone.png" alt="Logo" style={{ width: 180, height: 'auto', maxHeight: 80, objectFit: 'contain' }} />;
+  return <img src="/Logo_Parapheur.png" alt="Logo" style={{ width: 180, height: 'auto', maxHeight: 80, objectFit: 'contain' }} />;
 }
 
 export default function PageInscriptionAdmin() {

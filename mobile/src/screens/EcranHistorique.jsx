@@ -28,7 +28,7 @@ export default function EcranHistorique() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
+        <Image source={require('../../assets/Logo_Parapheur.png')} style={styles.logo} />
         <Text style={styles.titre}>Historique des scans</Text>
         <Text style={styles.sousTitre}>
           {scans.length} scan(s) · {enAttente} en attente de sync

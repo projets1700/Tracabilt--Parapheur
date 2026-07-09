@@ -40,7 +40,7 @@ export default function EcranSynchronisation() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
+        <Image source={require('../../assets/Logo_Parapheur.png')} style={styles.logo} />
         <Text style={styles.titre}>Synchronisation</Text>
       </View>
 

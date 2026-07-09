@@ -52,7 +52,7 @@ export default function EcranConnexion({ onConnexion }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
+        <Image source={require('../../assets/Logo_Parapheur.png')} style={styles.logo} />
         <Text style={styles.sousTitre}>Connexion opérateur</Text>
 
         <View style={styles.groupe}>

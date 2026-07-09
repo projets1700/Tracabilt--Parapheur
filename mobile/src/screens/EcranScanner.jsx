@@ -164,7 +164,7 @@ export default function EcranScanner({ scanner, onDeconnexion }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={require('../../assets/Logo_coeuressone.png')} style={styles.logo} />
+        <Image source={require('../../assets/Logo_Parapheur.png')} style={styles.logo} />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={styles.headerNom}>👤 {scanner?.nom}</Text>
           <TouchableOpacity onPress={onDeconnexion}>
