@@ -410,8 +410,8 @@ export default function PageAdmin() {
                             <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setScannerFiche(s)}>
                               Fiche
                             </button>
-                            <button className="btn btn-danger" title="Supprimer" aria-label="Supprimer" style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }} onClick={() => supprimerScanner(s.id, s.nom)}>
-                              🗑️
+                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerScanner(s.id, s.nom)}>
+                              Supprimer
                             </button>
                           </div>
                         </td>
@@ -489,8 +489,8 @@ export default function PageAdmin() {
                             <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setSuperviseurFiche(s)}>
                               Fiche
                             </button>
-                            <button className="btn btn-danger" title="Supprimer" aria-label="Supprimer" style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }} onClick={() => supprimerSuperviseur(s.id, s.nom)}>
-                              🗑️
+                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerSuperviseur(s.id, s.nom)}>
+                              Supprimer
                             </button>
                           </div>
                         </td>
@@ -562,8 +562,8 @@ export default function PageAdmin() {
                         <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
                         <td style={{ padding: '12px 16px' }}>
                           {!estMoi && admins.length > 1 && (
-                            <button className="btn btn-danger" title="Supprimer" aria-label="Supprimer" style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
-                              🗑️
+                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
+                              Supprimer
                             </button>
                           )}
                         </td>
