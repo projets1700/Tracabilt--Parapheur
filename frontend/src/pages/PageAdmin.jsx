@@ -74,7 +74,6 @@ function ModalFiche({ scanner, onFermer }) {
         {[
           { label: 'Statut',        valeur: <span className={`badge ${scanner.is_active ? 'badge-vert' : 'badge-rouge'}`}>{scanner.is_active ? 'Actif' : 'Inactif'}</span> },
           { label: 'Identifiant',   valeur: scanner.identifiant },
-          { label: 'ID appareil',   valeur: scanner.device_id || '—' },
           { label: 'Créé le',       valeur: formaterDate(scanner.created_at) },
         ].map(({ label, valeur }) => (
           <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
@@ -117,7 +116,7 @@ export default function PageAdmin() {
   const [soumissionSup, setSoumissionSup]             = useState(false);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
-  const [formScanner, setFormScanner] = useState({ mot_de_passe: '', device_id: '' });
+  const [formScanner, setFormScanner] = useState({ mot_de_passe: '' });
   const [infoApk, setInfoApk]         = useState(null);
   const [ajoutAdminOuvert, setAjoutAdminOuvert]       = useState(false);
   const [formAdmin, setFormAdmin]                     = useState({ nom: '', identifiant: '', mot_de_passe: '' });
@@ -267,7 +266,7 @@ export default function PageAdmin() {
     try {
       const { data } = await clientAdmin().post('/admin/scanners', formScanner);
       afficherSucces(`Scanner créé — identifiant : ${data.scanner.identifiant}`);
-      setFormScanner({ mot_de_passe: '', device_id: '' });
+      setFormScanner({ mot_de_passe: '' });
       setAjoutOuvert(false);
       chargerScanners();
     } catch (err) {
@@ -369,10 +368,6 @@ export default function PageAdmin() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="label-champ">ID appareil (optionnel)</label>
-                    <input className="champ" value={formScanner.device_id} onChange={e => setFormScanner(f => ({ ...f, device_id: e.target.value }))} placeholder="ANDROID-001" />
-                  </div>
                   <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                     <button type="button" className="btn" onClick={() => setAjoutOuvert(false)}>Annuler</button>
                     <button type="submit" className="btn btn-primaire" disabled={soumission}>
@@ -415,8 +410,8 @@ export default function PageAdmin() {
                             <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setScannerFiche(s)}>
                               Fiche
                             </button>
-                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerScanner(s.id, s.nom)}>
-                              Supprimer
+                            <button className="btn btn-danger" title="Supprimer" aria-label="Supprimer" style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }} onClick={() => supprimerScanner(s.id, s.nom)}>
+                              🗑️
                             </button>
                           </div>
                         </td>
@@ -494,8 +489,8 @@ export default function PageAdmin() {
                             <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setSuperviseurFiche(s)}>
                               Fiche
                             </button>
-                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerSuperviseur(s.id, s.nom)}>
-                              Supprimer
+                            <button className="btn btn-danger" title="Supprimer" aria-label="Supprimer" style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }} onClick={() => supprimerSuperviseur(s.id, s.nom)}>
+                              🗑️
                             </button>
                           </div>
                         </td>
@@ -567,8 +562,8 @@ export default function PageAdmin() {
                         <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
                         <td style={{ padding: '12px 16px' }}>
                           {!estMoi && admins.length > 1 && (
-                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
-                              Supprimer
+                            <button className="btn btn-danger" title="Supprimer" aria-label="Supprimer" style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
+                              🗑️
                             </button>
                           )}
                         </td>
