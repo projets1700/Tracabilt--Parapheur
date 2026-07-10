@@ -217,7 +217,7 @@ async function telechargerApk(req, res) {
     if (!fs.existsSync(APK_PATH)) {
       return res.status(404).json({ message: 'Aucun APK disponible.' });
     }
-    res.download(APK_PATH, 'tracaparapheur.apk');
+    res.download(APK_PATH, 'APK-CoeurTrace.apk');
   } catch (err) {
     console.error('telechargerApk :', err);
     res.status(500).json({ message: 'Erreur serveur.' });

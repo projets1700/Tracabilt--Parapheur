@@ -524,7 +524,7 @@ export default function PageAdmin() {
         {onglet === 'apk' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560 }}>
             <div className="carte">
-              <h3 style={{ fontWeight: 600, marginBottom: 16 }}>APK actuel</h3>
+              <h3 style={{ fontWeight: 600, marginBottom: 16 }}>APK CoeurTrace</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {infoApk?.disponible ? (
                   <>
@@ -546,7 +546,7 @@ export default function PageAdmin() {
                     </a>
                   </>
                 ) : (
-                  <p style={{ color: 'var(--texte3)', fontSize: 13 }}>Aucun APK disponible pour le moment. Uploadez-en un ci-dessous — le lien et le QR code ci-dessous seront valides dès la mise en ligne.</p>
+                  <p style={{ color: 'var(--texte3)', fontSize: 13 }}>Aucun APK disponible pour le moment. Le lien et le QR code ci-dessous deviendront valides dès qu'un build sera publié.</p>
                 )}
                 <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
                   Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
