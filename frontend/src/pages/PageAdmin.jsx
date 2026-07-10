@@ -117,7 +117,7 @@ export default function PageAdmin() {
   const [soumissionSup, setSoumissionSup]             = useState(false);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
-  const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
+  const [formScanner, setFormScanner] = useState({ nom: '', mot_de_passe: '', device_id: '' });
   const [infoApk, setInfoApk]         = useState(null);
 
   useEffect(() => {
@@ -236,9 +236,9 @@ export default function PageAdmin() {
     setErreur('');
     setSoumission(true);
     try {
-      await clientAdmin().post('/admin/scanners', formScanner);
-      afficherSucces(`Scanner "${formScanner.nom}" créé avec succès.`);
-      setFormScanner({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
+      const { data } = await clientAdmin().post('/admin/scanners', formScanner);
+      afficherSucces(`Scanner "${formScanner.nom}" créé — identifiant : ${data.scanner.identifiant}`);
+      setFormScanner({ nom: '', mot_de_passe: '', device_id: '' });
       setAjoutOuvert(false);
       chargerScanners();
     } catch (err) {
@@ -322,17 +322,26 @@ export default function PageAdmin() {
               <div className="carte">
                 <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Nouveau scanner</h3>
                 <form onSubmit={handleCreerScanner} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <p style={{ fontSize: 12, color: 'var(--texte3)' }}>L'identifiant (Scan1, Scan2…) est généré automatiquement à la création.</p>
+                  </div>
                   <div>
                     <label className="label-champ">Nom complet *</label>
                     <input className="champ" value={formScanner.nom} onChange={e => setFormScanner(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
                   </div>
                   <div>
-                    <label className="label-champ">Identifiant *</label>
-                    <input className="champ" value={formScanner.identifiant} onChange={e => setFormScanner(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" required />
-                  </div>
-                  <div>
-                    <label className="label-champ">Mot de passe *</label>
-                    <input className="champ" type="password" value={formScanner.mot_de_passe} onChange={e => setFormScanner(f => ({ ...f, mot_de_passe: e.target.value }))} placeholder="••••••••" required />
+                    <label className="label-champ">Code PIN (4 chiffres) *</label>
+                    <input
+                      className="champ"
+                      type="password"
+                      inputMode="numeric"
+                      pattern="\d{4}"
+                      maxLength={4}
+                      value={formScanner.mot_de_passe}
+                      onChange={e => setFormScanner(f => ({ ...f, mot_de_passe: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                      placeholder="1234"
+                      required
+                    />
                   </div>
                   <div>
                     <label className="label-champ">ID appareil (optionnel)</label>
@@ -545,9 +554,7 @@ export default function PageAdmin() {
                       Télécharger l'APK
                     </a>
                   </>
-                ) : (
-                  <p style={{ color: 'var(--texte3)', fontSize: 13 }}>Aucun APK disponible pour le moment. Le lien et le QR code ci-dessous deviendront valides dès qu'un build sera publié.</p>
-                )}
+                ) : null}
                 <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
                   Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
                 </div>

@@ -151,22 +151,40 @@ async function listerScanners(req, res) {
   }
 }
 
+async function genererIdentifiantScanner() {
+  const r = await pool.query("SELECT identifiant FROM scanners WHERE identifiant ~ '^Scan[0-9]+$'");
+  let max = 0;
+  for (const row of r.rows) {
+    const n = parseInt(row.identifiant.slice(4), 10);
+    if (n > max) max = n;
+  }
+  return `Scan${max + 1}`;
+}
+
 async function creerScanner(req, res) {
   try {
-    const { nom, identifiant, mot_de_passe, device_id } = req.body;
-    if (!nom || !identifiant || !mot_de_passe) {
-      return res.status(400).json({ message: 'Nom, identifiant et mot de passe sont obligatoires.' });
+    const { nom, mot_de_passe, device_id } = req.body;
+    if (!nom || !mot_de_passe) {
+      return res.status(400).json({ message: 'Nom et mot de passe sont obligatoires.' });
     }
-    const existe = await pool.query('SELECT id FROM scanners WHERE identifiant = $1', [identifiant.trim()]);
-    if (existe.rows.length > 0) {
-      return res.status(409).json({ message: 'Cet identifiant est déjà utilisé.' });
+    if (!/^\d{4}$/.test(mot_de_passe)) {
+      return res.status(400).json({ message: 'Le mot de passe doit être un code à 4 chiffres.' });
     }
     const hash = await bcrypt.hash(mot_de_passe, 10);
-    const r = await pool.query(
-      'INSERT INTO scanners (nom, identifiant, password_hash, device_id) VALUES ($1, $2, $3, $4) RETURNING id, nom, identifiant, device_id, is_active, created_at',
-      [nom.trim(), identifiant.trim(), hash, device_id?.trim() || null]
-    );
-    res.status(201).json({ scanner: r.rows[0] });
+    for (let tentative = 0; tentative < 5; tentative++) {
+      const identifiant = await genererIdentifiantScanner();
+      try {
+        const r = await pool.query(
+          'INSERT INTO scanners (nom, identifiant, password_hash, device_id) VALUES ($1, $2, $3, $4) RETURNING id, nom, identifiant, device_id, is_active, created_at',
+          [nom.trim(), identifiant, hash, device_id?.trim() || null]
+        );
+        return res.status(201).json({ scanner: r.rows[0] });
+      } catch (err) {
+        if (err.code === '23505') continue; // identifiant déjà pris entretemps, on réessaie avec le suivant
+        throw err;
+      }
+    }
+    res.status(500).json({ message: "Impossible de générer un identifiant unique, réessayez." });
   } catch (err) {
     console.error('creerScanner :', err);
     res.status(500).json({ message: 'Erreur serveur.' });

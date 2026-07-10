@@ -58,7 +58,7 @@ export default function EcranConnexion({ onConnexion }) {
           <Text style={styles.label}>Nom du scanner</Text>
           <TextInput
             style={styles.champ}
-            placeholder="Votre identifiant"
+            placeholder="Ex : Scan1"
             placeholderTextColor={theme.placeholder}
             value={identifiant}
             onChangeText={setIdentifiant}
@@ -68,13 +68,15 @@ export default function EcranConnexion({ onConnexion }) {
         </View>
 
         <View style={styles.groupe}>
-          <Text style={styles.label}>Mot de passe</Text>
+          <Text style={styles.label}>Code PIN</Text>
           <TextInput
             style={styles.champ}
-            placeholder="••••••••"
+            placeholder="1234"
             placeholderTextColor={theme.placeholder}
             value={motDePasse}
-            onChangeText={setMotDePasse}
+            onChangeText={t => setMotDePasse(t.replace(/\D/g, '').slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
             secureTextEntry
           />
         </View>
