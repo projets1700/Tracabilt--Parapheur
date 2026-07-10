@@ -251,6 +251,15 @@ export default function PageAdmin() {
     }
   }
 
+  function prochainIdentifiantScanner() {
+    let max = 0;
+    for (const s of scanners) {
+      const m = /^Scan(\d+)$/.exec(s.identifiant);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    }
+    return `Scan${max + 1}`;
+  }
+
   async function handleCreerScanner(e) {
     e.preventDefault();
     setErreur('');
@@ -333,9 +342,9 @@ export default function PageAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{scanners.length} scanner(s) enregistré(s)</p>
-              <button className="btn btn-primaire" onClick={() => setAjoutOuvert(o => !o)}>
-                {ajoutOuvert ? '✕ Annuler' : '+ Nouveau scanner'}
-              </button>
+              {!ajoutOuvert && (
+                <button className="btn btn-primaire" onClick={() => setAjoutOuvert(true)}>+ Nouveau scanner</button>
+              )}
             </div>
 
             {ajoutOuvert && (
@@ -344,7 +353,7 @@ export default function PageAdmin() {
                 <form onSubmit={handleCreerScanner} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label className="label-champ">Identifiant</label>
-                    <input className="champ" value="Généré automatiquement (Scan1, Scan2…)" disabled style={{ color: 'var(--texte3)', cursor: 'not-allowed' }} />
+                    <input className="champ" value={prochainIdentifiantScanner()} disabled style={{ color: 'var(--texte2)', fontWeight: 600, cursor: 'not-allowed' }} />
                   </div>
                   <div>
                     <label className="label-champ">Code PIN (4 chiffres) *</label>
@@ -424,9 +433,9 @@ export default function PageAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{superviseurs.length} superviseur(s) enregistré(s)</p>
-              <button className="btn btn-primaire" onClick={() => setAjoutSupOuvert(o => !o)}>
-                {ajoutSupOuvert ? '✕ Annuler' : '+ Nouveau superviseur'}
-              </button>
+              {!ajoutSupOuvert && (
+                <button className="btn btn-primaire" onClick={() => setAjoutSupOuvert(true)}>+ Nouveau superviseur</button>
+              )}
             </div>
 
             {ajoutSupOuvert && (
@@ -503,10 +512,8 @@ export default function PageAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{admins.length} administrateur(s) sur 2 maximum</p>
-              {admins.length < 2 && (
-                <button className="btn btn-primaire" onClick={() => setAjoutAdminOuvert(o => !o)}>
-                  {ajoutAdminOuvert ? '✕ Annuler' : '+ Nouvel administrateur'}
-                </button>
+              {admins.length < 2 && !ajoutAdminOuvert && (
+                <button className="btn btn-primaire" onClick={() => setAjoutAdminOuvert(true)}>+ Nouvel administrateur</button>
               )}
             </div>
 
