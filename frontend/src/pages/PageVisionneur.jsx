@@ -44,10 +44,10 @@ export default function PageVisionneur() {
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
 
       <header style={{
-        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '6px 24px',
+        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '2px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
-        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
+        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
         <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, width: 480, maxWidth: '100%' }}>
           <input
             className="champ"

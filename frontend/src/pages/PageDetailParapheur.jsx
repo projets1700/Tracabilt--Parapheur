@@ -36,10 +36,10 @@ export default function PageDetailParapheur() {
 
       {/* Header */}
       <header style={{
-        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '6px 24px',
+        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '2px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
-        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
+        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <Link to="/parapheurs" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>← Liste des parapheurs</Link>
           <Link to="/admin" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>Administration</Link>
