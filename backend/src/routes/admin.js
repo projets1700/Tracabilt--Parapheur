@@ -29,6 +29,7 @@ router.get('/existe',           ctrl.adminExiste);
 router.post('/inscription',     ctrl.inscription);
 router.post('/connexion',       ctrl.connexion);
 router.get('/admins',           exigerAdmin, ctrl.listerAdmins);
+router.post('/admins',          exigerAdmin, ctrl.creerAdmin);
 router.delete('/admins/:id',    exigerAdmin, ctrl.supprimerAdmin);
 router.get('/scanners',         exigerAdmin, ctrl.listerScanners);
 router.post('/scanners',        exigerAdmin, ctrl.creerScanner);

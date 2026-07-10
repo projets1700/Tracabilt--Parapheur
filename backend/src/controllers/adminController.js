@@ -106,6 +106,35 @@ async function easWebhook(req, res) {
   }
 }
 
+async function creerAdmin(req, res) {
+  try {
+    const compte = await pool.query('SELECT COUNT(*) FROM admins');
+    if (parseInt(compte.rows[0].count, 10) >= MAX_ADMINS) {
+      return res.status(409).json({ message: `Le nombre maximum d'administrateurs (${MAX_ADMINS}) est atteint.` });
+    }
+    const { nom, identifiant, mot_de_passe } = req.body;
+    if (!nom || !identifiant || !mot_de_passe) {
+      return res.status(400).json({ message: 'Tous les champs sont obligatoires.' });
+    }
+    if (mot_de_passe.length < 6) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    }
+    const existe = await pool.query('SELECT id FROM admins WHERE identifiant = $1', [identifiant.trim().toLowerCase()]);
+    if (existe.rows.length > 0) {
+      return res.status(409).json({ message: 'Cet identifiant est déjà utilisé.' });
+    }
+    const hash = await bcrypt.hash(mot_de_passe, 10);
+    const r = await pool.query(
+      'INSERT INTO admins (nom, identifiant, password_hash) VALUES ($1, $2, $3) RETURNING id, nom, identifiant, created_at',
+      [nom.trim(), identifiant.trim().toLowerCase(), hash]
+    );
+    res.status(201).json({ admin: r.rows[0] });
+  } catch (err) {
+    console.error('creerAdmin :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
 async function listerAdmins(req, res) {
   try {
     const r = await pool.query(
@@ -290,4 +319,4 @@ async function supprimerSuperviseur(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, supprimerAdmin, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
+module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, supprimerAdmin, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };

@@ -119,6 +119,9 @@ export default function PageAdmin() {
   const [soumission, setSoumission]   = useState(false);
   const [formScanner, setFormScanner] = useState({ mot_de_passe: '', device_id: '' });
   const [infoApk, setInfoApk]         = useState(null);
+  const [ajoutAdminOuvert, setAjoutAdminOuvert]       = useState(false);
+  const [formAdmin, setFormAdmin]                     = useState({ nom: '', identifiant: '', mot_de_passe: '' });
+  const [soumissionAdmin, setSoumissionAdmin]         = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('admin_token')) navigate('/admin/connexion', { replace: true });
@@ -192,6 +195,23 @@ export default function PageAdmin() {
       setErreur(err.response?.data?.message || 'Erreur lors de la création.');
     } finally {
       setSoumissionSup(false);
+    }
+  }
+
+  async function handleCreerAdmin(e) {
+    e.preventDefault();
+    setErreur('');
+    setSoumissionAdmin(true);
+    try {
+      await clientAdmin().post('/admin/admins', formAdmin);
+      afficherSucces(`Administrateur "${formAdmin.nom}" créé avec succès.`);
+      setFormAdmin({ nom: '', identifiant: '', mot_de_passe: '' });
+      setAjoutAdminOuvert(false);
+      chargerAdmins();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la création.');
+    } finally {
+      setSoumissionAdmin(false);
     }
   }
 
@@ -481,7 +501,40 @@ export default function PageAdmin() {
 
         {onglet === 'admins' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{admins.length} administrateur(s) sur 2 maximum</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{admins.length} administrateur(s) sur 2 maximum</p>
+              {admins.length < 2 && (
+                <button className="btn btn-primaire" onClick={() => setAjoutAdminOuvert(o => !o)}>
+                  {ajoutAdminOuvert ? '✕ Annuler' : '+ Nouvel administrateur'}
+                </button>
+              )}
+            </div>
+
+            {ajoutAdminOuvert && admins.length < 2 && (
+              <div className="carte">
+                <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Nouvel administrateur</h3>
+                <form onSubmit={handleCreerAdmin} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label-champ">Nom complet *</label>
+                    <input className="champ" value={formAdmin.nom} onChange={e => setFormAdmin(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
+                  </div>
+                  <div>
+                    <label className="label-champ">Identifiant *</label>
+                    <input className="champ" value={formAdmin.identifiant} onChange={e => setFormAdmin(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" autoCapitalize="none" required />
+                  </div>
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <label className="label-champ">Mot de passe *</label>
+                    <input className="champ" type="password" value={formAdmin.mot_de_passe} onChange={e => setFormAdmin(f => ({ ...f, mot_de_passe: e.target.value }))} placeholder="6 caractères minimum" required />
+                  </div>
+                  <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                    <button type="button" className="btn" onClick={() => setAjoutAdminOuvert(false)}>Annuler</button>
+                    <button type="submit" className="btn btn-primaire" disabled={soumissionAdmin}>
+                      {soumissionAdmin ? 'Création…' : "Créer l'administrateur"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
 
             <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -519,11 +572,6 @@ export default function PageAdmin() {
               </table>
             </div>
 
-            {admins.length < 2 && (
-              <p style={{ fontSize: 12, color: 'var(--texte3)' }}>
-                Un second administrateur peut être créé depuis la page d'inscription (/admin/inscription).
-              </p>
-            )}
           </div>
         )}
 
