@@ -163,9 +163,9 @@ async function genererIdentifiantScanner() {
 
 async function creerScanner(req, res) {
   try {
-    const { nom, mot_de_passe, device_id } = req.body;
-    if (!nom || !mot_de_passe) {
-      return res.status(400).json({ message: 'Nom et mot de passe sont obligatoires.' });
+    const { mot_de_passe, device_id } = req.body;
+    if (!mot_de_passe) {
+      return res.status(400).json({ message: 'Mot de passe obligatoire.' });
     }
     if (!/^\d{4}$/.test(mot_de_passe)) {
       return res.status(400).json({ message: 'Le mot de passe doit être un code à 4 chiffres.' });
@@ -176,7 +176,7 @@ async function creerScanner(req, res) {
       try {
         const r = await pool.query(
           'INSERT INTO scanners (nom, identifiant, password_hash, device_id) VALUES ($1, $2, $3, $4) RETURNING id, nom, identifiant, device_id, is_active, created_at',
-          [nom.trim(), identifiant, hash, device_id?.trim() || null]
+          [identifiant, identifiant, hash, device_id?.trim() || null]
         );
         return res.status(201).json({ scanner: r.rows[0] });
       } catch (err) {

@@ -117,7 +117,7 @@ export default function PageAdmin() {
   const [soumissionSup, setSoumissionSup]             = useState(false);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
-  const [formScanner, setFormScanner] = useState({ nom: '', mot_de_passe: '', device_id: '' });
+  const [formScanner, setFormScanner] = useState({ mot_de_passe: '', device_id: '' });
   const [infoApk, setInfoApk]         = useState(null);
 
   useEffect(() => {
@@ -237,8 +237,8 @@ export default function PageAdmin() {
     setSoumission(true);
     try {
       const { data } = await clientAdmin().post('/admin/scanners', formScanner);
-      afficherSucces(`Scanner "${formScanner.nom}" créé — identifiant : ${data.scanner.identifiant}`);
-      setFormScanner({ nom: '', mot_de_passe: '', device_id: '' });
+      afficherSucces(`Scanner créé — identifiant : ${data.scanner.identifiant}`);
+      setFormScanner({ mot_de_passe: '', device_id: '' });
       setAjoutOuvert(false);
       chargerScanners();
     } catch (err) {
@@ -322,12 +322,9 @@ export default function PageAdmin() {
               <div className="carte">
                 <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Nouveau scanner</h3>
                 <form onSubmit={handleCreerScanner} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div style={{ gridColumn: '1/-1' }}>
-                    <p style={{ fontSize: 12, color: 'var(--texte3)' }}>L'identifiant (Scan1, Scan2…) est généré automatiquement à la création.</p>
-                  </div>
                   <div>
-                    <label className="label-champ">Nom complet *</label>
-                    <input className="champ" value={formScanner.nom} onChange={e => setFormScanner(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
+                    <label className="label-champ">Identifiant</label>
+                    <input className="champ" value="Généré automatiquement (Scan1, Scan2…)" disabled style={{ color: 'var(--texte3)', cursor: 'not-allowed' }} />
                   </div>
                   <div>
                     <label className="label-champ">Code PIN (4 chiffres) *</label>
