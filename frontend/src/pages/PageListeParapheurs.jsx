@@ -38,7 +38,7 @@ export default function PageListeParapheurs() {
 
       {/* Header */}
       <header style={{
-        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '16px 24px',
+        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '6px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 300, height: 'auto', objectFit: 'contain' }} />
