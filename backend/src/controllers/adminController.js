@@ -92,17 +92,28 @@ async function easWebhook(req, res) {
       return res.status(200).json({ message: "Pas d'artefact à récupérer." });
     }
 
+    // Répond immédiatement pour éviter tout délai d'attente côté EAS sur un
+    // téléchargement volumineux (~80-100 Mo) — le téléchargement continue en arrière-plan.
+    res.status(200).json({ message: 'Téléchargement en cours.' });
+
+    telechargerEtEnregistrerApk(url, payload.id);
+  } catch (err) {
+    console.error('easWebhook :', err);
+    if (!res.headersSent) res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+async function telechargerEtEnregistrerApk(url, buildId) {
+  try {
     const dl = await fetch(url);
     if (!dl.ok) {
       throw new Error(`Téléchargement APK échoué : ${dl.status}`);
     }
     const buf = Buffer.from(await dl.arrayBuffer());
     fs.writeFileSync(APK_PATH, buf);
-    console.log(`APK mis à jour automatiquement depuis le build EAS ${payload.id}`);
-    res.status(200).json({ message: 'APK mis à jour.' });
+    console.log(`APK mis à jour automatiquement depuis le build EAS ${buildId} (${buf.length} octets)`);
   } catch (err) {
-    console.error('easWebhook :', err);
-    res.status(500).json({ message: 'Erreur serveur.' });
+    console.error('telechargerEtEnregistrerApk :', err);
   }
 }
 
