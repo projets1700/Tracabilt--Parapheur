@@ -72,6 +72,7 @@ sudo docker compose ps
 ```env
 DB_PASSWORD=motdepasse
 JWT_SECRET=secret_a_changer_en_production
+EAS_WEBHOOK_SECRET=secret_partage_avec_eas_webhook_create
 ```
 
 **2. Lancer tous les services :**
@@ -128,9 +129,9 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Rôle | Création | Accès |
 |------|----------|-------|
-| **Admin** | `/admin/inscription` *(première visite)* | Gestion des scanners, superviseurs, upload APK |
+| **Admin** | `/admin/inscription` *(première visite)*, puis un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum** | Gestion des scanners, superviseurs, admins, application mobile |
 | **Superviseur** | Créé par l'admin depuis le tableau de bord | Consultation de tous les parapheurs |
-| **Scanner** | Créé par l'admin depuis le tableau de bord | Application mobile uniquement |
+| **Scanner** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Scan1`, `Scan2`…), mot de passe = code PIN à 4 chiffres | Application mobile uniquement |
 
 ---
 
@@ -172,9 +173,10 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 - Connexion requise : `/admin/connexion`
 
-**Onglet Utilisateurs**
-- Liste des scanners (nom, identifiant, date de création)
-- Créer / supprimer un scanner
+**Onglet Scannaire**
+- Liste des scanners (identifiant, statut, date de création)
+- Créer un scanner : identifiant généré automatiquement (`Scan1`, `Scan2`… — aucun doublon possible), mot de passe = code PIN à 4 chiffres
+- Supprimer un scanner
 - Consulter la fiche d'un scanner
 
 **Onglet Superviseurs**
@@ -183,10 +185,15 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 - Supprimer un superviseur
 - Consulter la fiche d'un superviseur
 
+**Onglet Administrateurs**
+- Liste des administrateurs (2 maximum)
+- Créer un second administrateur (nom, identifiant, mot de passe) tant que la limite n'est pas atteinte
+- Supprimer un administrateur (impossible de se supprimer soi-même ou de supprimer le dernier compte restant)
+
 **Onglet Application mobile**
-- Informations sur l'APK disponible (taille, date)
-- Upload d'un nouvel APK
-- Lien de téléchargement + QR code
+- Lien de téléchargement de l'APK + QR code, toujours visibles
+- Informations sur l'APK disponible (taille, date de mise en ligne)
+- Publication automatique : à chaque build EAS Android réussi, un webhook récupère l'APK et le publie sans intervention manuelle (voir [Sécurité](#sécurité))
 
 ---
 
@@ -212,21 +219,31 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | POST | `/api/scans` | Enregistrer un scan |
 | POST | `/api/scans/sync` | Synchroniser des scans hors ligne |
 
-### Admin *(JWT admin requis)*
+### Admin *(JWT admin requis sauf mention contraire)*
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/api/admin/existe` | Vérifie si un admin existe |
-| POST | `/api/admin/inscription` | Créer le compte admin |
-| POST | `/api/admin/connexion` | Connexion admin |
+| GET | `/api/admin/existe` | Vérifie si un admin existe *(public)* |
+| POST | `/api/admin/inscription` | Créer le 1er compte admin *(public, unique)* |
+| POST | `/api/admin/connexion` | Connexion admin *(public)* |
+| GET | `/api/admin/admins` | Liste des administrateurs |
+| POST | `/api/admin/admins` | Créer un 2ᵉ administrateur (max 2) |
+| DELETE | `/api/admin/admins/:id` | Supprimer un administrateur |
 | GET | `/api/admin/scanners` | Liste des scanners |
-| POST | `/api/admin/scanners` | Créer un scanner |
+| POST | `/api/admin/scanners` | Créer un scanner (identifiant `ScanX` auto-généré, PIN 4 chiffres) |
 | DELETE | `/api/admin/scanners/:id` | Supprimer un scanner |
 | GET | `/api/admin/superviseurs` | Liste des superviseurs |
 | POST | `/api/admin/superviseurs` | Créer un superviseur |
 | DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
-| POST | `/api/admin/apk` | Upload de l'APK |
+| POST | `/api/admin/apk` | Upload manuel de l'APK |
 | GET | `/api/admin/apk/info` | Infos sur l'APK |
+| GET | `/api/admin/apk/download` | Télécharger l'APK *(public)* |
+
+### Webhooks
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/api/webhooks/eas-build` | Reçu depuis EAS à la fin d'un build Android — signature HMAC-SHA1 vérifiée (`EAS_WEBHOOK_SECRET`), télécharge et publie automatiquement l'APK |
 
 ### Superviseur *(JWT superviseur requis)*
 
@@ -247,7 +264,7 @@ Tables PostgreSQL :
 | `parapheurs` | Parapheurs physiques identifiés par numéro |
 | `scans` | Historique de chaque passage d'un scanner sur un parapheur |
 | `lieux` | Noms de lieux associés aux coordonnées GPS |
-| `admins` | Compte administrateur |
+| `admins` | Comptes administrateur (2 maximum, limite appliquée côté application) |
 | `superviseurs` | Compte superviseur |
 
 ---
@@ -259,6 +276,8 @@ Tables PostgreSQL :
 - Rate limiting sur les routes sensibles
 - Validation des données avec express-validator
 - Middleware de rôle : `scanner` / `admin` / `superviseur`
+- Webhook EAS signé (HMAC-SHA1, comparaison en temps constant) pour empêcher la publication d'un APK par un tiers non autorisé
+- Garde-fous admin : impossible de se supprimer soi-même ou de supprimer le dernier compte admin restant
 
 ---
 
@@ -291,3 +310,6 @@ Suite Jest couvrant l'authentification et les routes principales.
 | 12 | Interface admin (scanners + APK + QR code) | ✅ |
 | 13 | Compte superviseur + liste des parapheurs | ✅ |
 | 14 | Charte graphique et design UI | ✅ |
+| 15 | Gestion multi-administrateurs (jusqu'à 2, création et suppression) | ✅ |
+| 16 | Identifiant scanner auto-généré + mot de passe PIN 4 chiffres | ✅ |
+| 17 | Publication automatique de l'APK via webhook EAS | ✅ |
