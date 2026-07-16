@@ -40,7 +40,6 @@ Le projet tourne sur un VPS OVH via Docker Compose.
 |------|--------|
 | Visionneur (public) | `/` |
 | Connexion superviseur | `/superviseur/connexion` |
-| Première connexion superviseur | `/superviseur/premiere-connexion` |
 | Liste des parapheurs | `/parapheurs` |
 | Connexion admin | `/admin/connexion` |
 | Inscription admin *(1ère fois)* | `/admin/inscription` |
@@ -130,7 +129,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | Rôle | Création | Accès |
 |------|----------|-------|
 | **Admin** | `/admin/inscription` *(première visite)*, puis un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum** | Gestion des scanners, superviseurs, admins, application mobile |
-| **Superviseur** | Créé par l'admin depuis le tableau de bord | Consultation de tous les parapheurs |
+| **Superviseur** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres | Consultation de tous les parapheurs |
 | **Scanner** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Scan1`, `Scan2`…), mot de passe = code PIN à 4 chiffres | Application mobile uniquement |
 
 ---
@@ -160,9 +159,8 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ### Interface web — Superviseur
 
-- Compte créé par l'admin depuis le tableau de bord
+- Compte créé par l'admin depuis le tableau de bord (identifiant `SupX` + PIN, définitifs)
 - Connexion : `/superviseur/connexion`
-- Première connexion → formulaire pour choisir son identifiant et mot de passe personnel
 - Liste de tous les parapheurs, triée du plus récent au moins récent
 - Colonnes : numéro, titre, date du dernier scan, localisation
 - Clic sur un parapheur → historique complet en tableau
@@ -176,12 +174,12 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 **Onglet Scannaire**
 - Liste des scanners (identifiant, statut, date de création)
 - Créer un scanner : identifiant généré automatiquement (`Scan1`, `Scan2`… — aucun doublon possible), mot de passe = code PIN à 4 chiffres
+- Modifier la fiche d'un scanner : changer son statut actif/inactif, réinitialiser son code PIN
 - Supprimer un scanner
-- Consulter la fiche d'un scanner
 
 **Onglet Superviseurs**
-- Liste des superviseurs avec statut (En attente / Actif)
-- Créer un superviseur (identifiant et mot de passe provisoires)
+- Liste des superviseurs
+- Créer un superviseur : identifiant généré automatiquement (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres
 - Supprimer un superviseur
 - Consulter la fiche d'un superviseur
 
@@ -231,9 +229,10 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | DELETE | `/api/admin/admins/:id` | Supprimer un administrateur |
 | GET | `/api/admin/scanners` | Liste des scanners |
 | POST | `/api/admin/scanners` | Créer un scanner (identifiant `ScanX` auto-généré, PIN 4 chiffres) |
+| PUT | `/api/admin/scanners/:id` | Modifier un scanner (statut actif/inactif, réinitialiser le PIN) |
 | DELETE | `/api/admin/scanners/:id` | Supprimer un scanner |
 | GET | `/api/admin/superviseurs` | Liste des superviseurs |
-| POST | `/api/admin/superviseurs` | Créer un superviseur |
+| POST | `/api/admin/superviseurs` | Créer un superviseur (identifiant `SupX` auto-généré, PIN 4 chiffres) |
 | DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
 | POST | `/api/admin/apk` | Upload manuel de l'APK |
 | GET | `/api/admin/apk/info` | Infos sur l'APK |
@@ -245,12 +244,11 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 |---------|-------|-------------|
 | POST | `/api/webhooks/eas-build` | Reçu depuis EAS à la fin d'un build Android — signature HMAC-SHA1 vérifiée (`EAS_WEBHOOK_SECRET`), télécharge et publie automatiquement l'APK |
 
-### Superviseur *(JWT superviseur requis)*
+### Superviseur
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| POST | `/api/superviseur/connexion` | Connexion superviseur |
-| PUT | `/api/superviseur/moi` | Changer identifiant et mot de passe |
+| POST | `/api/superviseur/connexion` | Connexion superviseur *(public)* |
 
 ---
 
@@ -313,3 +311,4 @@ Suite Jest couvrant l'authentification et les routes principales.
 | 15 | Gestion multi-administrateurs (jusqu'à 2, création et suppression) | ✅ |
 | 16 | Identifiant scanner auto-généré + mot de passe PIN 4 chiffres | ✅ |
 | 17 | Publication automatique de l'APK via webhook EAS | ✅ |
+| 18 | Identifiant superviseur auto-généré + PIN, fiche scanner modifiable | ✅ |

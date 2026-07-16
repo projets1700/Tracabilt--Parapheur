@@ -30,11 +30,7 @@ export default function PageConnexionSuperviseur() {
       const { data } = await client.post('/superviseur/connexion', form);
       localStorage.setItem('superviseur_token', data.token);
       localStorage.setItem('superviseur_user', JSON.stringify(data.utilisateur));
-      if (data.utilisateur.premiere_connexion) {
-        navigate('/superviseur/premiere-connexion', { replace: true });
-      } else {
-        navigate('/parapheurs', { replace: true });
-      }
+      navigate('/parapheurs', { replace: true });
     } catch (err) {
       setErreur(err.response?.data?.message || 'Identifiants incorrects.');
     } finally {
@@ -71,11 +67,22 @@ export default function PageConnexionSuperviseur() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label className="label-champ">Identifiant</label>
-              <input className="champ" name="identifiant" value={form.identifiant} onChange={changer} autoCapitalize="none" autoFocus required />
+              <input className="champ" name="identifiant" value={form.identifiant} onChange={changer} placeholder="Ex : Sup1" autoCapitalize="none" autoFocus required />
             </div>
             <div>
-              <label className="label-champ">Mot de passe</label>
-              <input className="champ" type="password" name="mot_de_passe" value={form.mot_de_passe} onChange={changer} required />
+              <label className="label-champ">Code PIN</label>
+              <input
+                className="champ"
+                type="password"
+                inputMode="numeric"
+                pattern="\d{4}"
+                maxLength={4}
+                name="mot_de_passe"
+                value={form.mot_de_passe}
+                onChange={e => setForm(f => ({ ...f, mot_de_passe: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                placeholder="1234"
+                required
+              />
             </div>
             <button className="btn btn-primaire" type="submit" disabled={chargement} style={{ padding: '13px 0', fontSize: 14, justifyContent: 'center', marginTop: 8, borderRadius: 10 }}>
               {chargement ? 'Connexion…' : 'Se connecter'}

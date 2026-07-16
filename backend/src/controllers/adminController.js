@@ -220,6 +220,44 @@ async function creerScanner(req, res) {
   }
 }
 
+async function modifierScanner(req, res) {
+  try {
+    const { id } = req.params;
+    const { mot_de_passe, is_active } = req.body;
+
+    if (mot_de_passe !== undefined && !/^\d{4}$/.test(mot_de_passe)) {
+      return res.status(400).json({ message: 'Le mot de passe doit être un code à 4 chiffres.' });
+    }
+
+    const champs = [];
+    const valeurs = [];
+    let i = 1;
+    if (mot_de_passe !== undefined) {
+      champs.push(`password_hash = $${i++}`);
+      valeurs.push(await bcrypt.hash(mot_de_passe, 10));
+    }
+    if (is_active !== undefined) {
+      champs.push(`is_active = $${i++}`);
+      valeurs.push(!!is_active);
+    }
+    if (champs.length === 0) {
+      return res.status(400).json({ message: 'Aucune modification fournie.' });
+    }
+    valeurs.push(id);
+    const r = await pool.query(
+      `UPDATE scanners SET ${champs.join(', ')} WHERE id = $${i} RETURNING id, nom, identifiant, device_id, is_active, created_at`,
+      valeurs
+    );
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: 'Scanner introuvable.' });
+    }
+    res.json({ scanner: r.rows[0] });
+  } catch (err) {
+    console.error('modifierScanner :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
 async function supprimerScanner(req, res) {
   try {
     const { id } = req.params;
@@ -274,7 +312,7 @@ async function telechargerApk(req, res) {
 async function listerSuperviseurs(req, res) {
   try {
     const r = await pool.query(
-      'SELECT id, nom, identifiant, premiere_connexion, created_at FROM superviseurs ORDER BY created_at DESC'
+      'SELECT id, nom, identifiant, created_at FROM superviseurs ORDER BY created_at DESC'
     );
     res.json({ superviseurs: r.rows });
   } catch (err) {
@@ -283,22 +321,40 @@ async function listerSuperviseurs(req, res) {
   }
 }
 
+async function genererIdentifiantSuperviseur() {
+  const r = await pool.query("SELECT identifiant FROM superviseurs WHERE identifiant ~ '^Sup[0-9]+$'");
+  let max = 0;
+  for (const row of r.rows) {
+    const n = parseInt(row.identifiant.slice(3), 10);
+    if (n > max) max = n;
+  }
+  return `Sup${max + 1}`;
+}
+
 async function creerSuperviseur(req, res) {
   try {
-    const { nom, identifiant, mot_de_passe } = req.body;
-    if (!nom || !identifiant || !mot_de_passe) {
-      return res.status(400).json({ message: 'Nom, identifiant et mot de passe sont obligatoires.' });
+    const { nom, mot_de_passe } = req.body;
+    if (!nom || !mot_de_passe) {
+      return res.status(400).json({ message: 'Nom et mot de passe sont obligatoires.' });
     }
-    const existe = await pool.query('SELECT id FROM superviseurs WHERE identifiant = $1', [identifiant.trim().toLowerCase()]);
-    if (existe.rows.length > 0) {
-      return res.status(409).json({ message: 'Cet identifiant est déjà utilisé.' });
+    if (!/^\d{4}$/.test(mot_de_passe)) {
+      return res.status(400).json({ message: 'Le mot de passe doit être un code à 4 chiffres.' });
     }
     const hash = await bcrypt.hash(mot_de_passe, 10);
-    const r = await pool.query(
-      'INSERT INTO superviseurs (nom, identifiant, password_hash) VALUES ($1, $2, $3) RETURNING id, nom, identifiant, premiere_connexion, created_at',
-      [nom.trim(), identifiant.trim().toLowerCase(), hash]
-    );
-    res.status(201).json({ superviseur: r.rows[0] });
+    for (let tentative = 0; tentative < 5; tentative++) {
+      const identifiant = await genererIdentifiantSuperviseur();
+      try {
+        const r = await pool.query(
+          'INSERT INTO superviseurs (nom, identifiant, password_hash, premiere_connexion) VALUES ($1, $2, $3, FALSE) RETURNING id, nom, identifiant, created_at',
+          [nom.trim(), identifiant, hash]
+        );
+        return res.status(201).json({ superviseur: r.rows[0] });
+      } catch (err) {
+        if (err.code === '23505') continue; // identifiant déjà pris entretemps, on réessaie avec le suivant
+        throw err;
+      }
+    }
+    res.status(500).json({ message: "Impossible de générer un identifiant unique, réessayez." });
   } catch (err) {
     console.error('creerSuperviseur :', err);
     res.status(500).json({ message: 'Erreur serveur.' });
@@ -319,4 +375,4 @@ async function supprimerSuperviseur(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, supprimerAdmin, listerScanners, creerScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
+module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, supprimerAdmin, listerScanners, creerScanner, modifierScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
