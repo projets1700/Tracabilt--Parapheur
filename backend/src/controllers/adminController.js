@@ -386,4 +386,18 @@ async function supprimerSuperviseur(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, supprimerAdmin, listerScanners, creerScanner, modifierScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur };
+async function supprimerScan(req, res) {
+  try {
+    const { id } = req.params;
+    const r = await pool.query('DELETE FROM scans WHERE id = $1 RETURNING id', [id]);
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: 'Scan introuvable.' });
+    }
+    res.json({ message: 'Scan supprimé.' });
+  } catch (err) {
+    console.error('supprimerScan :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
+module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, supprimerAdmin, listerScanners, creerScanner, modifierScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur, supprimerScan };

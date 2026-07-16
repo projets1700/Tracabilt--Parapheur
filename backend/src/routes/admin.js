@@ -41,5 +41,6 @@ router.get('/apk/download',     ctrl.telechargerApk);
 router.get('/superviseurs',        exigerAdmin, ctrl.listerSuperviseurs);
 router.post('/superviseurs',       exigerAdmin, ctrl.creerSuperviseur);
 router.delete('/superviseurs/:id', exigerAdmin, ctrl.supprimerSuperviseur);
+router.delete('/scans/:id',        exigerAdmin, ctrl.supprimerScan);
 
 module.exports = router;

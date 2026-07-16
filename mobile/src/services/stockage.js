@@ -28,6 +28,13 @@ export async function chargerScansLocaux() {
   return data ? JSON.parse(data) : [];
 }
 
+// Supprime un scan de l'historique local par son index
+export async function supprimerScanLocal(index) {
+  const tous = await chargerScansLocaux();
+  tous.splice(index, 1);
+  await AsyncStorage.setItem('scans_locaux', JSON.stringify(tous));
+}
+
 // Retourne uniquement les scans non encore synchronisés
 export async function chargerScansEnAttente() {
   const tous = await chargerScansLocaux();
