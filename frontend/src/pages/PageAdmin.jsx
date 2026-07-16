@@ -8,11 +8,6 @@ function formaterDate(d) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function formaterTaille(octets) {
-  if (octets >= 1024 * 1024) return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
-  return `${(octets / 1024).toFixed(0)} Ko`;
-}
-
 function ModalFicheSuperviseur({ superviseur, onFermer }) {
   if (!superviseur) return null;
   return (
@@ -175,7 +170,6 @@ export default function PageAdmin() {
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
   const [formScanner, setFormScanner] = useState({ mot_de_passe: '' });
-  const [infoApk, setInfoApk]         = useState(null);
   const [ajoutAdminOuvert, setAjoutAdminOuvert]       = useState(false);
   const [formAdmin, setFormAdmin]                     = useState({ nom: '', identifiant: '', mot_de_passe: '' });
   const [soumissionAdmin, setSoumissionAdmin]         = useState(false);
@@ -213,19 +207,11 @@ export default function PageAdmin() {
     } catch {}
   }, []);
 
-  const chargerApk = useCallback(async () => {
-    try {
-      const { data } = await clientAdmin().get('/admin/apk/info');
-      setInfoApk(data);
-    } catch {}
-  }, []);
-
   useEffect(() => {
     chargerScanners();
     chargerSuperviseurs();
     chargerAdmins();
-    chargerApk();
-  }, [chargerScanners, chargerSuperviseurs, chargerAdmins, chargerApk]);
+  }, [chargerScanners, chargerSuperviseurs, chargerAdmins]);
 
   function deconnecter() {
     localStorage.removeItem('admin_token');
@@ -660,26 +646,6 @@ export default function PageAdmin() {
             <div className="carte">
               <h3 style={{ fontWeight: 600, marginBottom: 16 }}>APK CoeurTrace</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {infoApk?.disponible ? (
-                  <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                      <span style={{ color: 'var(--texte2)' }}>Taille</span>
-                      <span style={{ fontWeight: 600 }}>{formaterTaille(infoApk.taille)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                      <span style={{ color: 'var(--texte2)' }}>Mis en ligne le</span>
-                      <span style={{ fontWeight: 600 }}>{formaterDate(infoApk.modifie)}</span>
-                    </div>
-                    <div className="sep" />
-                    <a
-                      href="/api/admin/apk/download"
-                      className="btn btn-primaire"
-                      style={{ justifyContent: 'center', padding: '10px 0', textDecoration: 'none' }}
-                    >
-                      Télécharger l'APK
-                    </a>
-                  </>
-                ) : null}
                 <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
                   Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
                 </div>
