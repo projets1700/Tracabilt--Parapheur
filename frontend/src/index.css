@@ -9,19 +9,13 @@
 :root {
   --bleu: #082D57;
   --bleu-clair: #E7ECF2;
-  --bleu-moyen: #123F6B;
   --bleu-fonce: #041B33;
   --vert: #07AA93;
   --vert-clair: #E1F5F1;
   --vert-bandeau: #9FE0D5;
   --vert-fonce: #056657;
-  --orange: #E07B20;
-  --orange-clair: #FDF0E3;
   --rouge: #D94040;
   --rouge-clair: #FDEAEA;
-  --violet: #6A3FA0;
-  --violet-clair: #EDE8F8;
-  --gris: #65707D;
   --gris-clair: #F4F7FA;
   --gris-fonce: #3A4148;
   --bordure: #E2E8EE;
@@ -89,12 +83,9 @@ input, select, textarea { font-family: inherit; }
   font-size: 11px;
   font-weight: 600;
 }
-.badge-bleu   { background: var(--bleu-clair);   color: var(--bleu-fonce); }
 .badge-vert   { background: var(--vert-clair);   color: var(--vert-fonce); }
-.badge-orange { background: var(--orange-clair); color: #633806; }
 .badge-rouge  { background: var(--rouge-clair);  color: #791F1F; }
 .badge-gris   { background: var(--gris-clair);   color: var(--gris-fonce); }
-.badge-violet { background: var(--violet-clair); color: #3C3489; }
 
 /* Carte */
 .carte {
@@ -161,6 +152,3 @@ input, select, textarea { font-family: inherit; }
   background: var(--bordure);
   margin: 16px 0;
 }
-
-/* Leaflet fix */
-.leaflet-container { z-index: 1; }

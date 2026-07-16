@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const fs = require('fs');
-const path = require('path');
 const pool = require('../config/db');
 
 const APK_PATH = '/app/uploads/app-latest.apk';

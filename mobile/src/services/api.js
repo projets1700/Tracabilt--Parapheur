@@ -47,8 +47,6 @@ async function fetchApi(path, options = {}) {
 }
 
 export const api = {
-  testSante: () => fetchApi('/sante'),
-
   connexionScanner: (identifiant, mot_de_passe) =>
     fetchApi('/auth/scanner/connexion', {
       method: 'POST',
