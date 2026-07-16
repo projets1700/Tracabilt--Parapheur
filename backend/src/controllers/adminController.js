@@ -83,7 +83,9 @@ async function easWebhook(req, res) {
     }
 
     const payload = req.body;
-    if (payload.platform !== 'android' || payload.status !== 'finished') {
+    const plateforme = String(payload.platform || '').toLowerCase();
+    const statut = String(payload.status || '').toLowerCase();
+    if (plateforme !== 'android' || statut !== 'finished') {
       return res.status(200).json({ message: 'Ignoré (statut ou plateforme non concernée).' });
     }
     const url = payload.artifacts?.buildUrl;
