@@ -8,8 +8,7 @@ import EcranConnexion from './src/screens/EcranConnexion';
 import EcranScanner from './src/screens/EcranScanner';
 import EcranHistorique from './src/screens/EcranHistorique';
 import { chargerSession, supprimerSession } from './src/services/stockage';
-import { chargerScansEnAttente, marquerToutSynchronise } from './src/services/stockage';
-import { api } from './src/services/api';
+import { synchroniserScansEnAttente } from './src/services/sync';
 import { theme } from './src/theme';
 
 const Tab = createBottomTabNavigator();
@@ -40,12 +39,9 @@ export default function App() {
 
   const syncAuto = useCallback(async () => {
     if (!token) return;
-    const pending = await chargerScansEnAttente();
-    if (pending.length === 0) return;
     try {
-      await api.synchroniserScans(pending);
-      await marquerToutSynchronise();
-      afficherNotif(`✓ ${pending.length} scan(s) synchronisé(s)`);
+      const nombre = await synchroniserScansEnAttente();
+      if (nombre > 0) afficherNotif(`✓ ${nombre} scan(s) synchronisé(s)`);
     } catch {
       // Silencieux — réessayera à la prochaine reconnexion
     }

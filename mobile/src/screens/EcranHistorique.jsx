@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { chargerScansLocaux } from '../services/stockage';
+import { synchroniserScansEnAttente } from '../services/sync';
 import { theme } from '../theme';
 
 function formaterDate(d) {
@@ -14,6 +15,7 @@ function formaterDate(d) {
 export default function EcranHistorique() {
   const [scans, setScans] = useState([]);
   const [chargement, setChargement] = useState(true);
+  const [synchronisation, setSynchronisation] = useState(false);
 
   const charger = useCallback(async () => {
     setChargement(true);
@@ -26,10 +28,32 @@ export default function EcranHistorique() {
 
   const enAttente = scans.filter(s => s.sync_status === 'en_attente').length;
 
+  async function handleSynchroniser() {
+    setSynchronisation(true);
+    try {
+      const nombre = await synchroniserScansEnAttente();
+      await charger();
+      Alert.alert('Synchronisation', nombre > 0 ? `${nombre} scan(s) synchronisé(s).` : 'Rien à synchroniser.');
+    } catch {
+      Alert.alert('Synchronisation échouée', 'Vérifiez votre connexion et réessayez.');
+    } finally {
+      setSynchronisation(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.titre}>Historique des scans</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.titre}>Historique des scans</Text>
+          <TouchableOpacity onPress={handleSynchroniser} disabled={synchronisation}>
+            {synchronisation ? (
+              <ActivityIndicator size="small" color={theme.bleu} />
+            ) : (
+              <Text style={styles.lienSync}>🔄 Synchroniser</Text>
+            )}
+          </TouchableOpacity>
+        </View>
         <Text style={styles.sousTitre}>
           {scans.length} scan(s) · {enAttente} en attente de sync
         </Text>
@@ -89,6 +113,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.bordure,
   },
   titre: { fontSize: 20, fontWeight: '700', color: theme.bleu },
+  lienSync: { fontSize: 13, fontWeight: '600', color: theme.teal },
   sousTitre: { fontSize: 13, color: theme.texte, marginTop: 4 },
   vide: { fontSize: 15, color: theme.placeholder },
   item: {
