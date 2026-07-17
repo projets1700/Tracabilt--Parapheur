@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
 
 const STATUTS = {
@@ -48,18 +49,9 @@ export default function PageVisionneur() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
-        <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, width: 480, maxWidth: '100%' }}>
-          <input
-            className="champ"
-            style={{ flex: 1 }}
-            placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
-            value={recherche}
-            onChange={e => setRecherche(e.target.value)}
-          />
-          <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
-            Rechercher
-          </button>
-        </form>
+        <Link to="/connexion" className="btn btn-primaire">
+          Connexion
+        </Link>
       </header>
 
       <main className="conteneur" style={{ padding: '24px 24px' }}>
@@ -68,9 +60,20 @@ export default function PageVisionneur() {
 
         {!resultat && !chargement && !erreur && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--texte3)' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <p style={{ fontSize: 16, fontWeight: 500 }}>Saisir un numéro de parapheur</p>
-            <p style={{ fontSize: 13, marginTop: 6 }}>Exemple : PAR-2025-00001</p>
+            <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 16, color: 'var(--texte2)' }}>Saisir un numéro de parapheur</p>
+            <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, maxWidth: 480, margin: '0 auto' }}>
+              <input
+                className="champ"
+                style={{ flex: 1 }}
+                placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
+                value={recherche}
+                onChange={e => setRecherche(e.target.value)}
+              />
+              <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
+                Rechercher
+              </button>
+            </form>
+            <p style={{ fontSize: 13, marginTop: 12 }}>Exemple : PAR-2025-00001</p>
           </div>
         )}
 

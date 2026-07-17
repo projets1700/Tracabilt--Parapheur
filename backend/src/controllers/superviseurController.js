@@ -12,7 +12,7 @@ async function connexion(req, res) {
     if (!identifiant || !mot_de_passe) {
       return res.status(400).json({ message: 'Identifiant et mot de passe requis.' });
     }
-    const r = await pool.query('SELECT * FROM superviseurs WHERE identifiant = $1', [identifiant.trim().toLowerCase()]);
+    const r = await pool.query('SELECT * FROM superviseurs WHERE LOWER(identifiant) = LOWER($1)', [identifiant.trim()]);
     const sup = r.rows[0];
     if (!sup || !(await bcrypt.compare(mot_de_passe, sup.password_hash))) {
       return res.status(401).json({ message: 'Identifiants incorrects.' });

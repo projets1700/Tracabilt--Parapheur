@@ -34,18 +34,6 @@ mobile/    → Application mobile Expo        (scan QR Code)
 
 Le projet tourne sur un VPS OVH via Docker Compose.
 
-### Pages accessibles
-
-| Page | Chemin |
-|------|--------|
-| Visionneur (public) | `/` |
-| Connexion superviseur | `/superviseur/connexion` |
-| Liste des parapheurs | `/parapheurs` |
-| Connexion admin | `/admin/connexion` |
-| Inscription admin *(1ère fois)* | `/admin/inscription` |
-| Tableau de bord admin | `/admin` |
-| Santé de l'API | `/api/sante` *(port 3001)* |
-
 ### Commandes utiles sur le serveur
 
 ```bash
@@ -128,7 +116,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Rôle | Création | Accès |
 |------|----------|-------|
-| **Admin** | `/admin/inscription` *(première visite)*, puis un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum** | Gestion des scanners, superviseurs, admins, application mobile |
+| **Admin** | Formulaire dédié *(première visite)*, puis un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum** | Gestion des scanners, superviseurs, admins, application mobile |
 | **Superviseur** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres | Consultation de tous les parapheurs |
 | **Scanner** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Scan1`, `Scan2`…), mot de passe = code PIN à 4 chiffres | Application mobile uniquement |
 
@@ -160,7 +148,6 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 ### Interface web — Superviseur
 
 - Compte créé par l'admin depuis le tableau de bord (identifiant `SupX` + PIN, définitifs)
-- Connexion : `/superviseur/connexion`
 - Liste de tous les parapheurs, triée du plus récent au moins récent
 - Colonnes : numéro, titre, date du dernier scan, localisation
 - Clic sur un parapheur → historique complet en tableau
@@ -169,7 +156,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ### Interface web — Administration
 
-- Connexion requise : `/admin/connexion`
+- Connexion requise
 
 **Onglet Scannaire**
 - Liste des scanners (identifiant, statut, date de création)
@@ -188,9 +175,12 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 - Créer un second administrateur (nom, identifiant, mot de passe) tant que la limite n'est pas atteinte
 - Supprimer un administrateur (impossible de se supprimer soi-même ou de supprimer le dernier compte restant)
 
+**Onglet Scans**
+- Historique paginé de tous les scans enregistrés (parapheur, opérateur, lieu, date)
+- Supprimer un scan
+
 **Onglet Application mobile**
 - Lien de téléchargement de l'APK + QR code, toujours visibles
-- Informations sur l'APK disponible (taille, date de mise en ligne)
 - Publication automatique : à chaque build EAS Android réussi, un webhook récupère l'APK et le publie sans intervention manuelle (voir [Sécurité](#sécurité))
 
 ---
@@ -204,6 +194,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | GET | `/api/sante` | État du serveur |
 | GET | `/api/parapheurs` | Liste paginée des parapheurs |
 | GET | `/api/parapheurs/:numero` | Détail + historique d'un parapheur |
+| GET | `/api/scans` | Liste paginée de tous les scans |
 | GET | `/api/admin/apk/download` | Télécharger l'APK |
 
 ### Scanner *(JWT requis)*
@@ -234,6 +225,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | GET | `/api/admin/superviseurs` | Liste des superviseurs |
 | POST | `/api/admin/superviseurs` | Créer un superviseur (identifiant `SupX` auto-généré, PIN 4 chiffres) |
 | DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
+| DELETE | `/api/admin/scans/:id` | Supprimer un scan |
 | POST | `/api/admin/apk` | Upload manuel de l'APK |
 | GET | `/api/admin/apk/info` | Infos sur l'APK |
 | GET | `/api/admin/apk/download` | Télécharger l'APK *(public)* |

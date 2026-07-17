@@ -180,7 +180,7 @@ export default function PageAdmin() {
   const SCANS_PAR_PAGE = 50;
 
   useEffect(() => {
-    if (!localStorage.getItem('admin_token')) navigate('/admin/connexion', { replace: true });
+    if (!localStorage.getItem('admin_token')) navigate('/connexion', { replace: true });
   }, [navigate]);
 
   const chargerScanners = useCallback(async () => {
@@ -191,7 +191,7 @@ export default function PageAdmin() {
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem('admin_token');
-        navigate('/admin/connexion', { replace: true });
+        navigate('/connexion', { replace: true });
       }
     } finally {
       setChargement(false);
@@ -249,7 +249,7 @@ export default function PageAdmin() {
   function deconnecter() {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
-    navigate('/admin/connexion', { replace: true });
+    navigate('/connexion', { replace: true });
   }
 
   function afficherSucces(msg) {
