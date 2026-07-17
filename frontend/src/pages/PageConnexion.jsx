@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
@@ -11,14 +11,6 @@ export default function PageConnexion() {
   const [form, setForm] = useState({ identifiant: '', mot_de_passe: '' });
   const [erreur, setErreur] = useState('');
   const [chargement, setChargement] = useState(false);
-
-  useEffect(() => {
-    if (localStorage.getItem('admin_token')) {
-      navigate('/admin', { replace: true });
-    } else if (localStorage.getItem('superviseur_token')) {
-      navigate('/parapheurs', { replace: true });
-    }
-  }, [navigate]);
 
   function changer(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
