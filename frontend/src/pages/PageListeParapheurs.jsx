@@ -42,10 +42,7 @@ export default function PageListeParapheurs() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link to="/" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>Recherche</Link>
-          <Link to="/admin" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>Administration</Link>
-        </div>
+        <Link to="/parapheurs" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>← Retour à l'accueil</Link>
       </header>
 
       {/* Sous-header */}

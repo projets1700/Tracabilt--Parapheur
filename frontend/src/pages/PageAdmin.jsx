@@ -381,8 +381,8 @@ export default function PageAdmin() {
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="/" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>
-            ← Visionneur
+          <a href="/admin" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>
+            ← Retour à l'accueil
           </a>
           <div style={{ width: 1, height: 20, background: 'var(--bordure)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
