@@ -550,8 +550,9 @@ export default function PageAdmin() {
             <span style={{ fontSize: 13, color: 'var(--texte2)', fontWeight: 500 }}>{admin?.nom}</span>
           </div>
           <button
+            className="btn btn-primaire"
             onClick={deconnecter}
-            style={{ background: 'none', border: '1px solid var(--bordure)', borderRadius: 8, padding: '6px 14px', color: 'var(--texte2)', fontSize: 12, cursor: 'pointer' }}
+            style={{ padding: '6px 14px', fontSize: 12 }}
           >
             Déconnexion
           </button>
