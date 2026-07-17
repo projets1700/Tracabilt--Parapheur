@@ -21,6 +21,12 @@ export default function PageVisionneur() {
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
 
+  const lienEspace = localStorage.getItem('admin_token')
+    ? { to: '/admin', label: 'Tableau de bord' }
+    : localStorage.getItem('superviseur_token')
+      ? { to: '/parapheurs', label: 'Mes parapheurs' }
+      : null;
+
   async function handleRecherche(e) {
     e.preventDefault();
     if (!recherche.trim()) return;
@@ -49,9 +55,11 @@ export default function PageVisionneur() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
-        <Link to="/connexion" className="btn btn-primaire">
-          Connexion
-        </Link>
+        {lienEspace && (
+          <Link to={lienEspace.to} className="btn btn-primaire">
+            {lienEspace.label}
+          </Link>
+        )}
       </header>
 
       <main className="conteneur" style={{ padding: '24px 24px' }}>
