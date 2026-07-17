@@ -8,8 +8,41 @@ function formaterDate(d) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function ModalFicheSuperviseur({ superviseur, onFermer }) {
+function ModalFicheSuperviseur({ superviseur, onFermer, onEnregistrer }) {
+  const [pin, setPin] = useState('');
+  const [erreur, setErreur] = useState('');
+  const [soumission, setSoumission] = useState(false);
+
+  useEffect(() => {
+    if (superviseur) {
+      setPin('');
+      setErreur('');
+    }
+  }, [superviseur]);
+
   if (!superviseur) return null;
+
+  async function handleEnregistrer() {
+    if (!pin) {
+      setErreur('Saisissez un nouveau code PIN à enregistrer.');
+      return;
+    }
+    if (!/^\d{4}$/.test(pin)) {
+      setErreur('Le code PIN doit contenir exactement 4 chiffres.');
+      return;
+    }
+    setErreur('');
+    setSoumission(true);
+    try {
+      await onEnregistrer(superviseur.id, { mot_de_passe: pin });
+      onFermer();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la modification.');
+    } finally {
+      setSoumission(false);
+    }
+  }
+
   return (
     <div
       onClick={onFermer}
@@ -27,18 +60,40 @@ function ModalFicheSuperviseur({ superviseur, onFermer }) {
           </div>
           <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--texte3)', lineHeight: 1 }}>✕</button>
         </div>
+
         <div className="sep" style={{ margin: 0 }} />
-        {[
-          { label: 'Identifiant', valeur: superviseur.identifiant },
-          { label: 'Créé le',     valeur: formaterDate(superviseur.created_at) },
-        ].map(({ label, valeur }) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-            <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>{label}</span>
-            <span style={{ fontWeight: 600 }}>{valeur}</span>
-          </div>
-        ))}
+
+        {erreur && <div className="message-erreur">{erreur}</div>}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Identifiant</span>
+          <span style={{ fontWeight: 600 }}>{superviseur.identifiant}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Créé le</span>
+          <span style={{ fontWeight: 600 }}>{formaterDate(superviseur.created_at)}</span>
+        </div>
+
+        <div>
+          <label className="label-champ">Réinitialiser le code PIN</label>
+          <input
+            className="champ"
+            type="password"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="1234"
+          />
+        </div>
+
         <div className="sep" style={{ margin: 0 }} />
-        <button className="btn" onClick={onFermer} style={{ justifyContent: 'center' }}>Fermer</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn" onClick={onFermer}>Fermer</button>
+          <button className="btn btn-primaire" onClick={handleEnregistrer} disabled={soumission}>
+            {soumission ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -141,6 +196,95 @@ function ModalFiche({ scanner, onFermer, onEnregistrer }) {
   );
 }
 
+function ModalFicheAdmin({ admin, onFermer, onEnregistrer }) {
+  const [motDePasse, setMotDePasse] = useState('');
+  const [erreur, setErreur] = useState('');
+  const [soumission, setSoumission] = useState(false);
+
+  useEffect(() => {
+    if (admin) {
+      setMotDePasse('');
+      setErreur('');
+    }
+  }, [admin]);
+
+  if (!admin) return null;
+
+  async function handleEnregistrer() {
+    if (!motDePasse) {
+      setErreur('Saisissez un nouveau mot de passe à enregistrer.');
+      return;
+    }
+    if (motDePasse.length < 6) {
+      setErreur('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    setErreur('');
+    setSoumission(true);
+    try {
+      await onEnregistrer(admin.id, { mot_de_passe: motDePasse });
+      onFermer();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la modification.');
+    } finally {
+      setSoumission(false);
+    }
+  }
+
+  return (
+    <div
+      onClick={onFermer}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="carte"
+        style={{ width: '100%', maxWidth: 420, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>{admin.nom}</h2>
+            <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 2 }}>{admin.identifiant}</p>
+          </div>
+          <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--texte3)', lineHeight: 1 }}>✕</button>
+        </div>
+
+        <div className="sep" style={{ margin: 0 }} />
+
+        {erreur && <div className="message-erreur">{erreur}</div>}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Identifiant</span>
+          <span style={{ fontWeight: 600 }}>{admin.identifiant}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Créé le</span>
+          <span style={{ fontWeight: 600 }}>{formaterDate(admin.created_at)}</span>
+        </div>
+
+        <div>
+          <label className="label-champ">Réinitialiser le mot de passe</label>
+          <input
+            className="champ"
+            type="password"
+            value={motDePasse}
+            onChange={e => setMotDePasse(e.target.value)}
+            placeholder="6 caractères minimum"
+          />
+        </div>
+
+        <div className="sep" style={{ margin: 0 }} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn" onClick={onFermer}>Fermer</button>
+          <button className="btn btn-primaire" onClick={handleEnregistrer} disabled={soumission}>
+            {soumission ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function clientAdmin() {
   const token = localStorage.getItem('admin_token');
   return {
@@ -173,6 +317,7 @@ export default function PageAdmin() {
   const [ajoutAdminOuvert, setAjoutAdminOuvert]       = useState(false);
   const [formAdmin, setFormAdmin]                     = useState({ nom: '', identifiant: '', mot_de_passe: '' });
   const [soumissionAdmin, setSoumissionAdmin]         = useState(false);
+  const [adminFiche, setAdminFiche]                   = useState(null);
   const [scans, setScans]             = useState([]);
   const [scansTotal, setScansTotal]   = useState(0);
   const [scansPage, setScansPage]     = useState(1);
@@ -321,6 +466,18 @@ export default function PageAdmin() {
     chargerScanners();
   }
 
+  async function handleModifierSuperviseur(id, changes) {
+    await clientAdmin().put(`/admin/superviseurs/${id}`, changes);
+    afficherSucces('Superviseur modifié.');
+    chargerSuperviseurs();
+  }
+
+  async function handleModifierAdmin(id, changes) {
+    await clientAdmin().put(`/admin/admins/${id}`, changes);
+    afficherSucces('Administrateur modifié.');
+    chargerAdmins();
+  }
+
   async function supprimerScanner(id, nom) {
     if (!confirm(`Supprimer le scanner "${nom}" ?`)) return;
     setErreur('');
@@ -371,7 +528,8 @@ export default function PageAdmin() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
       <ModalFiche scanner={scannerFiche} onFermer={() => setScannerFiche(null)} onEnregistrer={handleModifierScanner} />
-      <ModalFicheSuperviseur superviseur={superviseurFiche} onFermer={() => setSuperviseurFiche(null)} />
+      <ModalFicheSuperviseur superviseur={superviseurFiche} onFermer={() => setSuperviseurFiche(null)} onEnregistrer={handleModifierSuperviseur} />
+      <ModalFicheAdmin admin={adminFiche} onFermer={() => setAdminFiche(null)} onEnregistrer={handleModifierAdmin} />
 
       {/* Header */}
       <header style={{
@@ -381,7 +539,7 @@ export default function PageAdmin() {
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="/admin" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>
+          <a href="/" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>
             ← Retour à l'accueil
           </a>
           <div style={{ width: 1, height: 20, background: 'var(--bordure)' }} />
@@ -658,11 +816,16 @@ export default function PageAdmin() {
                         <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{a.identifiant}</td>
                         <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
                         <td style={{ padding: '12px 16px' }}>
-                          {!estMoi && admins.length > 1 && (
-                            <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
-                              Supprimer
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setAdminFiche(a)}>
+                              Fiche
                             </button>
-                          )}
+                            {!estMoi && admins.length > 1 && (
+                              <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
+                                Supprimer
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

@@ -159,6 +159,31 @@ async function listerAdmins(req, res) {
   }
 }
 
+async function modifierAdmin(req, res) {
+  try {
+    const { id } = req.params;
+    const { mot_de_passe } = req.body;
+    if (!mot_de_passe) {
+      return res.status(400).json({ message: 'Aucune modification fournie.' });
+    }
+    if (mot_de_passe.length < 6) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    }
+    const hash = await bcrypt.hash(mot_de_passe, 10);
+    const r = await pool.query(
+      'UPDATE admins SET password_hash = $1 WHERE id = $2 RETURNING id, nom, identifiant, created_at',
+      [hash, id]
+    );
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: 'Administrateur introuvable.' });
+    }
+    res.json({ admin: r.rows[0] });
+  } catch (err) {
+    console.error('modifierAdmin :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
 async function supprimerAdmin(req, res) {
   try {
     const { id } = req.params;
@@ -373,6 +398,31 @@ async function creerSuperviseur(req, res) {
   }
 }
 
+async function modifierSuperviseur(req, res) {
+  try {
+    const { id } = req.params;
+    const { mot_de_passe } = req.body;
+    if (!mot_de_passe) {
+      return res.status(400).json({ message: 'Aucune modification fournie.' });
+    }
+    if (!/^\d{4}$/.test(mot_de_passe)) {
+      return res.status(400).json({ message: 'Le mot de passe doit être un code à 4 chiffres.' });
+    }
+    const hash = await bcrypt.hash(mot_de_passe, 10);
+    const r = await pool.query(
+      'UPDATE superviseurs SET password_hash = $1 WHERE id = $2 RETURNING id, nom, identifiant, created_at',
+      [hash, id]
+    );
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: 'Superviseur introuvable.' });
+    }
+    res.json({ superviseur: r.rows[0] });
+  } catch (err) {
+    console.error('modifierSuperviseur :', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+}
+
 async function supprimerSuperviseur(req, res) {
   try {
     const { id } = req.params;
@@ -401,4 +451,4 @@ async function supprimerScan(req, res) {
   }
 }
 
-module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, supprimerAdmin, listerScanners, creerScanner, modifierScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, supprimerSuperviseur, supprimerScan };
+module.exports = { adminExiste, inscription, connexion, easWebhook, listerAdmins, creerAdmin, modifierAdmin, supprimerAdmin, listerScanners, creerScanner, modifierScanner, supprimerScanner, uploadApk, infoApk, telechargerApk, listerSuperviseurs, creerSuperviseur, modifierSuperviseur, supprimerSuperviseur, supprimerScan };
