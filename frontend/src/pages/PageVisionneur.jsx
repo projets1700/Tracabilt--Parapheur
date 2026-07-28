@@ -15,17 +15,37 @@ function formaterDate(d) {
   });
 }
 
+function lireSession() {
+  const adminToken = localStorage.getItem('admin_token');
+  if (adminToken) {
+    const user = JSON.parse(localStorage.getItem('admin_user') || 'null');
+    return { role: 'admin', nom: user?.nom || user?.identifiant || 'Admin' };
+  }
+  const supToken = localStorage.getItem('superviseur_token');
+  if (supToken) {
+    const user = JSON.parse(localStorage.getItem('superviseur_user') || 'null');
+    return { role: 'superviseur', nom: user?.nom || user?.identifiant || 'Superviseur' };
+  }
+  return null;
+}
+
 export default function PageVisionneur() {
   const [recherche, setRecherche] = useState('');
   const [resultat, setResultat] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [session, setSession] = useState(lireSession);
 
-  const lienEspace = localStorage.getItem('admin_token')
-    ? { to: '/admin', label: 'Tableau de bord' }
-    : localStorage.getItem('superviseur_token')
-      ? { to: '/parapheurs', label: 'Mes parapheurs' }
-      : null;
+  function handleDeconnexion() {
+    if (session?.role === 'admin') {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+    } else if (session?.role === 'superviseur') {
+      localStorage.removeItem('superviseur_token');
+      localStorage.removeItem('superviseur_user');
+    }
+    setSession(null);
+  }
 
   async function handleRecherche(e) {
     e.preventDefault();
@@ -55,9 +75,18 @@ export default function PageVisionneur() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
-        {lienEspace && (
-          <Link to={lienEspace.to} className="btn btn-primaire">
-            {lienEspace.label}
+        {session ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 13, color: 'var(--texte2)', fontWeight: 500 }}>
+              Connecté : {session.nom}
+            </span>
+            <button className="btn btn-primaire" onClick={handleDeconnexion}>
+              Déconnexion
+            </button>
+          </div>
+        ) : (
+          <Link to="/connexion" className="btn btn-primaire">
+            Connexion
           </Link>
         )}
       </header>

@@ -116,7 +116,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Rôle | Création | Accès |
 |------|----------|-------|
-| **Admin** | Formulaire dédié *(première visite)*, puis un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum** | Gestion des scanners, superviseurs, admins, application mobile |
+| **Admin** | Premier compte créé automatiquement en base au démarrage du backend (voir migration), un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum**, aucune page d'inscription dans l'interface | Gestion des scanners, superviseurs, admins, application mobile |
 | **Superviseur** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres | Consultation de tous les parapheurs |
 | **Scanner** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Scan1`, `Scan2`…), mot de passe = code PIN à 4 chiffres | Application mobile uniquement |
 
@@ -139,9 +139,11 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ### Interface web — Visionneur *(public)*
 
-- Accessible sans connexion
+- Accessible sans compte, aucun lien de connexion affiché pour un visiteur anonyme
+- Si un admin ou un superviseur est déjà connecté, un bouton vers son espace (tableau de bord ou liste des parapheurs) s'affiche à la place — sans jamais le déconnecter
 - Recherche d'un parapheur par numéro
 - Historique complet des scans : lieu, date, opérateur
+- Page `/connexion` unique : identifiant + mot de passe/PIN, redirige automatiquement vers le bon espace selon le rôle détecté
 
 ---
 
@@ -167,12 +169,13 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 **Onglet Superviseurs**
 - Liste des superviseurs
 - Créer un superviseur : identifiant généré automatiquement (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres
+- Modifier la fiche d'un superviseur : réinitialiser son code PIN
 - Supprimer un superviseur
-- Consulter la fiche d'un superviseur
 
 **Onglet Administrateurs**
 - Liste des administrateurs (2 maximum)
 - Créer un second administrateur (nom, identifiant, mot de passe) tant que la limite n'est pas atteinte
+- Modifier la fiche d'un administrateur (y compris la sienne) : réinitialiser le mot de passe
 - Supprimer un administrateur (impossible de se supprimer soi-même ou de supprimer le dernier compte restant)
 
 **Onglet Scans**
@@ -213,10 +216,11 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | Méthode | Route | Description |
 |---------|-------|-------------|
 | GET | `/api/admin/existe` | Vérifie si un admin existe *(public)* |
-| POST | `/api/admin/inscription` | Créer le 1er compte admin *(public, unique)* |
+| POST | `/api/admin/inscription` | Créer le 1er compte admin *(public, unique — non utilisé par l'interface, le premier compte est seedé en base ; endpoint gardé pour une restauration manuelle)* |
 | POST | `/api/admin/connexion` | Connexion admin *(public)* |
 | GET | `/api/admin/admins` | Liste des administrateurs |
 | POST | `/api/admin/admins` | Créer un 2ᵉ administrateur (max 2) |
+| PUT | `/api/admin/admins/:id` | Réinitialiser le mot de passe d'un administrateur |
 | DELETE | `/api/admin/admins/:id` | Supprimer un administrateur |
 | GET | `/api/admin/scanners` | Liste des scanners |
 | POST | `/api/admin/scanners` | Créer un scanner (identifiant `ScanX` auto-généré, PIN 4 chiffres) |
@@ -224,6 +228,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | DELETE | `/api/admin/scanners/:id` | Supprimer un scanner |
 | GET | `/api/admin/superviseurs` | Liste des superviseurs |
 | POST | `/api/admin/superviseurs` | Créer un superviseur (identifiant `SupX` auto-généré, PIN 4 chiffres) |
+| PUT | `/api/admin/superviseurs/:id` | Réinitialiser le code PIN d'un superviseur |
 | DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
 | DELETE | `/api/admin/scans/:id` | Supprimer un scan |
 | POST | `/api/admin/apk` | Upload manuel de l'APK |
@@ -304,3 +309,4 @@ Suite Jest couvrant l'authentification et les routes principales.
 | 16 | Identifiant scanner auto-généré + mot de passe PIN 4 chiffres | ✅ |
 | 17 | Publication automatique de l'APK via webhook EAS | ✅ |
 | 18 | Identifiant superviseur auto-généré + PIN, fiche scanner modifiable | ✅ |
+| 19 | Page de connexion unique (redirection selon le rôle), fiches superviseur/admin modifiables, admin seedé en base | ✅ |
