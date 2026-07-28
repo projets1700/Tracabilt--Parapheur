@@ -422,7 +422,7 @@ export default function PageAdmin() {
   function deconnecter() {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
-    navigate('/connexion', { replace: true });
+    navigate('/', { replace: true });
   }
 
   function afficherSucces(msg) {

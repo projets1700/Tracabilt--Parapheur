@@ -17,6 +17,7 @@ const STATUTS = {
 
 export default function PageListeParapheurs() {
   const navigate = useNavigate();
+  const superviseur = JSON.parse(localStorage.getItem('superviseur_user') || 'null');
   const [parapheurs, setParapheurs] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur]         = useState('');
@@ -25,7 +26,7 @@ export default function PageListeParapheurs() {
   function deconnecter() {
     localStorage.removeItem('superviseur_token');
     localStorage.removeItem('superviseur_user');
-    navigate('/connexion', { replace: true });
+    navigate('/', { replace: true });
   }
 
   useEffect(() => {
@@ -49,7 +50,10 @@ export default function PageListeParapheurs() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 13, color: 'var(--texte2)', fontWeight: 500 }}>
+            Connecté : {superviseur?.nom || superviseur?.identifiant || 'Superviseur'}
+          </span>
           <button className="btn btn-primaire" onClick={deconnecter} style={{ padding: '6px 14px', fontSize: 12 }}>
             Déconnexion
           </button>

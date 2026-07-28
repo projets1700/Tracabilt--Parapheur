@@ -92,27 +92,27 @@ export default function PageVisionneur() {
       </header>
 
       <main className="conteneur" style={{ padding: '24px 24px' }}>
+        <div style={{ textAlign: 'center', padding: resultat ? '0 0 32px' : '80px 0' }}>
+          {!resultat && (
+            <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 16, color: 'var(--texte2)' }}>Saisir un numéro de parapheur</p>
+          )}
+          <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, maxWidth: 480, margin: '0 auto' }}>
+            <input
+              className="champ"
+              style={{ flex: 1 }}
+              placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
+              value={recherche}
+              onChange={e => setRecherche(e.target.value)}
+            />
+            <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
+              Rechercher
+            </button>
+          </form>
+          {!resultat && <p style={{ fontSize: 13, marginTop: 12, color: 'var(--texte3)' }}>Exemple : PAR-2025-00001</p>}
+        </div>
+
         {chargement && <div className="chargement">Recherche en cours…</div>}
         {erreur && <div className="message-erreur" style={{ maxWidth: 480, margin: '0 auto' }}>{erreur}</div>}
-
-        {!resultat && !chargement && !erreur && (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--texte3)' }}>
-            <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 16, color: 'var(--texte2)' }}>Saisir un numéro de parapheur</p>
-            <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8, maxWidth: 480, margin: '0 auto' }}>
-              <input
-                className="champ"
-                style={{ flex: 1 }}
-                placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
-                value={recherche}
-                onChange={e => setRecherche(e.target.value)}
-              />
-              <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
-                Rechercher
-              </button>
-            </form>
-            <p style={{ fontSize: 13, marginTop: 12 }}>Exemple : PAR-2025-00001</p>
-          </div>
-        )}
 
         {resultat && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800, margin: '0 auto' }}>
