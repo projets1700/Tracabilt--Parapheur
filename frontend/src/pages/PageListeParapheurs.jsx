@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function formaterDate(d) {
@@ -16,10 +16,17 @@ const STATUTS = {
 };
 
 export default function PageListeParapheurs() {
+  const navigate = useNavigate();
   const [parapheurs, setParapheurs] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur]         = useState('');
   const [recherche, setRecherche]   = useState('');
+
+  function deconnecter() {
+    localStorage.removeItem('superviseur_token');
+    localStorage.removeItem('superviseur_user');
+    navigate('/connexion', { replace: true });
+  }
 
   useEffect(() => {
     client.get('/parapheurs?limite=500')
@@ -42,7 +49,11 @@ export default function PageListeParapheurs() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
-        <Link to="/" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>← Retour à l'accueil</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <button className="btn btn-primaire" onClick={deconnecter} style={{ padding: '6px 14px', fontSize: 12 }}>
+            Déconnexion
+          </button>
+        </div>
       </header>
 
       {/* Sous-header */}
