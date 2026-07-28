@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const exigerAdmin = require('../middleware/exigerAdmin');
 const ctrl = require('../controllers/adminController');
+const { supprimerParapheur } = require('../controllers/parapheursController');
 
 const router = express.Router();
 
@@ -44,5 +45,6 @@ router.post('/superviseurs',       exigerAdmin, ctrl.creerSuperviseur);
 router.put('/superviseurs/:id',    exigerAdmin, ctrl.modifierSuperviseur);
 router.delete('/superviseurs/:id', exigerAdmin, ctrl.supprimerSuperviseur);
 router.delete('/scans/:id',        exigerAdmin, ctrl.supprimerScan);
+router.delete('/parapheurs/:id',   exigerAdmin, supprimerParapheur);
 
 module.exports = router;

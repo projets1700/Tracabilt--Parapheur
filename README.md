@@ -178,6 +178,10 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 - Modifier la fiche d'un administrateur (y compris la sienne) : réinitialiser le mot de passe
 - Supprimer un administrateur (impossible de se supprimer soi-même ou de supprimer le dernier compte restant)
 
+**Onglet Parapheurs**
+- Liste de tous les parapheurs (numéro, titre, statut, dernier scan)
+- Supprimer un parapheur : suppression définitive, entraîne la suppression de tout son historique de scans
+
 **Onglet Scans**
 - Historique paginé de tous les scans enregistrés (parapheur, opérateur, lieu, date)
 - Supprimer un scan
@@ -231,6 +235,7 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | PUT | `/api/admin/superviseurs/:id` | Réinitialiser le code PIN d'un superviseur |
 | DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
 | DELETE | `/api/admin/scans/:id` | Supprimer un scan |
+| DELETE | `/api/admin/parapheurs/:id` | Supprimer un parapheur (et tout son historique de scans, suppression en cascade) |
 | POST | `/api/admin/apk` | Upload manuel de l'APK |
 | GET | `/api/admin/apk/info` | Infos sur l'APK |
 | GET | `/api/admin/apk/download` | Télécharger l'APK *(public)* |
@@ -310,3 +315,4 @@ Suite Jest couvrant l'authentification et les routes principales.
 | 17 | Publication automatique de l'APK via webhook EAS | ✅ |
 | 18 | Identifiant superviseur auto-généré + PIN, fiche scanner modifiable | ✅ |
 | 19 | Page de connexion unique (redirection selon le rôle), fiches superviseur/admin modifiables, admin seedé en base | ✅ |
+| 20 | Suppression d'un parapheur côté admin (et de son historique de scans en cascade) | ✅ |

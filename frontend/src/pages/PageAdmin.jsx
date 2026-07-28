@@ -323,6 +323,8 @@ export default function PageAdmin() {
   const [scansPage, setScansPage]     = useState(1);
   const [chargementScans, setChargementScans] = useState(true);
   const SCANS_PAR_PAGE = 50;
+  const [parapheurs, setParapheurs]                     = useState([]);
+  const [chargementParapheurs, setChargementParapheurs] = useState(true);
 
   useEffect(() => {
     if (!localStorage.getItem('admin_token')) navigate('/connexion', { replace: true });
@@ -386,6 +388,32 @@ export default function PageAdmin() {
       await clientAdmin().delete(`/admin/scans/${id}`);
       afficherSucces('Scan supprimé.');
       chargerScans(scansPage);
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
+    }
+  }
+
+  const chargerParapheurs = useCallback(async () => {
+    setChargementParapheurs(true);
+    try {
+      const { data } = await clientAdmin().get('/parapheurs?limite=500');
+      setParapheurs(data.parapheurs);
+    } catch {} finally {
+      setChargementParapheurs(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (onglet === 'parapheurs') chargerParapheurs();
+  }, [onglet, chargerParapheurs]);
+
+  async function supprimerParapheur(id, numero) {
+    if (!confirm(`Supprimer définitivement le parapheur "${numero}" et tout son historique de scans ?`)) return;
+    setErreur('');
+    try {
+      await clientAdmin().delete(`/admin/parapheurs/${id}`);
+      afficherSucces('Parapheur supprimé.');
+      chargerParapheurs();
     } catch (err) {
       setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
     }
@@ -564,7 +592,7 @@ export default function PageAdmin() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
-          {[{ id: 'scanners', label: 'Scannaire' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'admins', label: 'Administrateurs' }, { id: 'scans', label: 'Scans' }, { id: 'apk', label: 'Application mobile' }].map(o => (
+          {[{ id: 'scanners', label: 'Scannaire' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'admins', label: 'Administrateurs' }, { id: 'parapheurs', label: 'Parapheurs' }, { id: 'scans', label: 'Scans' }, { id: 'apk', label: 'Application mobile' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
@@ -831,6 +859,51 @@ export default function PageAdmin() {
               </table>
             </div>
 
+          </div>
+        )}
+
+        {onglet === 'parapheurs' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{parapheurs.length} parapheur(s) enregistré(s)</p>
+
+            {chargementParapheurs ? (
+              <div className="chargement">Chargement…</div>
+            ) : parapheurs.length === 0 ? (
+              <div className="carte" style={{ textAlign: 'center', padding: 40, color: 'var(--texte3)' }}>
+                Aucun parapheur enregistré
+              </div>
+            ) : (
+              <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
+                      {['Numéro', 'Titre', 'Statut', 'Dernier scan', ''].map(h => (
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parapheurs.map((p, i) => (
+                      <tr key={p.id} style={{ borderBottom: i < parapheurs.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{p.numero}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{p.titre || '—'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span className={`badge ${p.statut === 'archive' ? 'badge-gris' : 'badge-vert'}`}>
+                            {p.statut === 'archive' ? 'Archivé' : 'En circulation'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(p.dernier_scan)}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerParapheur(p.id, p.numero)}>
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
