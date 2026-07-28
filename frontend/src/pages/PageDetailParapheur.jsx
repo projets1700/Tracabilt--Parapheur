@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import client from '../api/client';
 
 function formaterDate(d) {
@@ -48,6 +48,7 @@ export default function PageDetailParapheur() {
       }}>
         <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <Link to="/parapheurs" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>← Retour</Link>
           <button className="btn btn-primaire" onClick={deconnecter} style={{ padding: '6px 14px', fontSize: 12 }}>
             Déconnexion
           </button>
