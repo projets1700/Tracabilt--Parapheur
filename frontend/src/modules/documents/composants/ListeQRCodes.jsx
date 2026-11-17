@@ -13,9 +13,10 @@ function Vignette({ contenu }) {
 }
 
 /**
- * Liste des QR codes présents dans le document (§4.1, panneau latéral).
+ * Liste des QR codes présents dans le document (panneau latéral) :
+ * sélection d'un QR code et suppression.
  */
-export default function ListeQRCodes({ qrcodes, selection, onSelectionner }) {
+export default function ListeQRCodes({ qrcodes, selection, onSelectionner, onSupprimer, verrouille = false }) {
   if (!qrcodes.length) {
     return <p style={{ fontSize: 12, color: 'var(--texte3)' }}>Aucun QR code dans ce document.</p>;
   }
@@ -23,18 +24,26 @@ export default function ListeQRCodes({ qrcodes, selection, onSelectionner }) {
   return (
     <div className="liste-qr">
       {tries.map(q => (
-        <button
-          key={q.cle}
-          type="button"
-          className={`item-qr${q.cle === selection ? ' selectionne' : ''}`}
-          onClick={() => onSelectionner(q.cle, q.page)}
-        >
-          <Vignette contenu={q.contenu} />
-          <span style={{ minWidth: 0 }}>
-            <strong>{q.numero || q.reference}</strong>
-            <small>Page {q.page} · {Math.round(pointsVersMm(q.largeur))} mm</small>
-          </span>
-        </button>
+        <div key={q.cle} className={`item-qr${q.cle === selection ? ' selectionne' : ''}`}>
+          <button type="button" className="item-qr-corps" onClick={() => onSelectionner(q.cle, q.page)}>
+            <Vignette contenu={q.contenu} />
+            <span style={{ minWidth: 0 }}>
+              <strong>{q.numero || q.reference}</strong>
+              <small>Page {q.page} · {Math.round(pointsVersMm(q.largeur))} mm</small>
+            </span>
+          </button>
+          {onSupprimer && !verrouille && (
+            <button
+              type="button"
+              className="item-qr-suppr"
+              onClick={() => onSupprimer(q.cle)}
+              title={`Supprimer le QR code ${q.numero || q.reference}`}
+              aria-label={`Supprimer le QR code ${q.numero || q.reference}`}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       ))}
     </div>
   );

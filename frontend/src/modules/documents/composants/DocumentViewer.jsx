@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer, Image as KImage, Rect, Transformer, Line } from 'react-konva';
 import { rendrePage } from '../services/pdfRendu';
-import { qrImage } from '../utils/qr';
-import { TAILLE_QR_MIN, MARGE_REPERE } from '../utils/coordonnees';
+import { etiquetteImage } from '../utils/qr';
+import { TAILLE_QR_MIN, MARGE_REPERE, PROPORTION_BANDE_NOM } from '../utils/coordonnees';
 
 const SEUIL_MAGNETISME = 6; // pixels écran
 const BLEU = '#009DBF';
 const ROSE = '#E0409A';
 const estTactile = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
 
-function useImageQr(contenu) {
+/** Image affichée : nom du QR code en clair au-dessus du QR code (comme dans le PDF). */
+function useImageQr(contenu, nom) {
   const [img, setImg] = useState(null);
   useEffect(() => {
     let actif = true;
-    qrImage(contenu).then(i => actif && setImg(i)).catch(() => actif && setImg(null));
+    etiquetteImage(contenu, nom, PROPORTION_BANDE_NOM).then(i => actif && setImg(i)).catch(() => actif && setImg(null));
     return () => { actif = false; };
-  }, [contenu]);
+  }, [contenu, nom]);
   return img;
 }
 
@@ -25,7 +26,7 @@ const borner = (v, min, max) => Math.min(Math.max(v, min), Math.max(min, max));
  * QRCodeOverlay — un QR code positionnable sur la page.
  */
 function NoeudQr({ qr, echelle, L, H, selectionne, verrouille, onSelectionner, onGuides, onModifier }) {
-  const img = useImageQr(qr.contenu);
+  const img = useImageQr(qr.contenu, qr.numero || qr.reference);
   const taille = qr.largeur * echelle;
   const commun = {
     id: `qr-${qr.cle}`,

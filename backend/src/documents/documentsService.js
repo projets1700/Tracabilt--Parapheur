@@ -219,15 +219,14 @@ async function libererNomVisiteur(brut, cle) {
   return rowCount > 0;
 }
 
-/** Parapheur du QR code : existant (même numéro) ou créé. */
-async function parapheurPourNom(db, numero, titre) {
+/**
+ * Parapheur déjà existant portant ce numéro (sinon null).
+ * Aucun parapheur n'est créé depuis la page Documents : il le sera au premier
+ * scan du QR code par l'application mobile.
+ */
+async function parapheurPourNom(db, numero) {
   const existant = await db.query('SELECT id FROM parapheurs WHERE numero = $1', [numero]);
-  if (existant.rows[0]) return existant.rows[0].id;
-  const { rows: [p] } = await db.query(
-    'INSERT INTO parapheurs (numero, titre, cree_par_qr) VALUES ($1, $2, TRUE) RETURNING id',
-    [numero, String(titre).slice(0, 255)],
-  );
-  return p.id;
+  return existant.rows[0]?.id ?? null;
 }
 
 /** Supprime les parapheurs DEP devenus inutiles (jamais scannés, plus utilisés). */
@@ -363,7 +362,9 @@ async function lister({ parapheurId } = {}) {
     if (!/^[0-9a-f-]{36}$/i.test(parapheurId)) return [];
     params.push(parapheurId);
     // Document associé au parapheur, ou contenant un QR code portant son numéro.
-    where = 'WHERE d.parapheur_id = $1 OR EXISTS (SELECT 1 FROM qr_codes q WHERE q.document_id = d.id AND q.parapheur_id = $1)';
+    where = `WHERE d.parapheur_id = $1 OR EXISTS (
+      SELECT 1 FROM qr_codes q WHERE q.document_id = d.id
+        AND (q.parapheur_id = $1 OR q.numero = (SELECT numero FROM parapheurs WHERE id = $1)))`;
   }
   const { rows } = await pool.query(`${SELECT_DOCUMENT} ${where} ORDER BY d.updated_at DESC LIMIT 500`, params);
   return rows.map(serialiserDocument);
@@ -448,8 +449,9 @@ async function creerQr(id, corps, utilisateur) {
     const pos = lirePosition(corps);
     controlerPosition(pos, doc);
 
-    // Le QR code est rattaché au parapheur de même numéro (créé s'il n'existe pas).
-    const parapheurId = await parapheurPourNom(client, numero, doc.name);
+    // Rattaché au parapheur de même numéro s'il existe déjà ; sinon aucun parapheur n'est
+    // créé ici : il le sera au premier scan du QR code par l'application mobile.
+    const parapheurId = await parapheurPourNom(client, numero);
 
     const reference = genererJeton();
     const contenu = config.qr_contenu === 'jeton' ? reference : numero;
@@ -513,7 +515,7 @@ async function modifierQr(id, qrId, corps, utilisateur) {
     let resultat = { ...avant };
 
     if (nouveauNom && nouveauNom !== avant.numero) {
-      const parapheurId = await parapheurPourNom(client, nouveauNom, doc.name);
+      const parapheurId = await parapheurPourNom(client, nouveauNom);
       // En mode « numéro », le contenu encodé suit le nom ; en mode « jeton », il ne change pas.
       const contenu = avant.content === avant.reference ? avant.content : nouveauNom;
       await client.query('UPDATE qr_codes SET numero = $2, content = $3, parapheur_id = $4 WHERE id = $1',
@@ -595,8 +597,15 @@ async function supprimerQr(id, qrId, utilisateur) {
 
 const generationsEnCours = new Set();
 
-function nomGenere(nom, format) {
-  return `${nom.replace(/\.[^.]+$/, '')}_QR.${format}`;
+/**
+ * Nom du fichier généré : le(s) nom(s) des QR codes, ex. « DEP-000012.pdf »,
+ * « DEP-000012_DEP-000013.pdf », « A_B_C_et_2_autres.pdf ». À défaut, le nom du document.
+ */
+function nomGenere(nomDocument, format, nomsQr = []) {
+  const noms = [...new Set(nomsQr.filter(Boolean))];
+  if (!noms.length) return `${nomDocument.replace(/\.[^.]+$/, '')}_QR.${format}`;
+  const base = noms.length <= 3 ? noms.join('_') : `${noms.slice(0, 3).join('_')}_et_${noms.length - 3}_autres`;
+  return `${base}.${format}`;
 }
 
 /** Choisit, pour une page, le paragraphe d'ancrage du QR code dans le DOCX. */
@@ -648,7 +657,7 @@ async function generer(id, format, utilisateur) {
 
     const qrs = [];
     for (const l of lignes) {
-      const q = { reference: l.reference, contenu: l.content, page: l.page_number, x: Number(l.position_x), y: Number(l.position_y), largeur: Number(l.width), hauteur: Number(l.height) };
+      const q = { reference: l.reference, nom: l.numero || l.reference, contenu: l.content, page: l.page_number, x: Number(l.position_x), y: Number(l.position_y), largeur: Number(l.width), hauteur: Number(l.height) };
       const erreur = pdfOutils.verifierPosition({ page_number: q.page, position_x: q.x, position_y: q.y, width: q.largeur, height: q.hauteur }, doc.pages);
       if (erreur) throw new ErreurMetier(`QR code ${q.reference} : ${erreur}`, 422);
       try {
@@ -673,7 +682,7 @@ async function generer(id, format, utilisateur) {
     }
 
     const chemin = await stockage.ecrire(stockage.cheminRelatif(id, `genere.${format}`), sortie);
-    const nom = nomGenere(doc.name, format);
+    const nom = nomGenere(doc.name, format, qrs.map(q => q.nom));
     const client = await pool.connect();
     try {
       await client.query('BEGIN');

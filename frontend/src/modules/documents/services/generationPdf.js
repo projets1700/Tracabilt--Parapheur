@@ -1,5 +1,5 @@
-import { PDFDocument } from 'pdf-lib';
-import { normaliserRotation, rectangleAfficheVersPdf, estHorsPage } from '../utils/coordonnees';
+import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
+import { normaliserRotation, rectangleAfficheVersPdf, pointAfficheVersPdf, estHorsPage, dispositionEtiquette } from '../utils/coordonnees';
 import { qrPngOctets } from '../utils/qr';
 
 /**
@@ -7,6 +7,19 @@ import { qrPngOctets } from '../utils/qr';
  * Charge l'original, intègre les QR codes aux pages concernées et produit un NOUVEAU PDF.
  * L'original n'est jamais modifié (on travaille sur une copie des octets).
  */
+/** Écrit le nom centré dans la bande, en tenant compte de la rotation de la page. */
+function dessinerNom(page, police, nom, bande, boite, rotation) {
+  let taille = bande.hauteur * 0.62;
+  const largeurMax = bande.largeur * 0.94;
+  const largeurTexte = police.widthOfTextAtSize(nom, taille);
+  if (largeurTexte > largeurMax) taille *= largeurMax / largeurTexte;
+  const largeur = police.widthOfTextAtSize(nom, taille);
+  const dx = bande.x + (bande.largeur - largeur) / 2;
+  const dy = bande.y + bande.hauteur / 2 + taille * 0.35;
+  const origine = pointAfficheVersPdf(dx, dy, boite, rotation);
+  page.drawText(nom, { x: origine.x, y: origine.y, size: taille, font: police, color: rgb(0, 0, 0), rotate: degrees(rotation) });
+}
+
 export async function genererPdfAvecQr(octetsOriginal, qrcodes) {
   if (!qrcodes.length) throw new Error('Aucun QR code à intégrer.');
 
@@ -22,6 +35,7 @@ export async function genererPdfAvecQr(octetsOriginal, qrcodes) {
 
   const nbPages = pdf.getPageCount();
   const images = new Map();
+  const police = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   for (const qr of qrcodes) {
     if (!qr.contenu) throw new Error(`Le QR code ${qr.reference || ''} est invalide (contenu vide).`);
@@ -43,9 +57,13 @@ export async function genererPdfAvecQr(octetsOriginal, qrcodes) {
       images.set(qr.contenu, await pdf.embedPng(await qrPngOctets(qr.contenu)));
     }
 
-    // Un QR code est carré et lisible quelle que soit son orientation :
-    // on le dessine directement dans le rectangle converti, sans rotation de l'image.
-    const r = rectangleAfficheVersPdf({ x: qr.x, y: qr.y, largeur: qr.largeur, hauteur: qr.hauteur }, boite, rotation);
+    const zones = dispositionEtiquette(qr);
+    // Fond blanc, nom du QR code en clair au-dessus, puis le QR code (carré, sans rotation).
+    const fond = rectangleAfficheVersPdf({ x: qr.x, y: qr.y, largeur: qr.largeur, hauteur: qr.hauteur }, boite, rotation);
+    page.drawRectangle({ x: fond.x, y: fond.y, width: fond.largeur, height: fond.hauteur, color: rgb(1, 1, 1) });
+    const nom = qr.numero || qr.reference;
+    if (nom) dessinerNom(page, police, nom, zones.bande, boite, rotation);
+    const r = rectangleAfficheVersPdf(zones.qr, boite, rotation);
     page.drawImage(images.get(qr.contenu), { x: r.x, y: r.y, width: r.largeur, height: r.hauteur });
   }
 

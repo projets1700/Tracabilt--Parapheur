@@ -159,11 +159,14 @@ input, select, textarea { font-family: inherit; }
 .entete-visionneur .recherche { display: flex; gap: 8px; flex: 1; min-width: 0; }
 .entete-visionneur .generer-qr { flex-shrink: 0; white-space: nowrap; align-self: center; height: 40px; }
 .entete-visionneur .recherche .btn { height: 40px; }
+.entete-visionneur .session { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.entete-visionneur .session .btn { height: 40px; }
 /* Petits écrans : logo et bouton sur la 1re ligne, recherche en dessous */
 @media (max-width: 700px) {
   .entete-visionneur { flex-wrap: wrap; gap: 12px; padding: 0; }
   .entete-visionneur .logo { height: 56px; }
   .entete-visionneur .generer-qr { margin-left: auto; }
+  .entete-visionneur .session { order: 4; flex-basis: 100%; justify-content: flex-end; }
   .entete-visionneur .recherche { order: 3; flex-basis: 100%; }
 }
 

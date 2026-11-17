@@ -57,6 +57,30 @@ describe('Documents — conversions de coordonnées', () => {
 });
 
 /* ====================================================================== */
+describe('Documents — nom du QR code en clair', () => {
+  test('bande du nom en haut, QR code carré centré dessous, dans le cadre', () => {
+    const { bande, qr } = pdfOutils.dispositionEtiquette({ x: 100, y: 50, largeur: 100, hauteur: 100 });
+    expect(bande).toEqual({ x: 100, y: 50, largeur: 100, hauteur: 18 });
+    expect(qr).toEqual({ x: 109, y: 68, largeur: 82, hauteur: 82 });
+  });
+
+  test('le nom est écrit dans le PDF généré, au-dessus du QR code', async () => {
+    const { PDFDocument } = require('pdf-lib');
+    const { pngQr } = require('../src/documents/qr');
+    const pdf = await pdfOutils.genererPdfAvecQr(await pdfTest({ pages: 1 }), [
+      { reference: 'r', nom: 'DEP-000123', png: await pngQr('DEP-000123'), page: 1, x: 300, y: 600, largeur: mm(25), hauteur: mm(25) },
+    ]);
+    const relu = await PDFDocument.load(pdf);
+    expect(relu.getPageCount()).toBe(1);
+    // Police du nom intégrée (les objets du PDF sont compressés : on relit la structure)
+    const { PDFName, PDFDict } = require('pdf-lib');
+    const polices = relu.context.enumerateIndirectObjects()
+      .map(([, o]) => (o instanceof PDFDict ? o.get(PDFName.of('BaseFont')) : null))
+      .filter(Boolean).map(String);
+    expect(polices).toContain('/Helvetica-Bold');
+  });
+});
+
 describe('Documents — OOXML', () => {
   test('parcours des paragraphes : tableaux repérés, zones de texte ignorées', () => {
     const xml = '<w:body><w:p/><w:tbl><w:tr><w:tc><w:p><w:r/></w:p></w:tc></w:tr></w:tbl>'
@@ -181,8 +205,9 @@ integration('Documents — parcours complet (PostgreSQL + LibreOffice)', () => {
       // Numéro de parapheur unique attribué automatiquement, encodé dans le QR code
       expect(qr.numero).toMatch(/^DEP-\d{6}$/);
       expect(qr.content).toBe(qr.numero);
-      const p = await pool.query('SELECT titre FROM parapheurs WHERE numero = $1', [qr.numero]);
-      expect(p.rows[0].titre).toBe('Courrier été.pdf');
+      // Aucun parapheur n'est créé depuis la page Documents (il le sera au premier scan)
+      const p = await pool.query('SELECT 1 FROM parapheurs WHERE numero = $1', [qr.numero]);
+      expect(p.rows).toHaveLength(0);
       expect(qr.reference).toMatch(MOTIF_JETON);
       expect(qr.position).toMatchObject({ page_number: 2 });
     });
@@ -207,11 +232,15 @@ integration('Documents — parcours complet (PostgreSQL + LibreOffice)', () => {
     test('REC-08 génération PDF + REC-11 original inchangé', async () => {
       const res = await request(app).post(`/api/documents/${doc.id}/generate`).set('Authorization', sup()).send({ format: 'pdf' });
       expect(res.status).toBe(200);
-      expect(res.body.document).toMatchObject({ status: 'genere', generated_format: 'pdf', generated_name: 'Courrier été_QR.pdf' });
+      // Le fichier porte le nom des QR codes (ici deux noms DEP attribués automatiquement)
+      const lu = await request(app).get(`/api/documents/${doc.id}`).set('Authorization', sup());
+      const nomsQr = lu.body.qrcodes.map(q => q.numero);
+      expect(res.body.document).toMatchObject({ status: 'genere', generated_format: 'pdf' });
+      expect(res.body.document.generated_name).toBe(`${nomsQr.join('_')}.pdf`);
 
       const exp = await request(app).get(`/api/documents/${doc.id}/export`).set('Authorization', sup()).buffer(true);
       expect(exp.status).toBe(200);
-      expect(exp.headers['content-disposition']).toContain("filename*=UTF-8''Courrier%20%C3%A9t%C3%A9_QR.pdf");
+      expect(exp.headers['content-disposition']).toContain(`filename*=UTF-8''${nomsQr.join('_')}.pdf`);
       expect(exp.body.subarray(0, 5).toString()).toBe('%PDF-');
       expect(exp.body.length).toBeGreaterThan(original[0].length);
 
@@ -232,9 +261,8 @@ integration('Documents — parcours complet (PostgreSQL + LibreOffice)', () => {
       const lu = await request(app).get(`/api/documents/${doc.id}`).set('Authorization', sup());
       const numeros = lu.body.qrcodes.map(q => q.numero);
       expect(new Set(numeros).size).toBe(numeros.length);
-      // Le document est retrouvé depuis la fiche du parapheur DEP de chacun de ses QR codes
-      const { rows: [p] } = await pool.query('SELECT id FROM parapheurs WHERE numero = $1', [numeros[0]]);
-      const liste = await request(app).get(`/api/documents?parapheur_id=${p.id}`).set('Authorization', sup());
+      // Le document est retrouvé depuis la fiche du parapheur auquel il est associé
+      const liste = await request(app).get(`/api/documents?parapheur_id=${parapheur.id}`).set('Authorization', sup());
       expect(liste.body.documents.some(d => d.id === doc.id && Number(d.qr_count) === 2)).toBe(true);
       expect(liste.body.documents.find(d => d.id === doc.id).qr_numeros.split(', ').sort()).toEqual([...numeros].sort());
       const h = await request(app).get(`/api/documents/${doc.id}/history`).set('Authorization', sup());
@@ -296,7 +324,7 @@ integration('Documents — parcours complet (PostgreSQL + LibreOffice)', () => {
       expect(res.status).toBe(201);
       const gen = await request(app).post(`/api/documents/${doc.id}/generate`).set('Authorization', sup()).send({ format: 'pdf' });
       expect(gen.status).toBe(200);
-      expect(gen.body.document.generated_name).toBe('Note de service_QR.pdf');
+      expect(gen.body.document.generated_name).toMatch(/^DEP-\d{6}\.pdf$/);
       const exp = await request(app).get(`/api/documents/${doc.id}/export`).set('Authorization', sup()).buffer(true);
       expect(exp.headers['content-type']).toContain('application/pdf');
       const pages = await pdfOutils.infosPages(exp.body);
@@ -338,8 +366,26 @@ integration('Documents — parcours complet (PostgreSQL + LibreOffice)', () => {
       expect(r.status).toBe(201);
       expect(r.body.qrcode.numero).toBe('NOTE-SERVICE-1');
       expect(r.body.qrcode.content).toBe('NOTE-SERVICE-1');
-      const p = await pool.query('SELECT titre, cree_par_qr FROM parapheurs WHERE numero = $1', ['NOTE-SERVICE-1']);
-      expect(p.rows[0]).toMatchObject({ titre: 'noms-1.pdf', cree_par_qr: true });
+      const p = await pool.query('SELECT 1 FROM parapheurs WHERE numero = $1', ['NOTE-SERVICE-1']);
+      expect(p.rows).toHaveLength(0); // aucun parapheur enregistré
+    });
+
+    test('le parapheur est créé au premier scan, et le document est alors visible sur sa fiche', async () => {
+      const idScanner = '00000000-0000-4000-8000-000000000002';
+      await pool.query(
+        "INSERT INTO scanners (id, nom, identifiant, password_hash) VALUES ($1, 'Scanner noms', $2, 'x') ON CONFLICT (id) DO NOTHING",
+        [idScanner, `scanner-noms-${Date.now()}`],
+      );
+      const jetonScanner = jwt.sign({ id: idScanner, role: 'scanner' }, SECRET);
+      const scan = await request(app).post('/api/scans').set('Authorization', `Bearer ${jetonScanner}`).send({ parapheur_numero: 'NOTE-SERVICE-1' });
+      expect(scan.status).toBe(201);
+      const { rows: [p] } = await pool.query('SELECT id FROM parapheurs WHERE numero = $1', ['NOTE-SERVICE-1']);
+      expect(p).toBeTruthy();
+      const liste = await request(app).get(`/api/documents?parapheur_id=${p.id}`).set('Authorization', sup());
+      expect(liste.body.documents.map(d => d.id)).toContain(d1.id);
+      await pool.query('DELETE FROM scans WHERE parapheur_id = $1', [p.id]);
+      await pool.query('DELETE FROM parapheurs WHERE id = $1', [p.id]);
+      await pool.query('DELETE FROM scanners WHERE id = $1', [idScanner]);
     });
 
     test('même nom refusé : même document, autre document, autre casse', async () => {

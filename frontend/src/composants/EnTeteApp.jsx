@@ -1,30 +1,40 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { utilisateurActif } from '../modules/documents/services/documentsApi';
 import '../modules/documents/documents.css';
 
 /**
- * En-tête commun aux espaces connectés : les liens s'adaptent au rôle
- * (administrateur et/ou superviseur).
+ * En-tête des pages Documents, au même style que le reste de l'application
+ * (bandeau vert) : liens selon le rôle, puis connexion / déconnexion.
  */
 export default function EnTeteApp() {
-  const estAdmin = Boolean(localStorage.getItem('admin_token'));
-  const estSuperviseur = Boolean(localStorage.getItem('superviseur_token'));
-  const u = utilisateurActif();
+  const navigate = useNavigate();
+  const [utilisateur, setUtilisateur] = useState(utilisateurActif);
+  const estAdmin = utilisateur?.role === 'admin';
+  const estSuperviseur = utilisateur?.role === 'superviseur';
   const lienClasse = ({ isActive }) => (isActive ? 'actif' : undefined);
+
+  function deconnecter() {
+    ['admin_token', 'admin_user', 'superviseur_token', 'superviseur_user'].forEach(c => localStorage.removeItem(c));
+    setUtilisateur(null);
+    navigate('/');
+  }
 
   return (
     <header className="entete-app">
-      <NavLink to="/"><img src="/Logo_Parapheur.png" alt="TraçaParapheur" /></NavLink>
+      <Link to="/"><img src="/Logo_Parapheur.png" alt="CoeurTrace" /></Link>
       <nav>
         <NavLink to="/" end className={lienClasse}>Recherche</NavLink>
         {estSuperviseur && <NavLink to="/parapheurs" end className={lienClasse}>Parapheurs</NavLink>}
         <NavLink to="/documents" className={lienClasse}>Documents</NavLink>
         {estAdmin && <NavLink to="/admin" className={lienClasse}>Administration</NavLink>}
-        {u && (
-          <span className="utilisateur">
-            <span className="avatar">{(u.nom || u.identifiant || '?').charAt(0).toUpperCase()}</span>
-            <span>{u.nom || u.identifiant}</span>
-          </span>
+        {utilisateur ? (
+          <>
+            <span className="utilisateur">Connecté : {utilisateur.nom || utilisateur.identifiant}</span>
+            <button className="btn btn-primaire btn-petit" onClick={deconnecter}>Déconnexion</button>
+          </>
+        ) : (
+          <Link to="/connexion" className="btn btn-primaire btn-petit">Connexion</Link>
         )}
       </nav>
     </header>

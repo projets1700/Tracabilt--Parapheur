@@ -149,8 +149,16 @@ function nomSansExtension(nom) {
   return nom.replace(/\.[^.]+$/, '');
 }
 
+/**
+ * Nom du fichier généré : le(s) nom(s) des QR codes, ex. « DEP-000012.pdf »,
+ * « DEP-000012_DEP-000013.pdf », « A_B_C_et_2_autres.pdf » (comme côté serveur).
+ * À défaut de QR code nommé : le nom du document.
+ */
 export function nomFichierGenere(doc, format) {
-  return `${nomSansExtension(doc.nom)}_QR.${format}`;
+  const noms = [...new Set((doc.qrcodes || []).map(q => q.numero || q.reference).filter(Boolean))];
+  if (!noms.length) return `${nomSansExtension(doc.nom)}_QR.${format}`;
+  const base = noms.length <= 3 ? noms.join('_') : `${noms.slice(0, 3).join('_')}_et_${noms.length - 3}_autres`;
+  return `${base}.${format}`;
 }
 
 /* ======================================================================
@@ -530,6 +538,24 @@ export async function telechargerDocument(doc, version = 'genere') {
  * (jamais généré, ou modifié depuis la dernière génération).
  * Renvoie { doc, fichier } : document à jour et fichier téléchargé.
  */
+/**
+ * PDF avec QR codes à imprimer : (re)généré si nécessaire, renvoyé sans téléchargement.
+ * Renvoie { doc, octets }.
+ */
+export async function obtenirPdfAvecQr(doc) {
+  if (!doc.nbQr && !doc.qrcodes?.length) throw new Error("Ajoutez d'abord un QR code.");
+  const aJour = doc.genere && doc.statut === 'genere' && (doc.formatGenere || 'pdf') === 'pdf';
+  const genere = aJour ? doc : await genererDocument(doc.id, 'pdf');
+  if (await estServeur()) {
+    const { data } = await client.get(`/documents/${doc.id}/export?version=genere`, cfg({ responseType: 'arraybuffer', timeout: 120000 }));
+    return { doc: genere, octets: data };
+  }
+  const octets = await local.obtenirFichierLocal(doc.id, 'genere');
+  if (!octets) throw new Error("Le document avec QR codes n'a pas pu être préparé.");
+  await journaliserLocal(doc.id, evenement('impression', `Impression du document ${genere.nomGenere || ''}`.trim(), {}));
+  return { doc: genere, octets };
+}
+
 export async function telechargerAvecQr(doc, format = 'pdf') {
   if (!doc.nbQr && !doc.qrcodes?.length) throw new Error("Ce document n'a aucun QR code : ouvrez-le pour en ajouter.");
   const aJour = doc.genere && doc.statut === 'genere' && (doc.formatGenere || 'pdf') === format;

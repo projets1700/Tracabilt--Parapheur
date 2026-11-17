@@ -15,11 +15,37 @@ function formaterDate(d) {
   });
 }
 
+function lireSession() {
+  const adminToken = localStorage.getItem('admin_token');
+  if (adminToken) {
+    const user = JSON.parse(localStorage.getItem('admin_user') || 'null');
+    return { role: 'admin', nom: user?.nom || user?.identifiant || 'Admin' };
+  }
+  const supToken = localStorage.getItem('superviseur_token');
+  if (supToken) {
+    const user = JSON.parse(localStorage.getItem('superviseur_user') || 'null');
+    return { role: 'superviseur', nom: user?.nom || user?.identifiant || 'Superviseur' };
+  }
+  return null;
+}
+
 export default function PageVisionneur() {
   const [recherche, setRecherche] = useState('');
   const [resultat, setResultat] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [session, setSession] = useState(lireSession);
+
+  function handleDeconnexion() {
+    if (session?.role === 'admin') {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+    } else if (session?.role === 'superviseur') {
+      localStorage.removeItem('superviseur_token');
+      localStorage.removeItem('superviseur_user');
+    }
+    setSession(null);
+  }
 
   async function handleRecherche(e) {
     e.preventDefault();
@@ -61,9 +87,25 @@ export default function PageVisionneur() {
             </button>
           </form>
           {/* Toujours visible, sans connexion : un visiteur crée ses QR codes dans son navigateur. */}
-          <Link to="/documents" className="btn btn-primaire generer-qr">
+          <Link to="/documents?importer=1" className="btn btn-primaire generer-qr">
             Générer QR code
           </Link>
+          <div className="session">
+            {session ? (
+              <>
+                <span style={{ fontSize: 13, color: 'var(--texte2)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  Connecté : {session.nom}
+                </span>
+                <button className="btn btn-primaire" onClick={handleDeconnexion}>
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <Link to="/connexion" className="btn btn-primaire">
+                Connexion
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

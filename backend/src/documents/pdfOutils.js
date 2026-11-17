@@ -5,7 +5,7 @@
  * Repère de l'éditeur : points PDF, origine en haut à gauche de la page affichée
  * (rotation appliquée), axe Y vers le bas — identique au frontend.
  */
-const { PDFDocument, PDFName, PDFArray, PDFDict, PDFString, PDFHexString, PDFRef } = require('pdf-lib');
+const { PDFDocument, PDFName, PDFArray, PDFDict, PDFString, PDFHexString, PDFRef, StandardFonts, rgb, degrees } = require('pdf-lib');
 
 const EMU_PAR_POINT = 12700;
 const POINTS_PAR_MM = 72 / 25.4;
@@ -152,10 +152,43 @@ function verifierPosition(pos, pages) {
  * @param {Buffer} octetsOriginal
  * @param {Array} qrcodes [{ reference, png, page, x, y, largeur, hauteur }]
  */
+/* ---------- Étiquette : nom du QR code écrit en clair au-dessus du QR ---------- */
+
+/** Part du cadre (carré) réservée à la bande du nom, en haut. Identique dans l'éditeur. */
+const PROPORTION_BANDE_NOM = 0.18;
+
+/**
+ * Découpe du cadre d'un QR code : bande du nom en haut, QR code carré centré dessous.
+ * Coordonnées dans le repère affiché (haut-gauche, Y vers le bas).
+ */
+function dispositionEtiquette(qr) {
+  const bande = qr.hauteur * PROPORTION_BANDE_NOM;
+  const cote = Math.min(qr.largeur, qr.hauteur - bande);
+  return {
+    bande: { x: qr.x, y: qr.y, largeur: qr.largeur, hauteur: bande },
+    qr: { x: qr.x + (qr.largeur - cote) / 2, y: qr.y + bande, largeur: cote, hauteur: cote },
+  };
+}
+
+/** Écrit le nom centré dans la bande, en tenant compte de la rotation de la page. */
+function dessinerNom(page, police, nom, bande, boite, rotation) {
+  let taille = bande.hauteur * 0.62;
+  const largeurMax = bande.largeur * 0.94;
+  const largeurTexte = police.widthOfTextAtSize(nom, taille);
+  if (largeurTexte > largeurMax) taille *= largeurMax / largeurTexte;
+  const largeur = police.widthOfTextAtSize(nom, taille);
+  // Ligne de base, dans le repère affiché, puis conversion vers l'espace de la page.
+  const dx = bande.x + (bande.largeur - largeur) / 2;
+  const dy = bande.y + bande.hauteur / 2 + taille * 0.35;
+  const origine = pointAfficheVersPdf(dx, dy, boite, rotation);
+  page.drawText(nom, { x: origine.x, y: origine.y, size: taille, font: police, color: rgb(0, 0, 0), rotate: degrees(rotation) });
+}
+
 async function genererPdfAvecQr(octetsOriginal, qrcodes) {
   const pdf = await chargerPdf(octetsOriginal);
   const nbPages = pdf.getPageCount();
   const images = new Map();
+  const police = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   for (const qr of qrcodes) {
     if (qr.page < 1 || qr.page > nbPages) throw new ErreurPdf(`Le QR code ${qr.reference} est placé sur une page inexistante.`);
@@ -166,8 +199,17 @@ async function genererPdfAvecQr(octetsOriginal, qrcodes) {
 
     const cle = qr.png.toString('base64');
     if (!images.has(cle)) images.set(cle, await pdf.embedPng(qr.png));
-    // Un QR code carré reste lisible quelle que soit l'orientation : pas de rotation de l'image.
-    const r = rectangleAfficheVersPdf({ x: qr.x, y: qr.y, largeur: qr.largeur, hauteur: qr.hauteur }, boite, rotation);
+    const zones = dispositionEtiquette(qr);
+
+    // Fond blanc sous l'ensemble (lisibilité du nom et du QR code sur le document).
+    const fond = rectangleAfficheVersPdf({ x: qr.x, y: qr.y, largeur: qr.largeur, hauteur: qr.hauteur }, boite, rotation);
+    page.drawRectangle({ x: fond.x, y: fond.y, width: fond.largeur, height: fond.hauteur, color: rgb(1, 1, 1) });
+
+    // Nom du QR code en clair, au-dessus.
+    if (qr.nom) dessinerNom(page, police, qr.nom, zones.bande, boite, rotation);
+
+    // QR code : carré, lisible quelle que soit l'orientation (pas de rotation de l'image).
+    const r = rectangleAfficheVersPdf(zones.qr, boite, rotation);
     page.drawImage(images.get(cle), { x: r.x, y: r.y, width: r.largeur, height: r.hauteur });
   }
 
@@ -183,6 +225,8 @@ function round(v) {
 }
 
 module.exports = {
+  PROPORTION_BANDE_NOM,
+  dispositionEtiquette,
   ErreurPdf,
   EMU_PAR_POINT,
   POINTS_PAR_MM,

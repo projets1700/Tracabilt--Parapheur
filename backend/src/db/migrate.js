@@ -182,6 +182,20 @@ ALTER TABLE parapheurs ADD COLUMN IF NOT EXISTS cree_par_qr BOOLEAN NOT NULL DEF
 UPDATE parapheurs SET cree_par_qr = TRUE
   WHERE numero LIKE 'DEP-%' AND id IN (SELECT parapheur_id FROM qr_codes WHERE parapheur_id IS NOT NULL);
 
+-- Les QR codes ne créent plus de parapheur (il est créé au premier scan) : on retire
+-- ceux créés auparavant par des QR codes et jamais scannés.
+UPDATE qr_codes SET parapheur_id = NULL
+  WHERE parapheur_id IN (
+    SELECT p.id FROM parapheurs p
+    WHERE p.cree_par_qr
+      AND NOT EXISTS (SELECT 1 FROM scans s WHERE s.parapheur_id = p.id)
+      AND NOT EXISTS (SELECT 1 FROM documents d WHERE d.parapheur_id = p.id));
+DELETE FROM parapheurs p
+  WHERE p.cree_par_qr
+    AND NOT EXISTS (SELECT 1 FROM scans s WHERE s.parapheur_id = p.id)
+    AND NOT EXISTS (SELECT 1 FROM documents d WHERE d.parapheur_id = p.id)
+    AND NOT EXISTS (SELECT 1 FROM qr_codes q WHERE q.parapheur_id = p.id);
+
 INSERT INTO noms_qr (numero, qr_code_id)
   SELECT numero, id FROM qr_codes WHERE numero IS NOT NULL
   ON CONFLICT DO NOTHING;

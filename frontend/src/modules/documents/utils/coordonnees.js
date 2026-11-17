@@ -27,6 +27,19 @@ export const TAILLE_QR_CONSEILLEE = mmVersPoints(20);
 /** Marge utilisée pour les repères visuels et le placement par défaut. */
 export const MARGE_REPERE = mmVersPoints(15);
 
+/** Part du cadre (carré) réservée à la bande du nom du QR code, en haut. Identique côté serveur. */
+export const PROPORTION_BANDE_NOM = 0.18;
+
+/** Découpe du cadre : bande du nom en haut, QR code carré centré dessous (repère affiché). */
+export function dispositionEtiquette(qr) {
+  const bande = qr.hauteur * PROPORTION_BANDE_NOM;
+  const cote = Math.min(qr.largeur, qr.hauteur - bande);
+  return {
+    bande: { x: qr.x, y: qr.y, largeur: qr.largeur, hauteur: bande },
+    qr: { x: qr.x + (qr.largeur - cote) / 2, y: qr.y + bande, largeur: cote, hauteur: cote },
+  };
+}
+
 export function normaliserRotation(angle) {
   return (((Math.round(angle || 0) % 360) + 360) % 360);
 }
