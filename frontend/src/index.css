@@ -152,5 +152,19 @@ input, select, textarea { font-family: inherit; }
   margin: 16px 0;
 }
 
+/* En-tête du Visionneur : logo | recherche | « Générer QR code » sur une ligne */
+.entete-visionneur { display: flex; align-items: center; gap: 16px; }
+.entete-visionneur .logo { height: 72px; width: auto; object-fit: contain; flex-shrink: 0; }
+.entete-visionneur .recherche { display: flex; gap: 8px; flex: 1; min-width: 0; }
+.entete-visionneur .generer-qr { flex-shrink: 0; white-space: nowrap; align-self: center; height: 40px; }
+.entete-visionneur .recherche .btn { height: 40px; }
+/* Petits écrans : logo et bouton sur la 1re ligne, recherche en dessous */
+@media (max-width: 700px) {
+  .entete-visionneur { flex-wrap: wrap; gap: 12px; padding: 0; }
+  .entete-visionneur .logo { height: 56px; }
+  .entete-visionneur .generer-qr { margin-left: auto; }
+  .entete-visionneur .recherche { order: 3; flex-basis: 100%; }
+}
+
 /* Leaflet fix */
 .leaflet-container { z-index: 1; }

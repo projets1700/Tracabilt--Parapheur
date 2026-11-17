@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
 
 const STATUTS = {
@@ -43,15 +44,14 @@ export default function PageVisionneur() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
 
-      <header style={{ background: 'var(--bleu)', padding: '20px 24px 16px' }}>
-        <div className="conteneur">
-          <div style={{ marginBottom: 12 }}>
-            <img src="/Logo_Parapheur.png" alt="TraçaParapheur" style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
-          </div>
-          <form onSubmit={handleRecherche} style={{ display: 'flex', gap: 8 }}>
+      <header style={{ background: 'var(--bleu)', padding: '16px 24px' }}>
+        {/* Une seule ligne : logo | recherche + « Rechercher » | « Générer QR code » */}
+        <div className="conteneur entete-visionneur">
+          <img className="logo" src="/Logo_Parapheur.png" alt="TraçaParapheur" />
+          <form className="recherche" onSubmit={handleRecherche}>
             <input
               className="champ"
-              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', flex: 1 }}
+              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', flex: 1, minWidth: 0 }}
               placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
@@ -60,6 +60,10 @@ export default function PageVisionneur() {
               Rechercher
             </button>
           </form>
+          {/* Toujours visible, sans connexion : un visiteur crée ses QR codes dans son navigateur. */}
+          <Link to="/documents" className="btn generer-qr" style={{ background: 'white', color: 'var(--bleu)', border: 'none', fontWeight: 600 }}>
+            Générer QR code
+          </Link>
         </div>
       </header>
 
@@ -103,6 +107,13 @@ export default function PageVisionneur() {
                   </p>
                 </div>
               </div>
+              <Link
+                to={`/documents?parapheur=${encodeURIComponent(resultat.numero)}`}
+                className="btn"
+                style={{ marginTop: 12, justifyContent: 'center', width: '100%' }}
+              >
+                📄 Documents et QR codes de ce parapheur
+              </Link>
             </div>
 
             <div className="carte">

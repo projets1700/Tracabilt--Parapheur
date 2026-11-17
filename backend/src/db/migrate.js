@@ -79,6 +79,111 @@ CREATE TABLE IF NOT EXISTS superviseurs (
 );
 
 ALTER TABLE superviseurs ADD COLUMN IF NOT EXISTS premiere_connexion BOOLEAN DEFAULT TRUE;
+
+-- ============================================================
+-- Module de gestion documentaire et QR codes (CDC §6)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS parametres (
+  cle        VARCHAR(100) PRIMARY KEY,
+  valeur     JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS documents (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parapheur_id     UUID REFERENCES parapheurs(id) ON DELETE SET NULL,
+  name             VARCHAR(255) NOT NULL,
+  original_path    TEXT NOT NULL,
+  preview_path     TEXT,
+  generated_path   TEXT,
+  generated_name   VARCHAR(255),
+  generated_format VARCHAR(10) CHECK (generated_format IN ('pdf', 'docx')),
+  original_format  VARCHAR(10) NOT NULL CHECK (original_format IN ('pdf', 'docx')),
+  size             BIGINT,
+  pages            JSONB NOT NULL DEFAULT '[]',
+  ancrages         JSONB,
+  status           VARCHAR(20) NOT NULL DEFAULT 'importe'
+                   CHECK (status IN ('importe', 'en_edition', 'genere', 'erreur')),
+  created_by       UUID,
+  created_by_role  VARCHAR(20),
+  created_by_name  VARCHAR(100),
+  created_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  generated_at     TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS qr_codes (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  reference   VARCHAR(40) UNIQUE NOT NULL,
+  content     TEXT NOT NULL,
+  created_by  UUID,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS qr_code_positions (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  qr_code_id    UUID NOT NULL UNIQUE REFERENCES qr_codes(id) ON DELETE CASCADE,
+  page_number   INTEGER NOT NULL CHECK (page_number >= 1),
+  position_x    DECIMAL(10, 2) NOT NULL,
+  position_y    DECIMAL(10, 2) NOT NULL,
+  width         DECIMAL(10, 2) NOT NULL,
+  height        DECIMAL(10, 2) NOT NULL,
+  unite         VARCHAR(5) NOT NULL DEFAULT 'pt',
+  page_largeur  DECIMAL(10, 2),
+  page_hauteur  DECIMAL(10, 2),
+  page_rotation INTEGER DEFAULT 0,
+  updated_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS document_history (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  user_id     UUID,
+  user_role   VARCHAR(20),
+  user_name   VARCHAR(100),
+  action      VARCHAR(40) NOT NULL,
+  details     JSONB NOT NULL DEFAULT '{}',
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Format du fichier importé (les documents Word / ODT sont convertis en PDF à l'import ;
+-- original_format désigne alors le format de travail « pdf »).
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_format VARCHAR(10);
+UPDATE documents SET source_format = original_format WHERE source_format IS NULL;
+
+-- Chaque QR code porte son propre numéro de parapheur unique « DEP-000001 »,
+-- attribué par cette séquence (jamais réutilisé).
+CREATE SEQUENCE IF NOT EXISTS seq_numero_dep START 1;
+ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS parapheur_id UUID REFERENCES parapheurs(id) ON DELETE SET NULL;
+ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS numero VARCHAR(50);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_qr_codes_numero ON qr_codes(numero) WHERE numero IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_qr_codes_parapheur ON qr_codes(parapheur_id);
+
+-- Registre des noms de QR codes : un nom ne peut appartenir qu'à un seul QR code.
+--   qr_code_id renseigné : QR code enregistré sur le serveur (nom libéré à sa suppression) ;
+--   qr_code_id NULL      : nom réservé par un visiteur (cle_hash permet de le libérer).
+CREATE TABLE IF NOT EXISTS noms_qr (
+  numero     VARCHAR(50) PRIMARY KEY,
+  qr_code_id UUID UNIQUE REFERENCES qr_codes(id) ON DELETE CASCADE,
+  cle_hash   VARCHAR(64),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+-- Parapheurs créés automatiquement pour un QR code : seuls ceux-là peuvent être
+-- nettoyés (jamais un parapheur créé par ailleurs).
+ALTER TABLE parapheurs ADD COLUMN IF NOT EXISTS cree_par_qr BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE parapheurs SET cree_par_qr = TRUE
+  WHERE numero LIKE 'DEP-%' AND id IN (SELECT parapheur_id FROM qr_codes WHERE parapheur_id IS NOT NULL);
+
+INSERT INTO noms_qr (numero, qr_code_id)
+  SELECT numero, id FROM qr_codes WHERE numero IS NOT NULL
+  ON CONFLICT DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_documents_parapheur ON documents(parapheur_id);
+CREATE INDEX IF NOT EXISTS idx_documents_maj       ON documents(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_qr_codes_document   ON qr_codes(document_id);
+CREATE INDEX IF NOT EXISTS idx_historique_document ON document_history(document_id, created_at DESC);
 `;
 
 async function migrate() {

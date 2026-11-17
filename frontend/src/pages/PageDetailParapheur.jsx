@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import client from '../api/client';
+import ListeDocuments from '../modules/documents/composants/ListeDocuments';
+import '../modules/documents/documents.css';
 
 function formaterDate(d) {
   if (!d) return '—';
@@ -41,6 +43,7 @@ export default function PageDetailParapheur() {
         </div>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <Link to="/parapheurs" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>← Liste des parapheurs</Link>
+          <Link to="/documents" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Documents</Link>
           <Link to="/admin" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Administration</Link>
         </div>
       </header>
@@ -86,6 +89,25 @@ export default function PageDetailParapheur() {
                   </div>
                 </>
               )}
+            </div>
+
+            {/* Documents associés au parapheur */}
+            <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E6EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1B' }}>Documents</h2>
+                <Link
+                  to={`/documents?parapheur=${encodeURIComponent(parapheur.numero)}&importer=1`}
+                  className="btn btn-primaire"
+                  style={{ padding: '6px 14px', fontSize: 12 }}
+                >
+                  + Ajouter un document avec QR code
+                </Link>
+              </div>
+              <ListeDocuments
+                parapheurId={parapheur.id}
+                masquerParapheur
+                messageVide="Aucun document associé à ce parapheur."
+              />
             </div>
 
             {/* Historique complet */}

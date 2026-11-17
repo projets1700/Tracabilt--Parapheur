@@ -43,6 +43,7 @@ export default function PageListeParapheurs() {
         </div>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <Link to="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Recherche</Link>
+          <Link to="/documents" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Documents</Link>
           <Link to="/admin" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>Administration</Link>
         </div>
       </header>
@@ -120,13 +121,22 @@ export default function PageListeParapheurs() {
                       ) : '—'}
                     </td>
                     <td style={{ padding: '14px 20px' }}>
-                      <Link
-                        to={`/parapheurs/${p.numero}`}
-                        className="btn btn-primaire"
-                        style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}
-                      >
-                        Voir l'historique
-                      </Link>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <Link
+                          to={`/parapheurs/${p.numero}`}
+                          className="btn btn-primaire"
+                          style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}
+                        >
+                          Voir l'historique
+                        </Link>
+                        <Link
+                          to={`/documents?parapheur=${encodeURIComponent(p.numero)}`}
+                          className="btn"
+                          style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}
+                        >
+                          Documents
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

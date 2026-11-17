@@ -1,4 +1,26 @@
 const pool = require('../config/db');
+const { MOTIF_JETON } = require('../documents/qr');
+
+/**
+ * Un QR code de document peut contenir un jeton (TQ-XXXXXXXXXXXXXXXX) au lieu du
+ * numéro du parapheur : on le résout vers le numéro du parapheur associé.
+ * Renvoie null si le jeton est inconnu (on ne crée pas de parapheur fantôme).
+ */
+async function resoudreNumero(client, brut) {
+  const valeur = String(brut || '').toUpperCase().trim();
+  if (!MOTIF_JETON.test(valeur)) return valeur;
+  // Numéro DEP propre au QR code, à défaut le parapheur associé au document.
+  const r = await client.query(
+    `SELECT COALESCE(pq.numero, q.numero, pd.numero) AS numero
+     FROM qr_codes q
+     JOIN documents d ON d.id = q.document_id
+     LEFT JOIN parapheurs pq ON pq.id = q.parapheur_id
+     LEFT JOIN parapheurs pd ON pd.id = d.parapheur_id
+     WHERE q.reference = $1`,
+    [valeur]
+  );
+  return r.rows[0]?.numero || null;
+}
 
 async function obtenirOuCreerLieu(client, latitude, longitude, lieu) {
   const nomLieu = lieu?.nom_lieu?.trim();
@@ -43,7 +65,11 @@ async function enregistrerScan(req, res) {
   try {
     await client.query('BEGIN');
 
-    const numero = parapheur_numero.toUpperCase().trim();
+    const numero = await resoudreNumero(client, parapheur_numero);
+    if (!numero) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'QR code inconnu : aucun parapheur associé.' });
+    }
 
     await client.query(
       'INSERT INTO parapheurs (numero, titre) VALUES ($1, $1) ON CONFLICT (numero) DO NOTHING',
@@ -77,7 +103,7 @@ async function enregistrerScan(req, res) {
     );
 
     await client.query('COMMIT');
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({ ...result.rows[0], parapheur_numero: numero });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Erreur enregistrement scan :', err);
@@ -98,7 +124,12 @@ async function synchroniserScans(req, res) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      const numero = scan.parapheur_numero?.toUpperCase().trim();
+      const numero = await resoudreNumero(client, scan.parapheur_numero);
+      if (!numero) {
+        await client.query('ROLLBACK');
+        resultats.push({ numero: scan.parapheur_numero, succes: false, message: 'QR code inconnu.' });
+        continue;
+      }
       await client.query(
         'INSERT INTO parapheurs (numero, titre) VALUES ($1, $1) ON CONFLICT (numero) DO NOTHING',
         [numero]

@@ -45,6 +45,8 @@ Le projet tourne sur un VPS OVH via Docker Compose.
 | Connexion admin | `/admin/connexion` |
 | Inscription admin *(1ère fois)* | `/admin/inscription` |
 | Tableau de bord admin | `/admin` |
+| Documents (admin / superviseur) | `/documents` |
+| Éditeur de QR codes | `/documents/:id` |
 | Santé de l'API | `/api/sante` *(port 3001)* |
 
 ### Commandes utiles sur le serveur
@@ -190,6 +192,23 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ---
 
+### Gestion documentaire et QR codes *(admin et superviseur)*
+
+Accessible depuis `/documents`, l'onglet **Documents** de l'administration, la fiche et la liste des parapheurs.
+
+- Import de documents **PDF**, **Word (.docx, .doc)** et **OpenDocument (.odt)** par glisser-déposer (type réel, taille et intégrité vérifiés)
+- Les documents Word et OpenDocument sont **convertis en PDF** à l'import (LibreOffice) : le PDF devient le document de travail, le fichier d'origine est conservé et reste téléchargeable
+- **Sans connexion** depuis le Visionneur : le visiteur travaille dans son navigateur (rien n'est stocké sur le serveur) ; seule la conversion Word/ODT → PDF passe par le serveur
+- Aperçu multipage
+- Éditeur : ajout, déplacement, redimensionnement, duplication et suppression de QR codes, repères magnétiques, réglage en millimètres, annuler / rétablir, aperçu final
+- Génération : moteur **PDF** (pdf-lib)
+- Export PDF ou DOCX (l'export DOCX d'un PDF est une reconstruction, l'utilisateur en est averti)
+- Association au parapheur, historique complet des opérations, brouillon local en cas de perte de connexion
+- Contenu des QR codes configurable par l'admin : **numéro du parapheur** (lu tel quel par l'application mobile) ou **jeton sécurisé** `TQ-…` (résolu par le serveur au moment du scan)
+
+
+---
+
 ## API REST
 
 ### Public
@@ -235,6 +254,29 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 | POST | `/api/superviseur/connexion` | Connexion superviseur |
 | PUT | `/api/superviseur/moi` | Changer identifiant et mot de passe |
 
+### Documents
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/api/documents/conversion-pdf` | **Public** — conversion Word/ODT → PDF sans stockage (20 conversions / 15 min / IP) |
+| | *Routes suivantes : JWT admin ou superviseur requis* | |
+| GET | `/api/documents/config` | Taille maximale, mode de contenu des QR codes |
+| PUT | `/api/documents/config` | Modifier la configuration *(admin)* |
+| GET | `/api/documents?parapheur_id=` | Liste des documents |
+| POST | `/api/documents` | Importer (multipart : `fichier`, `parapheur_id`) |
+| GET | `/api/documents/:id` | Document + QR codes |
+| PUT | `/api/documents/:id` | Associer à un parapheur |
+| DELETE | `/api/documents/:id` | Supprimer *(admin)* |
+| GET | `/api/documents/:id/preview` | Aperçu PDF |
+| POST | `/api/documents/:id/qrcodes` | Ajouter un QR code |
+| PUT | `/api/documents/:id/qrcodes/:qrId` | Modifier la position |
+| DELETE | `/api/documents/:id/qrcodes/:qrId` | Supprimer un QR code |
+| POST | `/api/documents/:id/generate` | Générer (`{ "format": "pdf" \| "docx" }`) |
+| GET | `/api/documents/:id/export?version=genere\|original` | Télécharger |
+| GET | `/api/documents/:id/history` | Historique |
+
+Positions : points PDF (1/72 pouce), origine en haut à gauche de la page affichée.
+
 ---
 
 ## Base de données
@@ -249,6 +291,10 @@ Tables PostgreSQL :
 | `lieux` | Noms de lieux associés aux coordonnées GPS |
 | `admins` | Compte administrateur |
 | `superviseurs` | Compte superviseur |
+| `documents` | Documents importés (fichiers stockés dans `uploads/documents/<id>/`) |
+| `qr_codes` / `qr_code_positions` | QR codes et leur position |
+| `document_history` | Historique des opérations documentaires |
+| `parametres` | Paramètres configurables (taille max, contenu des QR) |
 
 ---
 
@@ -271,6 +317,11 @@ npm test
 
 Suite Jest couvrant l'authentification et les routes principales.
 
+Tests d'intégration complets du module documentaire (PostgreSQL + LibreOffice requis) :
+```bash
+TEST_INTEGRATION=1 npm test
+```
+
 ---
 
 ## Avancement
@@ -291,3 +342,4 @@ Suite Jest couvrant l'authentification et les routes principales.
 | 12 | Interface admin (scanners + APK + QR code) | ✅ |
 | 13 | Compte superviseur + liste des parapheurs | ✅ |
 | 14 | Charte graphique et design UI | ✅ |
+| 15 | Module documentaire : QR codes dans les PDF et Word | ✅ |

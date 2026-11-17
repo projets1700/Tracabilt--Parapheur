@@ -1,5 +1,8 @@
 const rateLimit = require('express-rate-limit');
 
+// Les tests automatisés (NODE_ENV=test, défini par Jest) ne sont pas limités.
+const horsTests = () => process.env.NODE_ENV === 'test';
+
 const limiterAuth = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10,
@@ -9,6 +12,7 @@ const limiterAuth = rateLimit({
 });
 
 const limiterAPI = rateLimit({
+  skip: horsTests,
   windowMs: 60 * 1000, // 1 minute
   max: 100,
   message: { message: 'Trop de requêtes. Réessayez dans une minute.' },
@@ -16,4 +20,24 @@ const limiterAPI = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { limiterAuth, limiterAPI };
+// Conversion publique Word/ODT → PDF (visiteurs non connectés) : coûteuse, donc limitée.
+const limiterConversion = rateLimit({
+  skip: horsTests,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: { message: 'Trop de conversions de documents. Réessayez dans quelques minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Réservation publique de numéros DEP pour les QR codes des visiteurs.
+const limiterNumeros = rateLimit({
+  skip: horsTests,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 60,
+  message: { message: 'Trop de QR codes créés. Réessayez dans quelques minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { limiterAuth, limiterAPI, limiterConversion, limiterNumeros };
