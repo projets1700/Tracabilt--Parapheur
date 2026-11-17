@@ -69,6 +69,12 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Compte admin de démarrage (identifiant : admin1, code PIN : 1234) — créé une seule fois,
+-- n'écrase jamais un compte existant du même identifiant.
+INSERT INTO admins (nom, identifiant, password_hash)
+VALUES ('Admin', 'admin1', '$2b$10$vRJFWgiQWV.3FufrPCf0RugmiVKpK9JmYtphM83O2ygvn0ZO9UMt2')
+ON CONFLICT (identifiant) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS superviseurs (
   id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nom                VARCHAR(100) NOT NULL,

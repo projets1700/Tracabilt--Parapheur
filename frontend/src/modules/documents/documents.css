@@ -2,6 +2,14 @@
  * Module de gestion documentaire — TraçaParapheur
  * ============================================================ */
 
+/* ---------- Couleurs propres au module (absentes du thème général) ---------- */
+:root {
+  --orange: #E07B20;
+  --orange-clair: #FDF0E3;
+}
+.badge-orange { background: var(--orange-clair); color: #633806; }
+.badge-bleu   { background: var(--bleu-clair);   color: var(--bleu); }
+
 /* ---------- En-tête commun ---------- */
 .entete-app {
   background: #1D1D1B;

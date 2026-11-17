@@ -7,10 +7,8 @@ import { ActivityIndicator, Text, ToastAndroid, Platform, View } from 'react-nat
 import EcranConnexion from './src/screens/EcranConnexion';
 import EcranScanner from './src/screens/EcranScanner';
 import EcranHistorique from './src/screens/EcranHistorique';
-import EcranSynchronisation from './src/screens/EcranSynchronisation';
 import { chargerSession, supprimerSession } from './src/services/stockage';
-import { chargerScansEnAttente, marquerToutSynchronise } from './src/services/stockage';
-import { api } from './src/services/api';
+import { synchroniserScansEnAttente } from './src/services/sync';
 import { theme } from './src/theme';
 
 const Tab = createBottomTabNavigator();
@@ -41,18 +39,25 @@ export default function App() {
 
   const syncAuto = useCallback(async () => {
     if (!token) return;
-    const pending = await chargerScansEnAttente();
-    if (pending.length === 0) return;
     try {
-      await api.synchroniserScans(pending);
-      await marquerToutSynchronise();
-      afficherNotif(`✓ ${pending.length} scan(s) synchronisé(s)`);
+      const nombre = await synchroniserScansEnAttente();
+      if (nombre > 0) afficherNotif(`✓ ${nombre} scan(s) synchronisé(s)`);
     } catch {
       // Silencieux — réessayera à la prochaine reconnexion
     }
   }, [token]);
 
-  // Écoute le retour du réseau et synchronise automatiquement
+  // Synchronise dès que l'appareil est connecté (wifi ou données mobiles) :
+  // au démarrage si déjà connecté, puis à chaque reconnexion détectée
+  useEffect(() => {
+    if (!token) return;
+    NetInfo.fetch().then(state => {
+      const connecte = state.isConnected && state.isInternetReachable !== false;
+      etaitConnecte.current = connecte;
+      if (connecte) syncAuto();
+    });
+  }, [token, syncAuto]);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       const connecte = state.isConnected && state.isInternetReachable !== false;
@@ -117,11 +122,6 @@ export default function App() {
           name="Historique"
           component={EcranHistorique}
           options={{ tabBarIcon: () => <TabIcon emoji="📋" /> }}
-        />
-        <Tab.Screen
-          name="Sync"
-          component={EcranSynchronisation}
-          options={{ tabBarIcon: () => <TabIcon emoji="🔄" /> }}
         />
       </Tab.Navigator>
     </NavigationContainer>

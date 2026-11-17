@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const exigerAdmin = require('../middleware/exigerAdmin');
 const ctrl = require('../controllers/adminController');
+const { supprimerParapheur } = require('../controllers/parapheursController');
 
 const router = express.Router();
 
@@ -28,14 +29,22 @@ function handleUpload(req, res, next) {
 router.get('/existe',           ctrl.adminExiste);
 router.post('/inscription',     ctrl.inscription);
 router.post('/connexion',       ctrl.connexion);
+router.get('/admins',           exigerAdmin, ctrl.listerAdmins);
+router.post('/admins',          exigerAdmin, ctrl.creerAdmin);
+router.put('/admins/:id',       exigerAdmin, ctrl.modifierAdmin);
+router.delete('/admins/:id',    exigerAdmin, ctrl.supprimerAdmin);
 router.get('/scanners',         exigerAdmin, ctrl.listerScanners);
 router.post('/scanners',        exigerAdmin, ctrl.creerScanner);
+router.put('/scanners/:id',     exigerAdmin, ctrl.modifierScanner);
 router.delete('/scanners/:id',  exigerAdmin, ctrl.supprimerScanner);
 router.post('/apk',             exigerAdmin, handleUpload, ctrl.uploadApk);
 router.get('/apk/info',         exigerAdmin, ctrl.infoApk);
 router.get('/apk/download',     ctrl.telechargerApk);
 router.get('/superviseurs',        exigerAdmin, ctrl.listerSuperviseurs);
 router.post('/superviseurs',       exigerAdmin, ctrl.creerSuperviseur);
+router.put('/superviseurs/:id',    exigerAdmin, ctrl.modifierSuperviseur);
 router.delete('/superviseurs/:id', exigerAdmin, ctrl.supprimerSuperviseur);
+router.delete('/scans/:id',        exigerAdmin, ctrl.supprimerScan);
+router.delete('/parapheurs/:id',   exigerAdmin, supprimerParapheur);
 
 module.exports = router;

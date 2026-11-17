@@ -42,13 +42,11 @@ async function fetchApi(path, options = {}) {
   } catch (error) {
     console.log('FETCH ERROR:', error);
     console.log('FETCH MESSAGE:', error.message);
-    throw new Error(error.message || 'Network request failed');
+    throw new Error(error.message || 'Erreur réseau.');
   }
 }
 
 export const api = {
-  testSante: () => fetchApi('/sante'),
-
   connexionScanner: (identifiant, mot_de_passe) =>
     fetchApi('/auth/scanner/connexion', {
       method: 'POST',

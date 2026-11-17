@@ -44,40 +44,40 @@ export default function PageVisionneur() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
 
-      <header style={{ background: 'var(--bleu)', padding: '16px 24px' }}>
+      <header style={{ background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '8px 24px' }}>
         {/* Une seule ligne : logo | recherche + « Rechercher » | « Générer QR code » */}
         <div className="conteneur entete-visionneur">
-          <img className="logo" src="/Logo_Parapheur.png" alt="TraçaParapheur" />
+          <img className="logo" src="/Logo_Parapheur.png" alt="CoeurTrace" />
           <form className="recherche" onSubmit={handleRecherche}>
             <input
               className="champ"
-              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', flex: 1, minWidth: 0 }}
+              style={{ flex: 1, minWidth: 0 }}
               placeholder="Numéro de parapheur (ex : PAR-2025-00142)"
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
             />
-            <button className="btn" type="submit" style={{ background: 'white', color: 'var(--bleu)', border: 'none', fontWeight: 600, flexShrink: 0 }}>
+            <button className="btn btn-primaire" type="submit" style={{ flexShrink: 0 }}>
               Rechercher
             </button>
           </form>
           {/* Toujours visible, sans connexion : un visiteur crée ses QR codes dans son navigateur. */}
-          <Link to="/documents" className="btn generer-qr" style={{ background: 'white', color: 'var(--bleu)', border: 'none', fontWeight: 600 }}>
+          <Link to="/documents" className="btn btn-primaire generer-qr">
             Générer QR code
           </Link>
         </div>
       </header>
 
       <main className="conteneur" style={{ padding: '24px 24px' }}>
-        {chargement && <div className="chargement">Recherche en cours…</div>}
-        {erreur && <div className="message-erreur" style={{ maxWidth: 480, margin: '0 auto' }}>{erreur}</div>}
-
         {!resultat && !chargement && !erreur && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--texte3)' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <p style={{ fontSize: 16, fontWeight: 500 }}>Saisir un numéro de parapheur</p>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--texte2)' }}>Saisir un numéro de parapheur</p>
             <p style={{ fontSize: 13, marginTop: 6 }}>Exemple : PAR-2025-00001</p>
           </div>
         )}
+
+        {chargement && <div className="chargement">Recherche en cours…</div>}
+        {erreur && <div className="message-erreur" style={{ maxWidth: 480, margin: '0 auto' }}>{erreur}</div>}
 
         {resultat && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800, margin: '0 auto' }}>

@@ -34,21 +34,6 @@ mobile/    → Application mobile Expo        (scan QR Code)
 
 Le projet tourne sur un VPS OVH via Docker Compose.
 
-### Pages accessibles
-
-| Page | Chemin |
-|------|--------|
-| Visionneur (public) | `/` |
-| Connexion superviseur | `/superviseur/connexion` |
-| Première connexion superviseur | `/superviseur/premiere-connexion` |
-| Liste des parapheurs | `/parapheurs` |
-| Connexion admin | `/admin/connexion` |
-| Inscription admin *(1ère fois)* | `/admin/inscription` |
-| Tableau de bord admin | `/admin` |
-| Documents (admin / superviseur) | `/documents` |
-| Éditeur de QR codes | `/documents/:id` |
-| Santé de l'API | `/api/sante` *(port 3001)* |
-
 ### Commandes utiles sur le serveur
 
 ```bash
@@ -74,6 +59,7 @@ sudo docker compose ps
 ```env
 DB_PASSWORD=motdepasse
 JWT_SECRET=secret_a_changer_en_production
+EAS_WEBHOOK_SECRET=secret_partage_avec_eas_webhook_create
 ```
 
 **2. Lancer tous les services :**
@@ -130,9 +116,9 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 | Rôle | Création | Accès |
 |------|----------|-------|
-| **Admin** | `/admin/inscription` *(première visite)* | Gestion des scanners, superviseurs, upload APK |
-| **Superviseur** | Créé par l'admin depuis le tableau de bord | Consultation de tous les parapheurs |
-| **Scanner** | Créé par l'admin depuis le tableau de bord | Application mobile uniquement |
+| **Admin** | Premier compte créé automatiquement en base au démarrage du backend (voir migration), un 2ᵉ admin possible depuis le tableau de bord — **2 comptes maximum**, aucune page d'inscription dans l'interface | Gestion des scanners, superviseurs, admins, application mobile |
+| **Superviseur** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres | Consultation de tous les parapheurs |
+| **Scanner** | Créé par l'admin depuis le tableau de bord — identifiant auto-généré (`Scan1`, `Scan2`…), mot de passe = code PIN à 4 chiffres | Application mobile uniquement |
 
 ---
 
@@ -153,17 +139,17 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ### Interface web — Visionneur *(public)*
 
-- Accessible sans connexion
+- Accessible sans compte, aucun lien de connexion affiché pour un visiteur anonyme
+- Si un admin ou un superviseur est déjà connecté, un bouton vers son espace (tableau de bord ou liste des parapheurs) s'affiche à la place — sans jamais le déconnecter
 - Recherche d'un parapheur par numéro
 - Historique complet des scans : lieu, date, opérateur
+- Page `/connexion` unique : identifiant + mot de passe/PIN, redirige automatiquement vers le bon espace selon le rôle détecté
 
 ---
 
 ### Interface web — Superviseur
 
-- Compte créé par l'admin depuis le tableau de bord
-- Connexion : `/superviseur/connexion`
-- Première connexion → formulaire pour choisir son identifiant et mot de passe personnel
+- Compte créé par l'admin depuis le tableau de bord (identifiant `SupX` + PIN, définitifs)
 - Liste de tous les parapheurs, triée du plus récent au moins récent
 - Colonnes : numéro, titre, date du dernier scan, localisation
 - Clic sur un parapheur → historique complet en tableau
@@ -172,23 +158,37 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ### Interface web — Administration
 
-- Connexion requise : `/admin/connexion`
+- Connexion requise
 
-**Onglet Utilisateurs**
-- Liste des scanners (nom, identifiant, date de création)
-- Créer / supprimer un scanner
-- Consulter la fiche d'un scanner
+**Onglet Scannaire**
+- Liste des scanners (identifiant, statut, date de création)
+- Créer un scanner : identifiant généré automatiquement (`Scan1`, `Scan2`… — aucun doublon possible), mot de passe = code PIN à 4 chiffres
+- Modifier la fiche d'un scanner : changer son statut actif/inactif, réinitialiser son code PIN
+- Supprimer un scanner
 
 **Onglet Superviseurs**
-- Liste des superviseurs avec statut (En attente / Actif)
-- Créer un superviseur (identifiant et mot de passe provisoires)
+- Liste des superviseurs
+- Créer un superviseur : identifiant généré automatiquement (`Sup1`, `Sup2`…), mot de passe = code PIN à 4 chiffres
+- Modifier la fiche d'un superviseur : réinitialiser son code PIN
 - Supprimer un superviseur
-- Consulter la fiche d'un superviseur
+
+**Onglet Administrateurs**
+- Liste des administrateurs (2 maximum)
+- Créer un second administrateur (nom, identifiant, mot de passe) tant que la limite n'est pas atteinte
+- Modifier la fiche d'un administrateur (y compris la sienne) : réinitialiser le mot de passe
+- Supprimer un administrateur (impossible de se supprimer soi-même ou de supprimer le dernier compte restant)
+
+**Onglet Parapheurs**
+- Liste de tous les parapheurs (numéro, titre, statut, dernier scan)
+- Supprimer un parapheur : suppression définitive, entraîne la suppression de tout son historique de scans
+
+**Onglet Scans**
+- Historique paginé de tous les scans enregistrés (parapheur, opérateur, lieu, date)
+- Supprimer un scan
 
 **Onglet Application mobile**
-- Informations sur l'APK disponible (taille, date)
-- Upload d'un nouvel APK
-- Lien de téléchargement + QR code
+- Lien de téléchargement de l'APK + QR code, toujours visibles
+- Publication automatique : à chaque build EAS Android réussi, un webhook récupère l'APK et le publie sans intervention manuelle (voir [Sécurité](#sécurité))
 
 ---
 
@@ -218,6 +218,7 @@ Accessible depuis `/documents`, l'onglet **Documents** de l'administration, la f
 | GET | `/api/sante` | État du serveur |
 | GET | `/api/parapheurs` | Liste paginée des parapheurs |
 | GET | `/api/parapheurs/:numero` | Détail + historique d'un parapheur |
+| GET | `/api/scans` | Liste paginée de tous les scans |
 | GET | `/api/admin/apk/download` | Télécharger l'APK |
 
 ### Scanner *(JWT requis)*
@@ -231,28 +232,42 @@ Accessible depuis `/documents`, l'onglet **Documents** de l'administration, la f
 | POST | `/api/scans` | Enregistrer un scan |
 | POST | `/api/scans/sync` | Synchroniser des scans hors ligne |
 
-### Admin *(JWT admin requis)*
+### Admin *(JWT admin requis sauf mention contraire)*
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | `/api/admin/existe` | Vérifie si un admin existe |
-| POST | `/api/admin/inscription` | Créer le compte admin |
-| POST | `/api/admin/connexion` | Connexion admin |
+| GET | `/api/admin/existe` | Vérifie si un admin existe *(public)* |
+| POST | `/api/admin/inscription` | Créer le 1er compte admin *(public, unique — non utilisé par l'interface, le premier compte est seedé en base ; endpoint gardé pour une restauration manuelle)* |
+| POST | `/api/admin/connexion` | Connexion admin *(public)* |
+| GET | `/api/admin/admins` | Liste des administrateurs |
+| POST | `/api/admin/admins` | Créer un 2ᵉ administrateur (max 2) |
+| PUT | `/api/admin/admins/:id` | Réinitialiser le mot de passe d'un administrateur |
+| DELETE | `/api/admin/admins/:id` | Supprimer un administrateur |
 | GET | `/api/admin/scanners` | Liste des scanners |
-| POST | `/api/admin/scanners` | Créer un scanner |
+| POST | `/api/admin/scanners` | Créer un scanner (identifiant `ScanX` auto-généré, PIN 4 chiffres) |
+| PUT | `/api/admin/scanners/:id` | Modifier un scanner (statut actif/inactif, réinitialiser le PIN) |
 | DELETE | `/api/admin/scanners/:id` | Supprimer un scanner |
 | GET | `/api/admin/superviseurs` | Liste des superviseurs |
-| POST | `/api/admin/superviseurs` | Créer un superviseur |
+| POST | `/api/admin/superviseurs` | Créer un superviseur (identifiant `SupX` auto-généré, PIN 4 chiffres) |
+| PUT | `/api/admin/superviseurs/:id` | Réinitialiser le code PIN d'un superviseur |
 | DELETE | `/api/admin/superviseurs/:id` | Supprimer un superviseur |
-| POST | `/api/admin/apk` | Upload de l'APK |
+| DELETE | `/api/admin/scans/:id` | Supprimer un scan |
+| DELETE | `/api/admin/parapheurs/:id` | Supprimer un parapheur (et tout son historique de scans, suppression en cascade) |
+| POST | `/api/admin/apk` | Upload manuel de l'APK |
 | GET | `/api/admin/apk/info` | Infos sur l'APK |
+| GET | `/api/admin/apk/download` | Télécharger l'APK *(public)* |
 
-### Superviseur *(JWT superviseur requis)*
+### Webhooks
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| POST | `/api/superviseur/connexion` | Connexion superviseur |
-| PUT | `/api/superviseur/moi` | Changer identifiant et mot de passe |
+| POST | `/api/webhooks/eas-build` | Reçu depuis EAS à la fin d'un build Android — signature HMAC-SHA1 vérifiée (`EAS_WEBHOOK_SECRET`), télécharge et publie automatiquement l'APK |
+
+### Superviseur
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/api/superviseur/connexion` | Connexion superviseur *(public)* |
 
 ### Documents
 
@@ -289,7 +304,7 @@ Tables PostgreSQL :
 | `parapheurs` | Parapheurs physiques identifiés par numéro |
 | `scans` | Historique de chaque passage d'un scanner sur un parapheur |
 | `lieux` | Noms de lieux associés aux coordonnées GPS |
-| `admins` | Compte administrateur |
+| `admins` | Comptes administrateur (2 maximum, limite appliquée côté application) |
 | `superviseurs` | Compte superviseur |
 | `documents` | Documents importés (fichiers stockés dans `uploads/documents/<id>/`) |
 | `qr_codes` / `qr_code_positions` | QR codes et leur position |
@@ -305,6 +320,8 @@ Tables PostgreSQL :
 - Rate limiting sur les routes sensibles
 - Validation des données avec express-validator
 - Middleware de rôle : `scanner` / `admin` / `superviseur`
+- Webhook EAS signé (HMAC-SHA1, comparaison en temps constant) pour empêcher la publication d'un APK par un tiers non autorisé
+- Garde-fous admin : impossible de se supprimer soi-même ou de supprimer le dernier compte admin restant
 
 ---
 
@@ -342,4 +359,10 @@ TEST_INTEGRATION=1 npm test
 | 12 | Interface admin (scanners + APK + QR code) | ✅ |
 | 13 | Compte superviseur + liste des parapheurs | ✅ |
 | 14 | Charte graphique et design UI | ✅ |
-| 15 | Module documentaire : QR codes dans les PDF et Word | ✅ |
+| 15 | Gestion multi-administrateurs (jusqu'à 2, création et suppression) | ✅ |
+| 16 | Identifiant scanner auto-généré + mot de passe PIN 4 chiffres | ✅ |
+| 17 | Publication automatique de l'APK via webhook EAS | ✅ |
+| 18 | Identifiant superviseur auto-généré + PIN, fiche scanner modifiable | ✅ |
+| 19 | Page de connexion unique (redirection selon le rôle), fiches superviseur/admin modifiables, admin seedé en base | ✅ |
+| 20 | Suppression d'un parapheur côté admin (et de son historique de scans en cascade) | ✅ |
+| 21 | Module documentaire : QR codes nommés (uniques) dans les PDF, Word et OpenDocument | ✅ |

@@ -32,6 +32,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-motdepasse}
       JWT_SECRET: ${JWT_SECRET:-secret_a_changer_en_production}
       JWT_EXPIRES_IN: 7d
+      EAS_WEBHOOK_SECRET: ${EAS_WEBHOOK_SECRET:-98b2a12197e8e21e6aad8333a8d7a805416c0444b39fdaf5fd24346a9a9995bb}
     volumes:
       - uploads:/app/uploads
     depends_on:

@@ -1,13 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import PageVisionneur from './pages/PageVisionneur';
-import PageInscriptionAdmin from './pages/PageInscriptionAdmin';
-import PageConnexionAdmin from './pages/PageConnexionAdmin';
+import PageConnexion from './pages/PageConnexion';
 import PageAdmin from './pages/PageAdmin';
 import PageListeParapheurs from './pages/PageListeParapheurs';
 import PageDetailParapheur from './pages/PageDetailParapheur';
-import PageConnexionSuperviseur from './pages/PageConnexionSuperviseur';
-import PagePremiereConnexionSuperviseur from './pages/PagePremiereConnexionSuperviseur';
 import ProtectionSuperviseur from './composants/ProtectionSuperviseur';
 
 // Module documentaire chargé à la demande (pdf.js, Konva, pdf-lib).
@@ -19,11 +16,8 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<div className="chargement">Chargement…</div>}>
       <Routes>
-        <Route path="/admin/inscription"                  element={<PageInscriptionAdmin />} />
-        <Route path="/admin/connexion"                    element={<PageConnexionAdmin />} />
+        <Route path="/connexion"                          element={<PageConnexion />} />
         <Route path="/admin"                              element={<PageAdmin />} />
-        <Route path="/superviseur/connexion"              element={<PageConnexionSuperviseur />} />
-        <Route path="/superviseur/premiere-connexion"     element={<PagePremiereConnexionSuperviseur />} />
         <Route path="/parapheurs"                         element={<ProtectionSuperviseur><PageListeParapheurs /></ProtectionSuperviseur>} />
         <Route path="/parapheurs/:numero"                 element={<ProtectionSuperviseur><PageDetailParapheur /></ProtectionSuperviseur>} />
         {/* Accessibles sans connexion : un visiteur travaille dans son navigateur,

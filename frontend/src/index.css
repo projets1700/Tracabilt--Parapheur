@@ -7,20 +7,15 @@
 }
 
 :root {
-  --bleu: #009DBF;
-  --bleu-clair: #E6F4F1;
-  --bleu-moyen: #00B4D8;
-  --bleu-fonce: #0067A5;
-  --vert: #95C11F;
-  --vert-clair: #EEF6D6;
-  --vert-fonce: #5A7410;
-  --orange: #E07B20;
-  --orange-clair: #FDF0E3;
+  --bleu: #082D57;
+  --bleu-clair: #E7ECF2;
+  --bleu-fonce: #041B33;
+  --vert: #07AA93;
+  --vert-clair: #E1F5F1;
+  --vert-bandeau: #9FE0D5;
+  --vert-fonce: #056657;
   --rouge: #D94040;
   --rouge-clair: #FDEAEA;
-  --violet: #6A3FA0;
-  --violet-clair: #EDE8F8;
-  --gris: #65707D;
   --gris-clair: #F4F7FA;
   --gris-fonce: #3A4148;
   --bordure: #E2E8EE;
@@ -33,9 +28,18 @@
 body {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--fond-page);
-  color: #1D1D1B;
+  color: var(--bleu);
   font-size: 14px;
   line-height: 1.5;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--bleu) 0%, var(--vert) 100%);
+  z-index: 1000;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -79,12 +83,9 @@ input, select, textarea { font-family: inherit; }
   font-size: 11px;
   font-weight: 600;
 }
-.badge-bleu   { background: var(--bleu-clair);   color: var(--bleu-fonce); }
 .badge-vert   { background: var(--vert-clair);   color: var(--vert-fonce); }
-.badge-orange { background: var(--orange-clair); color: #633806; }
 .badge-rouge  { background: var(--rouge-clair);  color: #791F1F; }
 .badge-gris   { background: var(--gris-clair);   color: var(--gris-fonce); }
-.badge-violet { background: var(--violet-clair); color: #3C3489; }
 
 /* Carte */
 .carte {
@@ -166,5 +167,3 @@ input, select, textarea { font-family: inherit; }
   .entete-visionneur .recherche { order: 3; flex-basis: 100%; }
 }
 
-/* Leaflet fix */
-.leaflet-container { z-index: 1; }

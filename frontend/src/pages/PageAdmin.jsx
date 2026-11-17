@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import client from '../api/client';
@@ -71,13 +71,41 @@ function formaterDate(d) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function formaterTaille(octets) {
-  if (octets >= 1024 * 1024) return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
-  return `${(octets / 1024).toFixed(0)} Ko`;
-}
+function ModalFicheSuperviseur({ superviseur, onFermer, onEnregistrer }) {
+  const [pin, setPin] = useState('');
+  const [erreur, setErreur] = useState('');
+  const [soumission, setSoumission] = useState(false);
 
-function ModalFicheSuperviseur({ superviseur, onFermer }) {
+  useEffect(() => {
+    if (superviseur) {
+      setPin('');
+      setErreur('');
+    }
+  }, [superviseur]);
+
   if (!superviseur) return null;
+
+  async function handleEnregistrer() {
+    if (!pin) {
+      setErreur('Saisissez un nouveau code PIN à enregistrer.');
+      return;
+    }
+    if (!/^\d{4}$/.test(pin)) {
+      setErreur('Le code PIN doit contenir exactement 4 chiffres.');
+      return;
+    }
+    setErreur('');
+    setSoumission(true);
+    try {
+      await onEnregistrer(superviseur.id, { mot_de_passe: pin });
+      onFermer();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la modification.');
+    } finally {
+      setSoumission(false);
+    }
+  }
+
   return (
     <div
       onClick={onFermer}
@@ -95,25 +123,78 @@ function ModalFicheSuperviseur({ superviseur, onFermer }) {
           </div>
           <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--texte3)', lineHeight: 1 }}>✕</button>
         </div>
+
         <div className="sep" style={{ margin: 0 }} />
-        {[
-          { label: 'Identifiant', valeur: superviseur.identifiant },
-          { label: 'Créé le',     valeur: formaterDate(superviseur.created_at) },
-        ].map(({ label, valeur }) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-            <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>{label}</span>
-            <span style={{ fontWeight: 600 }}>{valeur}</span>
-          </div>
-        ))}
+
+        {erreur && <div className="message-erreur">{erreur}</div>}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Identifiant</span>
+          <span style={{ fontWeight: 600 }}>{superviseur.identifiant}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Créé le</span>
+          <span style={{ fontWeight: 600 }}>{formaterDate(superviseur.created_at)}</span>
+        </div>
+
+        <div>
+          <label className="label-champ">Réinitialiser le code PIN</label>
+          <input
+            className="champ"
+            type="password"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="1234"
+          />
+        </div>
+
         <div className="sep" style={{ margin: 0 }} />
-        <button className="btn" onClick={onFermer} style={{ justifyContent: 'center' }}>Fermer</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn" onClick={onFermer}>Fermer</button>
+          <button className="btn btn-primaire" onClick={handleEnregistrer} disabled={soumission}>
+            {soumission ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function ModalFiche({ scanner, onFermer }) {
+function ModalFiche({ scanner, onFermer, onEnregistrer }) {
+  const [actif, setActif] = useState(true);
+  const [pin, setPin] = useState('');
+  const [erreur, setErreur] = useState('');
+  const [soumission, setSoumission] = useState(false);
+
+  useEffect(() => {
+    if (scanner) {
+      setActif(scanner.is_active);
+      setPin('');
+      setErreur('');
+    }
+  }, [scanner]);
+
   if (!scanner) return null;
+
+  async function handleEnregistrer() {
+    if (pin && !/^\d{4}$/.test(pin)) {
+      setErreur('Le code PIN doit contenir exactement 4 chiffres.');
+      return;
+    }
+    setErreur('');
+    setSoumission(true);
+    try {
+      await onEnregistrer(scanner.id, { is_active: actif, ...(pin ? { mot_de_passe: pin } : {}) });
+      onFermer();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la modification.');
+    } finally {
+      setSoumission(false);
+    }
+  }
+
   return (
     <div
       onClick={onFermer}
@@ -134,20 +215,134 @@ function ModalFiche({ scanner, onFermer }) {
 
         <div className="sep" style={{ margin: 0 }} />
 
-        {[
-          { label: 'Statut',        valeur: <span className={`badge ${scanner.is_active ? 'badge-vert' : 'badge-rouge'}`}>{scanner.is_active ? 'Actif' : 'Inactif'}</span> },
-          { label: 'Identifiant',   valeur: scanner.identifiant },
-          { label: 'ID appareil',   valeur: scanner.device_id || '—' },
-          { label: 'Créé le',       valeur: formaterDate(scanner.created_at) },
-        ].map(({ label, valeur }) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-            <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>{label}</span>
-            <span style={{ fontWeight: 600 }}>{valeur}</span>
-          </div>
-        ))}
+        {erreur && <div className="message-erreur">{erreur}</div>}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Statut</span>
+          <button
+            type="button"
+            className={`badge ${actif ? 'badge-vert' : 'badge-rouge'}`}
+            style={{ border: 'none', cursor: 'pointer' }}
+            onClick={() => setActif(a => !a)}
+          >
+            {actif ? 'Actif' : 'Inactif'} — cliquer pour changer
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Créé le</span>
+          <span style={{ fontWeight: 600 }}>{formaterDate(scanner.created_at)}</span>
+        </div>
+
+        <div>
+          <label className="label-champ">Réinitialiser le code PIN (optionnel)</label>
+          <input
+            className="champ"
+            type="password"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="Laisser vide pour ne pas changer"
+          />
+        </div>
 
         <div className="sep" style={{ margin: 0 }} />
-        <button className="btn" onClick={onFermer} style={{ justifyContent: 'center' }}>Fermer</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn" onClick={onFermer}>Fermer</button>
+          <button className="btn btn-primaire" onClick={handleEnregistrer} disabled={soumission}>
+            {soumission ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalFicheAdmin({ admin, onFermer, onEnregistrer }) {
+  const [motDePasse, setMotDePasse] = useState('');
+  const [erreur, setErreur] = useState('');
+  const [soumission, setSoumission] = useState(false);
+
+  useEffect(() => {
+    if (admin) {
+      setMotDePasse('');
+      setErreur('');
+    }
+  }, [admin]);
+
+  if (!admin) return null;
+
+  async function handleEnregistrer() {
+    if (!motDePasse) {
+      setErreur('Saisissez un nouveau mot de passe à enregistrer.');
+      return;
+    }
+    if (motDePasse.length < 6) {
+      setErreur('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    setErreur('');
+    setSoumission(true);
+    try {
+      await onEnregistrer(admin.id, { mot_de_passe: motDePasse });
+      onFermer();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la modification.');
+    } finally {
+      setSoumission(false);
+    }
+  }
+
+  return (
+    <div
+      onClick={onFermer}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="carte"
+        style={{ width: '100%', maxWidth: 420, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>{admin.nom}</h2>
+            <p style={{ fontSize: 13, color: 'var(--texte2)', marginTop: 2 }}>{admin.identifiant}</p>
+          </div>
+          <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--texte3)', lineHeight: 1 }}>✕</button>
+        </div>
+
+        <div className="sep" style={{ margin: 0 }} />
+
+        {erreur && <div className="message-erreur">{erreur}</div>}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Identifiant</span>
+          <span style={{ fontWeight: 600 }}>{admin.identifiant}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--texte2)', fontWeight: 500 }}>Créé le</span>
+          <span style={{ fontWeight: 600 }}>{formaterDate(admin.created_at)}</span>
+        </div>
+
+        <div>
+          <label className="label-champ">Réinitialiser le mot de passe</label>
+          <input
+            className="champ"
+            type="password"
+            value={motDePasse}
+            onChange={e => setMotDePasse(e.target.value)}
+            placeholder="6 caractères minimum"
+          />
+        </div>
+
+        <div className="sep" style={{ margin: 0 }} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn" onClick={onFermer}>Fermer</button>
+          <button className="btn btn-primaire" onClick={handleEnregistrer} disabled={soumission}>
+            {soumission ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -158,6 +353,7 @@ function clientAdmin() {
   return {
     get:    (url)       => client.get(url, { headers: { Authorization: `Bearer ${token}` } }),
     post:   (url, data) => client.post(url, data, { headers: { Authorization: `Bearer ${token}` } }),
+    put:    (url, data) => client.put(url, data, { headers: { Authorization: `Bearer ${token}` } }),
     delete: (url)       => client.delete(url, { headers: { Authorization: `Bearer ${token}` } }),
   };
 }
@@ -167,6 +363,7 @@ export default function PageAdmin() {
   const admin = JSON.parse(localStorage.getItem('admin_user') || 'null');
 
   const [onglet, setOnglet]           = useState('scanners');
+  const [admins, setAdmins]           = useState([]);
   const [scanners, setScanners]       = useState([]);
   const [chargement, setChargement]   = useState(true);
   const [erreur, setErreur]           = useState('');
@@ -175,18 +372,25 @@ export default function PageAdmin() {
   const [superviseurs, setSuperviseurs]               = useState([]);
   const [superviseurFiche, setSuperviseurFiche]       = useState(null);
   const [ajoutSupOuvert, setAjoutSupOuvert]           = useState(false);
-  const [formSuperviseur, setFormSuperviseur]         = useState({ nom: '', identifiant: '', mot_de_passe: '' });
+  const [formSuperviseur, setFormSuperviseur]         = useState({ nom: '', mot_de_passe: '' });
   const [soumissionSup, setSoumissionSup]             = useState(false);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [soumission, setSoumission]   = useState(false);
-  const [formScanner, setFormScanner] = useState({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
-  const [infoApk, setInfoApk]         = useState(null);
-  const [uploadApk, setUploadApk]     = useState(null);
-  const [uploadEnCours, setUploadEnCours] = useState(false);
-  const fileRef = useRef();
+  const [formScanner, setFormScanner] = useState({ mot_de_passe: '' });
+  const [ajoutAdminOuvert, setAjoutAdminOuvert]       = useState(false);
+  const [formAdmin, setFormAdmin]                     = useState({ nom: '', identifiant: '', mot_de_passe: '' });
+  const [soumissionAdmin, setSoumissionAdmin]         = useState(false);
+  const [adminFiche, setAdminFiche]                   = useState(null);
+  const [scans, setScans]             = useState([]);
+  const [scansTotal, setScansTotal]   = useState(0);
+  const [scansPage, setScansPage]     = useState(1);
+  const [chargementScans, setChargementScans] = useState(true);
+  const SCANS_PAR_PAGE = 50;
+  const [parapheurs, setParapheurs]                     = useState([]);
+  const [chargementParapheurs, setChargementParapheurs] = useState(true);
 
   useEffect(() => {
-    if (!localStorage.getItem('admin_token')) navigate('/admin/connexion', { replace: true });
+    if (!localStorage.getItem('admin_token')) navigate('/connexion', { replace: true });
   }, [navigate]);
 
   const chargerScanners = useCallback(async () => {
@@ -197,7 +401,7 @@ export default function PageAdmin() {
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem('admin_token');
-        navigate('/admin/connexion', { replace: true });
+        navigate('/connexion', { replace: true });
       }
     } finally {
       setChargement(false);
@@ -211,23 +415,77 @@ export default function PageAdmin() {
     } catch {}
   }, []);
 
-  const chargerApk = useCallback(async () => {
+  const chargerAdmins = useCallback(async () => {
     try {
-      const { data } = await clientAdmin().get('/admin/apk/info');
-      setInfoApk(data);
+      const { data } = await clientAdmin().get('/admin/admins');
+      setAdmins(data.admins);
     } catch {}
   }, []);
 
   useEffect(() => {
     chargerScanners();
     chargerSuperviseurs();
-    chargerApk();
-  }, [chargerScanners, chargerSuperviseurs, chargerApk]);
+    chargerAdmins();
+  }, [chargerScanners, chargerSuperviseurs, chargerAdmins]);
+
+  const chargerScans = useCallback(async (page) => {
+    setChargementScans(true);
+    try {
+      const { data } = await clientAdmin().get(`/scans?page=${page}&limite=${SCANS_PAR_PAGE}`);
+      setScans(data.scans);
+      setScansTotal(data.total);
+      setScansPage(data.page);
+    } catch {} finally {
+      setChargementScans(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (onglet === 'scans') chargerScans(1);
+  }, [onglet, chargerScans]);
+
+  async function supprimerScan(id, numero) {
+    if (!confirm(`Supprimer le scan de "${numero}" ?`)) return;
+    setErreur('');
+    try {
+      await clientAdmin().delete(`/admin/scans/${id}`);
+      afficherSucces('Scan supprimé.');
+      chargerScans(scansPage);
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
+    }
+  }
+
+  const chargerParapheurs = useCallback(async () => {
+    setChargementParapheurs(true);
+    try {
+      const { data } = await clientAdmin().get('/parapheurs?limite=500');
+      setParapheurs(data.parapheurs);
+    } catch {} finally {
+      setChargementParapheurs(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (onglet === 'parapheurs') chargerParapheurs();
+  }, [onglet, chargerParapheurs]);
+
+  async function supprimerParapheur(id, numero) {
+    if (!confirm(`Supprimer définitivement le parapheur "${numero}" et tout son historique de scans ?`)) return;
+    setErreur('');
+    try {
+      await clientAdmin().delete(`/admin/parapheurs/${id}`);
+      afficherSucces('Parapheur supprimé.');
+      chargerParapheurs();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
+    }
+  }
 
   function deconnecter() {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
-    navigate('/admin/connexion', { replace: true });
+    navigate('/', { replace: true });
   }
 
   function afficherSucces(msg) {
@@ -240,15 +498,44 @@ export default function PageAdmin() {
     setErreur('');
     setSoumissionSup(true);
     try {
-      await clientAdmin().post('/admin/superviseurs', formSuperviseur);
-      afficherSucces(`Superviseur "${formSuperviseur.nom}" créé avec succès.`);
-      setFormSuperviseur({ nom: '', identifiant: '', mot_de_passe: '' });
+      const { data } = await clientAdmin().post('/admin/superviseurs', formSuperviseur);
+      afficherSucces(`Superviseur "${formSuperviseur.nom}" créé — identifiant : ${data.superviseur.identifiant}`);
+      setFormSuperviseur({ nom: '', mot_de_passe: '' });
       setAjoutSupOuvert(false);
       chargerSuperviseurs();
     } catch (err) {
       setErreur(err.response?.data?.message || 'Erreur lors de la création.');
     } finally {
       setSoumissionSup(false);
+    }
+  }
+
+  async function handleCreerAdmin(e) {
+    e.preventDefault();
+    setErreur('');
+    setSoumissionAdmin(true);
+    try {
+      await clientAdmin().post('/admin/admins', formAdmin);
+      afficherSucces(`Administrateur "${formAdmin.nom}" créé avec succès.`);
+      setFormAdmin({ nom: '', identifiant: '', mot_de_passe: '' });
+      setAjoutAdminOuvert(false);
+      chargerAdmins();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la création.');
+    } finally {
+      setSoumissionAdmin(false);
+    }
+  }
+
+  async function supprimerAdmin(id, nom) {
+    if (!confirm(`Supprimer l'administrateur "${nom}" ?`)) return;
+    setErreur('');
+    try {
+      await clientAdmin().delete(`/admin/admins/${id}`);
+      afficherSucces('Administrateur supprimé.');
+      chargerAdmins();
+    } catch (err) {
+      setErreur(err.response?.data?.message || 'Erreur lors de la suppression.');
     }
   }
 
@@ -264,6 +551,24 @@ export default function PageAdmin() {
     }
   }
 
+  async function handleModifierScanner(id, changes) {
+    await clientAdmin().put(`/admin/scanners/${id}`, changes);
+    afficherSucces('Scanner modifié.');
+    chargerScanners();
+  }
+
+  async function handleModifierSuperviseur(id, changes) {
+    await clientAdmin().put(`/admin/superviseurs/${id}`, changes);
+    afficherSucces('Superviseur modifié.');
+    chargerSuperviseurs();
+  }
+
+  async function handleModifierAdmin(id, changes) {
+    await clientAdmin().put(`/admin/admins/${id}`, changes);
+    afficherSucces('Administrateur modifié.');
+    chargerAdmins();
+  }
+
   async function supprimerScanner(id, nom) {
     if (!confirm(`Supprimer le scanner "${nom}" ?`)) return;
     setErreur('');
@@ -276,14 +581,32 @@ export default function PageAdmin() {
     }
   }
 
+  function prochainIdentifiantScanner() {
+    let max = 0;
+    for (const s of scanners) {
+      const m = /^Scan(\d+)$/.exec(s.identifiant);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    }
+    return `Scan${max + 1}`;
+  }
+
+  function prochainIdentifiantSuperviseur() {
+    let max = 0;
+    for (const s of superviseurs) {
+      const m = /^Sup(\d+)$/.exec(s.identifiant);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    }
+    return `Sup${max + 1}`;
+  }
+
   async function handleCreerScanner(e) {
     e.preventDefault();
     setErreur('');
     setSoumission(true);
     try {
-      await clientAdmin().post('/admin/scanners', formScanner);
-      afficherSucces(`Scanner "${formScanner.nom}" créé avec succès.`);
-      setFormScanner({ nom: '', identifiant: '', mot_de_passe: '', device_id: '' });
+      const { data } = await clientAdmin().post('/admin/scanners', formScanner);
+      afficherSucces(`Scanner créé — identifiant : ${data.scanner.identifiant}`);
+      setFormScanner({ mot_de_passe: '' });
       setAjoutOuvert(false);
       chargerScanners();
     } catch (err) {
@@ -293,64 +616,33 @@ export default function PageAdmin() {
     }
   }
 
-  async function handleUploadApk(e) {
-    e.preventDefault();
-    if (!uploadApk) return;
-    setUploadEnCours(true);
-    setErreur('');
-    try {
-      const token = localStorage.getItem('admin_token');
-      const fd = new FormData();
-      fd.append('apk', uploadApk);
-      const r = await fetch('/api/admin/apk', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      if (!r.ok) {
-        const d = await r.json();
-        throw new Error(d.message || 'Erreur upload.');
-      }
-      afficherSucces('APK mis en ligne avec succès.');
-      setUploadApk(null);
-      fileRef.current.value = '';
-      chargerApk();
-    } catch (err) {
-      setErreur(err.message || "Erreur lors de l'upload.");
-    } finally {
-      setUploadEnCours(false);
-    }
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--fond-page)' }}>
-      <ModalFiche scanner={scannerFiche} onFermer={() => setScannerFiche(null)} />
-      <ModalFicheSuperviseur superviseur={superviseurFiche} onFermer={() => setSuperviseurFiche(null)} />
+      <ModalFiche scanner={scannerFiche} onFermer={() => setScannerFiche(null)} onEnregistrer={handleModifierScanner} />
+      <ModalFicheSuperviseur superviseur={superviseurFiche} onFermer={() => setSuperviseurFiche(null)} onEnregistrer={handleModifierSuperviseur} />
+      <ModalFicheAdmin admin={adminFiche} onFermer={() => setAdminFiche(null)} onEnregistrer={handleModifierAdmin} />
 
-      {/* Header sombre */}
-      <header style={{ background: '#1D1D1B', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {/* Logo simplifié */}
-          <img src="/Logo_Parapheur.png" alt="TraçaParapheur" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
-        </div>
+      {/* Header */}
+      <header style={{
+        background: 'var(--vert-bandeau)', borderBottom: '1px solid var(--bordure)', padding: '2px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+      }}>
+        <img src="/Logo_Parapheur.png" alt="CoeurTrace" style={{ width: 150, height: 'auto', objectFit: 'contain' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <a href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>
-            ← Visionneur
-          </a>
-          <Link to="/documents" style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>
-            Documents
+          <Link to="/documents" style={{ fontSize: 12, color: 'var(--vert-fonce)', textDecoration: 'none', fontWeight: 600 }}>
+            Documents &amp; QR codes
           </Link>
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.15)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--bleu)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>
               {admin?.nom?.charAt(0).toUpperCase()}
             </div>
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{admin?.nom}</span>
+            <span style={{ fontSize: 13, color: 'var(--texte2)', fontWeight: 500 }}>{admin?.nom}</span>
           </div>
           <button
+            className="btn btn-primaire"
             onClick={deconnecter}
-            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '6px 14px', color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer' }}
+            style={{ padding: '6px 14px', fontSize: 12 }}
           >
             Déconnexion
           </button>
@@ -361,12 +653,12 @@ export default function PageAdmin() {
       <div style={{ background: 'white', borderBottom: '1px solid var(--bordure)', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, paddingBottom: 0 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1D1D1B' }}>Tableau de bord</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--bleu)' }}>Tableau de bord</h1>
             <p style={{ fontSize: 12, color: 'var(--texte3)', marginTop: 2 }}>Gestion des scanners et de l'application mobile</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
-          {[{ id: 'scanners', label: 'Utilisateurs' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'documents', label: 'Documents' }, { id: 'apk', label: 'Application mobile' }].map(o => (
+          {[{ id: 'scanners', label: 'Scannaire' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'admins', label: 'Administrateurs' }, { id: 'parapheurs', label: 'Parapheurs' }, { id: 'scans', label: 'Scans' }, { id: 'documents', label: 'Documents' }, { id: 'apk', label: 'Application mobile' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
@@ -390,9 +682,9 @@ export default function PageAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{scanners.length} scanner(s) enregistré(s)</p>
-              <button className="btn btn-primaire" onClick={() => setAjoutOuvert(o => !o)}>
-                {ajoutOuvert ? '✕ Annuler' : '+ Nouveau scanner'}
-              </button>
+              {!ajoutOuvert && (
+                <button className="btn btn-primaire" onClick={() => setAjoutOuvert(true)}>+ Nouveau scanner</button>
+              )}
             </div>
 
             {ajoutOuvert && (
@@ -400,20 +692,22 @@ export default function PageAdmin() {
                 <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Nouveau scanner</h3>
                 <form onSubmit={handleCreerScanner} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label className="label-champ">Nom complet *</label>
-                    <input className="champ" value={formScanner.nom} onChange={e => setFormScanner(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
+                    <label className="label-champ">Identifiant</label>
+                    <input className="champ" value={prochainIdentifiantScanner()} disabled style={{ color: 'var(--texte2)', fontWeight: 600, cursor: 'not-allowed' }} />
                   </div>
                   <div>
-                    <label className="label-champ">Identifiant *</label>
-                    <input className="champ" value={formScanner.identifiant} onChange={e => setFormScanner(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" required />
-                  </div>
-                  <div>
-                    <label className="label-champ">Mot de passe *</label>
-                    <input className="champ" type="password" value={formScanner.mot_de_passe} onChange={e => setFormScanner(f => ({ ...f, mot_de_passe: e.target.value }))} placeholder="••••••••" required />
-                  </div>
-                  <div>
-                    <label className="label-champ">ID appareil (optionnel)</label>
-                    <input className="champ" value={formScanner.device_id} onChange={e => setFormScanner(f => ({ ...f, device_id: e.target.value }))} placeholder="ANDROID-001" />
+                    <label className="label-champ">Code PIN (4 chiffres) *</label>
+                    <input
+                      className="champ"
+                      type="password"
+                      inputMode="numeric"
+                      pattern="\d{4}"
+                      maxLength={4}
+                      value={formScanner.mot_de_passe}
+                      onChange={e => setFormScanner(f => ({ ...f, mot_de_passe: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                      placeholder="1234"
+                      required
+                    />
                   </div>
                   <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                     <button type="button" className="btn" onClick={() => setAjoutOuvert(false)}>Annuler</button>
@@ -475,9 +769,9 @@ export default function PageAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{superviseurs.length} superviseur(s) enregistré(s)</p>
-              <button className="btn btn-primaire" onClick={() => setAjoutSupOuvert(o => !o)}>
-                {ajoutSupOuvert ? '✕ Annuler' : '+ Nouveau superviseur'}
-              </button>
+              {!ajoutSupOuvert && (
+                <button className="btn btn-primaire" onClick={() => setAjoutSupOuvert(true)}>+ Nouveau superviseur</button>
+              )}
             </div>
 
             {ajoutSupOuvert && (
@@ -489,12 +783,22 @@ export default function PageAdmin() {
                     <input className="champ" value={formSuperviseur.nom} onChange={e => setFormSuperviseur(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
                   </div>
                   <div>
-                    <label className="label-champ">Identifiant provisoire *</label>
-                    <input className="champ" value={formSuperviseur.identifiant} onChange={e => setFormSuperviseur(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" required />
+                    <label className="label-champ">Identifiant</label>
+                    <input className="champ" value={prochainIdentifiantSuperviseur()} disabled style={{ color: 'var(--texte2)', fontWeight: 600, cursor: 'not-allowed' }} />
                   </div>
                   <div style={{ gridColumn: '1/-1' }}>
-                    <label className="label-champ">Mot de passe provisoire *</label>
-                    <input className="champ" type="password" value={formSuperviseur.mot_de_passe} onChange={e => setFormSuperviseur(f => ({ ...f, mot_de_passe: e.target.value }))} placeholder="••••••••" required />
+                    <label className="label-champ">Code PIN (4 chiffres) *</label>
+                    <input
+                      className="champ"
+                      type="password"
+                      inputMode="numeric"
+                      pattern="\d{4}"
+                      maxLength={4}
+                      value={formSuperviseur.mot_de_passe}
+                      onChange={e => setFormSuperviseur(f => ({ ...f, mot_de_passe: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                      placeholder="1234"
+                      required
+                    />
                   </div>
                   <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                     <button type="button" className="btn" onClick={() => setAjoutSupOuvert(false)}>Annuler</button>
@@ -515,7 +819,7 @@ export default function PageAdmin() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
-                      {['Nom', 'Identifiant', 'Statut', 'Créé le', ''].map(h => (
+                      {['Nom', 'Identifiant', 'Créé le', ''].map(h => (
                         <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
                       ))}
                     </tr>
@@ -525,11 +829,6 @@ export default function PageAdmin() {
                       <tr key={s.id} style={{ borderBottom: i < superviseurs.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
                         <td style={{ padding: '12px 16px', fontWeight: 600 }}>{s.nom}</td>
                         <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{s.identifiant}</td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span className={`badge ${s.premiere_connexion ? 'badge-orange' : 'badge-vert'}`}>
-                            {s.premiere_connexion ? 'En attente' : 'Actif'}
-                          </span>
-                        </td>
                         <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(s.created_at)}</td>
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -563,79 +862,214 @@ export default function PageAdmin() {
           </div>
         )}
 
-        {onglet === 'apk' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560 }}>
-            <div className="carte">
-              <h3 style={{ fontWeight: 600, marginBottom: 16 }}>APK actuel</h3>
-              {infoApk?.disponible ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--texte2)' }}>Taille</span>
-                    <span style={{ fontWeight: 600 }}>{formaterTaille(infoApk.taille)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--texte2)' }}>Mis en ligne le</span>
-                    <span style={{ fontWeight: 600 }}>{formaterDate(infoApk.modifie)}</span>
-                  </div>
-                  <div className="sep" />
-                  <a
-                    href="/api/admin/apk/download"
-                    className="btn btn-primaire"
-                    style={{ justifyContent: 'center', padding: '10px 0', textDecoration: 'none' }}
-                  >
-                    Télécharger l'APK
-                  </a>
-                  <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
-                    Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
-                  </div>
-                  <div className="sep" />
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--texte2)' }}>QR code de téléchargement</p>
-                    <div style={{ background: 'white', padding: 12, borderRadius: 8, border: '1px solid var(--bordure)' }}>
-                      <QRCodeSVG
-                        value={`${window.location.origin}/api/admin/apk/download`}
-                        size={180}
-                        fgColor="#1D1D1B"
-                        bgColor="white"
-                        level="M"
-                      />
-                    </div>
-                    <p style={{ fontSize: 11, color: 'var(--texte3)', textAlign: 'center' }}>Scannez pour télécharger l'APK sur mobile</p>
-                  </div>
-                </div>
-              ) : (
-                <p style={{ color: 'var(--texte3)', fontSize: 13 }}>Aucun APK disponible. Uploadez-en un ci-dessous.</p>
+        {onglet === 'admins' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{admins.length} administrateur(s) sur 2 maximum</p>
+              {admins.length < 2 && !ajoutAdminOuvert && (
+                <button className="btn btn-primaire" onClick={() => setAjoutAdminOuvert(true)}>+ Nouvel administrateur</button>
               )}
             </div>
 
-            <div className="carte">
-              <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Mettre en ligne un nouvel APK</h3>
-              <form onSubmit={handleUploadApk} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <label className="label-champ">Fichier APK</label>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".apk"
-                    onChange={e => setUploadApk(e.target.files[0])}
-                    style={{ fontSize: 13, width: '100%' }}
-                  />
-                </div>
-                {uploadApk && (
-                  <p style={{ fontSize: 12, color: 'var(--texte2)' }}>
-                    {uploadApk.name} — {formaterTaille(uploadApk.size)}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  className="btn btn-primaire"
-                  disabled={!uploadApk || uploadEnCours}
-                  style={{ justifyContent: 'center' }}
-                >
-                  {uploadEnCours ? 'Upload en cours…' : 'Mettre en ligne'}
-                </button>
-              </form>
+            {ajoutAdminOuvert && admins.length < 2 && (
+              <div className="carte">
+                <h3 style={{ fontWeight: 600, marginBottom: 16 }}>Nouvel administrateur</h3>
+                <form onSubmit={handleCreerAdmin} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label-champ">Nom complet *</label>
+                    <input className="champ" value={formAdmin.nom} onChange={e => setFormAdmin(f => ({ ...f, nom: e.target.value }))} placeholder="Nom complet" required />
+                  </div>
+                  <div>
+                    <label className="label-champ">Identifiant *</label>
+                    <input className="champ" value={formAdmin.identifiant} onChange={e => setFormAdmin(f => ({ ...f, identifiant: e.target.value }))} placeholder="identifiant" autoCapitalize="none" required />
+                  </div>
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <label className="label-champ">Mot de passe *</label>
+                    <input className="champ" type="password" value={formAdmin.mot_de_passe} onChange={e => setFormAdmin(f => ({ ...f, mot_de_passe: e.target.value }))} placeholder="6 caractères minimum" required />
+                  </div>
+                  <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                    <button type="button" className="btn" onClick={() => setAjoutAdminOuvert(false)}>Annuler</button>
+                    <button type="submit" className="btn btn-primaire" disabled={soumissionAdmin}>
+                      {soumissionAdmin ? 'Création…' : "Créer l'administrateur"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
+                    {['Nom', 'Identifiant', 'Créé le', ''].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {admins.map((a, i) => {
+                    const estMoi = a.identifiant === admin?.identifiant;
+                    return (
+                      <tr key={a.id} style={{ borderBottom: i < admins.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                          {a.nom}
+                          {estMoi && (
+                            <span style={{ marginLeft: 8, fontSize: 10, background: 'var(--bleu-clair)', color: 'var(--bleu)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Vous</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{a.identifiant}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(a.created_at)}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setAdminFiche(a)}>
+                              Fiche
+                            </button>
+                            {!estMoi && admins.length > 1 && (
+                              <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerAdmin(a.id, a.nom)}>
+                                Supprimer
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+
+          </div>
+        )}
+
+        {onglet === 'parapheurs' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{parapheurs.length} parapheur(s) enregistré(s)</p>
+
+            {chargementParapheurs ? (
+              <div className="chargement">Chargement…</div>
+            ) : parapheurs.length === 0 ? (
+              <div className="carte" style={{ textAlign: 'center', padding: 40, color: 'var(--texte3)' }}>
+                Aucun parapheur enregistré
+              </div>
+            ) : (
+              <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
+                      {['Numéro', 'Titre', 'Statut', 'Dernier scan', ''].map(h => (
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parapheurs.map((p, i) => (
+                      <tr key={p.id} style={{ borderBottom: i < parapheurs.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{p.numero}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{p.titre || '—'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span className={`badge ${p.statut === 'archive' ? 'badge-gris' : 'badge-vert'}`}>
+                            {p.statut === 'archive' ? 'Archivé' : 'En circulation'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(p.dernier_scan)}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerParapheur(p.id, p.numero)}>
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {onglet === 'scans' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: 'var(--texte2)', fontSize: 13 }}>{scansTotal} scan(s) enregistré(s)</p>
+
+            {chargementScans ? (
+              <div className="chargement">Chargement…</div>
+            ) : scans.length === 0 ? (
+              <div className="carte" style={{ textAlign: 'center', padding: 40, color: 'var(--texte3)' }}>
+                Aucun scan enregistré
+              </div>
+            ) : (
+              <>
+                <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
+                        {['Parapheur', 'Opérateur', 'Lieu', 'Date', ''].map(h => (
+                          <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scans.map((s, i) => (
+                        <tr key={s.id} style={{ borderBottom: i < scans.length - 1 ? '1px solid var(--bordure)' : 'none' }}>
+                          <td style={{ padding: '12px 16px', fontWeight: 600 }}>{s.parapheur_numero}</td>
+                          <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{s.operateur_nom || '—'}</td>
+                          <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{s.nom_lieu || '—'}</td>
+                          <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(s.scanned_at)}</td>
+                          <td style={{ padding: '12px 16px' }}>
+                            <button
+                              className="btn btn-danger"
+                              title="Supprimer"
+                              aria-label="Supprimer"
+                              style={{ padding: '5px 10px', fontSize: 16, lineHeight: 1 }}
+                              onClick={() => supprimerScan(s.id, s.parapheur_numero)}
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {scansTotal > SCANS_PAR_PAGE && (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+                    <button className="btn" disabled={scansPage <= 1} onClick={() => chargerScans(scansPage - 1)}>← Précédent</button>
+                    <span style={{ fontSize: 13, color: 'var(--texte2)' }}>
+                      Page {scansPage} / {Math.ceil(scansTotal / SCANS_PAR_PAGE)}
+                    </span>
+                    <button className="btn" disabled={scansPage >= Math.ceil(scansTotal / SCANS_PAR_PAGE)} onClick={() => chargerScans(scansPage + 1)}>Suivant →</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {onglet === 'apk' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560 }}>
+            <div className="carte">
+              <h3 style={{ fontWeight: 600, marginBottom: 16 }}>APK CoeurTrace</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ background: 'var(--fond2)', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: 'var(--texte2)', wordBreak: 'break-all' }}>
+                  Lien direct : <strong>{window.location.origin}/api/admin/apk/download</strong>
+                </div>
+                <div className="sep" />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--texte2)' }}>QR code de téléchargement</p>
+                  <div style={{ background: 'white', padding: 12, borderRadius: 8, border: '1px solid var(--bordure)' }}>
+                    <QRCodeSVG
+                      value={`${window.location.origin}/api/admin/apk/download`}
+                      size={180}
+                      fgColor="var(--bleu)"
+                      bgColor="white"
+                      level="M"
+                    />
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--texte3)', textAlign: 'center' }}>Scannez pour télécharger l'APK sur mobile</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </div>

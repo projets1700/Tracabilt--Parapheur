@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -53,14 +52,13 @@ export default function EcranConnexion({ onConnexion }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Image source={require('../../assets/Logo_Parapheur.png')} style={styles.logo} />
         <Text style={styles.sousTitre}>Connexion opérateur</Text>
 
         <View style={styles.groupe}>
           <Text style={styles.label}>Nom du scanner</Text>
           <TextInput
             style={styles.champ}
-            placeholder="Votre identifiant"
+            placeholder="Ex : Scan1"
             placeholderTextColor={theme.placeholder}
             value={identifiant}
             onChangeText={setIdentifiant}
@@ -70,13 +68,15 @@ export default function EcranConnexion({ onConnexion }) {
         </View>
 
         <View style={styles.groupe}>
-          <Text style={styles.label}>Mot de passe</Text>
+          <Text style={styles.label}>Code PIN</Text>
           <TextInput
             style={styles.champ}
-            placeholder="••••••••"
+            placeholder="1234"
             placeholderTextColor={theme.placeholder}
             value={motDePasse}
-            onChangeText={setMotDePasse}
+            onChangeText={t => setMotDePasse(t.replace(/\D/g, '').slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
             secureTextEntry
           />
         </View>
@@ -100,7 +100,6 @@ export default function EcranConnexion({ onConnexion }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.fond },
   inner: { flex: 1, justifyContent: 'center', padding: 32, gap: 16 },
-  logo: { width: 200, height: 80, resizeMode: 'contain', alignSelf: 'center', marginBottom: 8 },
   sousTitre: {
     fontSize: 14,
     color: theme.texte,
