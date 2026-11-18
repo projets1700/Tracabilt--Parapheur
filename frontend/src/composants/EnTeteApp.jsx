@@ -22,11 +22,11 @@ export default function EnTeteApp() {
 
   return (
     <header className="entete-app">
-      <Link to="/"><img src="/Logo_Parapheur.png" alt="CoeurTrace" /></Link>
+      {/* Le logo n'est pas un lien : le retour au Visionneur se fait par le bouton « Retour ». */}
+      <img src="/Logo_Parapheur.png" alt="CoeurTrace" />
       <nav>
-        <NavLink to="/" end className={lienClasse}>Recherche</NavLink>
+        <Link to="/" className="btn btn-petit">← Retour</Link>
         {estSuperviseur && <NavLink to="/parapheurs" end className={lienClasse}>Parapheurs</NavLink>}
-        <NavLink to="/documents" className={lienClasse}>Documents</NavLink>
         {estAdmin && <NavLink to="/admin" className={lienClasse}>Administration</NavLink>}
         {utilisateur ? (
           <>

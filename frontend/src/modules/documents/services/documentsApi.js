@@ -190,9 +190,8 @@ export async function importerDocument(fichier, { format, aConvertir }, onProgre
   if (aConvertir) {
     doc.historique.push(evenement('conversion', `Conversion du document ${FORMATS[format].label} en PDF`, { format_source: format }));
   }
-  // « original » = PDF de travail ; « source » = fichier importé tel quel (Word / ODT).
+  // PDF de travail (PDF importé, ou issu de la conversion Word / ODT).
   await local.enregistrerFichierLocal(id, 'original', octetsPdf);
-  if (aConvertir) await local.enregistrerFichierLocal(id, 'source', octetsSource);
   await local.enregistrerDocumentLocal(doc);
   onProgression?.(100);
   return normaliserDocument(doc);
@@ -306,8 +305,14 @@ export async function enregistrerEdition(docId, { qrcodes, supprimes, initiaux }
 }
 
 /** Génération du PDF avec les QR codes (§3.5). */
+/** Règle de gestion : un seul QR code par document. */
+export const MAX_QR_PAR_DOCUMENT = 1;
+
 export async function genererDocument(docId) {
   const doc = await local.obtenirDocumentLocal(docId);
+  if ((doc.qrcodes || []).length > MAX_QR_PAR_DOCUMENT) {
+    throw new Error("Un seul QR code par document : supprimez les QR codes en trop avant de télécharger ou d'imprimer.");
+  }
   const original = await local.obtenirFichierLocal(docId, 'original');
   try {
     const { genererPdfAvecQr } = await import('./generationPdf');
@@ -347,8 +352,6 @@ function declencherTelechargement(blob, nom) {
   return { url, nom };
 }
 
-const MIME = Object.fromEntries(Object.entries(FORMATS).map(([cle, f]) => [cle, f.mime]));
-
 /** PDF avec QR codes à jour : (re)généré si nécessaire. Renvoie { doc, octets }. */
 async function pdfAvecQrAJour(doc) {
   if (!doc.nbQr && !doc.qrcodes?.length) throw new Error("Ajoutez d'abord un QR code.");
@@ -357,14 +360,6 @@ async function pdfAvecQrAJour(doc) {
   const octets = await local.obtenirFichierLocal(doc.id, 'genere');
   if (!octets) throw new Error("Le document avec QR codes n'a pas pu être préparé.");
   return { doc: genere, octets };
-}
-
-/** Télécharge le document original (tel qu'importé : PDF, Word ou ODT). */
-export async function telechargerOriginal(doc) {
-  const converti = doc.sourceFormat && doc.sourceFormat !== doc.format;
-  const octets = await local.obtenirFichierLocal(doc.id, converti ? 'source' : 'original');
-  if (!octets) throw new Error('Fichier original introuvable.');
-  return declencherTelechargement(new Blob([octets], { type: MIME[doc.sourceFormat || doc.format] }), doc.nom);
 }
 
 /** Télécharge le PDF avec les QR codes (généré si nécessaire). Renvoie { doc, fichier }. */

@@ -11,7 +11,7 @@ import useAnnulation from '../hooks/useAnnulation';
 import { chargerPdf } from '../services/pdfRendu';
 import { imprimerPdf } from '../services/impression';
 import {
-  obtenirDocument, obtenirApercu, creerQr, enregistrerEdition, telechargerOriginal as telechargerFichierOriginal, telechargerAvecQr, obtenirPdfAvecQr,
+  obtenirDocument, obtenirApercu, creerQr, enregistrerEdition, telechargerAvecQr, obtenirPdfAvecQr,
   messageErreur, STATUTS_DOCUMENT,
 } from '../services/documentsApi';
 import { lireBrouillon, ecrireBrouillon, effacerBrouillon } from '../services/magasinLocal';
@@ -22,6 +22,8 @@ import { formaterTaille, FORMATS } from '../utils/validationFichier';
 import '../documents.css';
 
 const PX_PAR_POINT = 96 / 72;
+/** Règle de gestion : un seul QR code par document. */
+const MAX_QR_PAR_DOCUMENT = 1;
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 4;
 
@@ -176,7 +178,8 @@ export default function PageEditeurDocument() {
   }
 
   function ajouterQr() {
-    if (!page) return;
+    // Règle : un seul QR code par document.
+    if (!page || qrcodes.length >= MAX_QR_PAR_DOCUMENT) return;
     // Par défaut : coin bas-droit, en décalant si la place est déjà prise.
     const decalage = qrcodes.filter(q => q.page === pageCourante).length * mmVersPoints(8);
     setDialogueNom({
@@ -271,14 +274,6 @@ export default function PageEditeurDocument() {
       notifier('erreur', `${messageErreur(err, "L'enregistrement a échoué.")} Vos modifications sont conservées sur ce poste.`);
     } finally {
       setOccupe(false);
-    }
-  }
-
-  async function telechargerOriginal() {
-    try {
-      setFichierTelecharge(await telechargerFichierOriginal(doc));
-    } catch (err) {
-      notifier('erreur', messageErreur(err, 'Le téléchargement a échoué.'));
     }
   }
 
@@ -473,25 +468,23 @@ export default function PageEditeurDocument() {
               <span><span className={`badge ${STATUTS_DOCUMENT[doc.statut]?.classe || 'badge-gris'}`}>{STATUTS_DOCUMENT[doc.statut]?.label || doc.statut}</span></span>
             </div>
             {doc.genereLe && <div className="ligne-info"><span>Généré le</span><span>{formaterDate(doc.genereLe)}</span></div>}
-            <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-              <button className="btn btn-petit" onClick={telechargerOriginal}>⬇ Original</button>
-            </div>
           </section>
 
           <section>
-            <h3>
-              QR codes <span className="badge badge-bleu">{qrcodes.length}</span>
-            </h3>
+            <h3>QR code</h3>
             <button
               className="btn btn-primaire"
               style={{ width: '100%', justifyContent: 'center', marginBottom: 12 }}
               onClick={ajouterQr}
-              disabled={occupe}
+              disabled={occupe || qrcodes.length >= MAX_QR_PAR_DOCUMENT}
+              title={qrcodes.length >= MAX_QR_PAR_DOCUMENT ? 'Un seul QR code par document' : undefined}
             >
               + Ajouter un QR code sur la page {pageCourante}
             </button>
             <p style={{ fontSize: 11, color: 'var(--texte3)', marginBottom: 10 }}>
-              Vous choisissez le nom de chaque QR code (un nom libre DEP-… est proposé). Deux QR codes ne peuvent pas porter le même nom.
+              {qrcodes.length >= MAX_QR_PAR_DOCUMENT
+                ? "Un seul QR code par document. Pour en placer un autre, supprimez d'abord celui-ci (✕)."
+                : 'Un seul QR code par document. Vous choisissez son nom (un nom libre DEP-… est proposé) ; deux QR codes ne peuvent pas porter le même nom.'}
             </p>
             <ListeQRCodes qrcodes={qrcodes} selection={selection} onSelectionner={selectionnerDepuisListe} onSupprimer={supprimerQr} verrouille={apercuFinal} />
           </section>

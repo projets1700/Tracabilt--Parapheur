@@ -198,6 +198,7 @@ Accessible sans connexion par le bouton **« Générer QR code »** du Visionneu
 
 - Import de documents **PDF**, **Word (.docx, .doc)** et **OpenDocument (.odt)** par glisser-déposer (type réel, taille et intégrité vérifiés) ; les Word / ODT sont **convertis en PDF** par le serveur (LibreOffice), sans être conservés
 - Éditeur : ajout, déplacement, redimensionnement et suppression de QR codes, repères magnétiques, annuler / rétablir, enregistrement automatique
+- **Un seul QR code par document**
 - **Nom de chaque QR code choisi par l'utilisateur** (un nom libre `DEP-000001`… est proposé) et **unique** : deux QR codes ne peuvent jamais porter le même nom ; le nom est écrit en clair au-dessus du QR code
 - Téléchargement du PDF avec QR codes (fichier nommé d'après les QR codes) et **impression** (choix de l'imprimante par l'appareil)
 - **Rien n'est stocké sur le serveur, à part le nom de chaque QR code** (pour garantir son unicité) : documents et QR codes restent dans le navigateur. Le **parapheur est créé au premier scan** du QR code par l'application mobile
