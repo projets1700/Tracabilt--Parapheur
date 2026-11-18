@@ -3,7 +3,6 @@
  * extension, type réel (signature binaire + structure), taille, intégrité.
  */
 const JSZip = require('jszip');
-const { ouvrirDocx } = require('./ooxml');
 const { chargerPdf } = require('./pdfOutils');
 
 class ErreurValidation extends Error {
@@ -37,6 +36,20 @@ const SIGNATURE_OLE = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]; // .doc 
 const TAILLE_DECOMPRESSEE_MAX = 300 * 1024 * 1024;
 
 const commencePar = (octets, signature) => signature.every((o, i) => octets[i] === o);
+
+/** Ouvre une archive (docx) et vérifie qu'elle contient l'entrée attendue (+ protection « bombe ZIP »). */
+async function verifierArchive(octets, entree, messageAbsence) {
+  let zip;
+  try {
+    zip = await JSZip.loadAsync(octets);
+  } catch {
+    throw new ErreurValidation("Le fichier n'est pas un document Word valide (archive illisible).", 422);
+  }
+  let total = 0;
+  zip.forEach((_, f) => { total += f._data?.uncompressedSize || 0; });
+  if (total > TAILLE_DECOMPRESSEE_MAX) throw new ErreurValidation('Le document est anormalement volumineux une fois décompressé.', 422);
+  if (!zip.file(entree)) throw new ErreurValidation(messageAbsence, 422);
+}
 
 async function verifierOdt(octets) {
   let zip;
@@ -85,11 +98,7 @@ async function validerFichier(nomOriginal, octets, tailleMax) {
     if (!commencePar(octets, SIGNATURE_ZIP)) {
       throw new ErreurValidation("Ce fichier porte l'extension .docx mais n'est pas un document Word valide.", 415);
     }
-    try {
-      await ouvrirDocx(octets);
-    } catch (err) {
-      throw new ErreurValidation(err.message, 422);
-    }
+    await verifierArchive(octets, 'word/document.xml', "Cette archive n'est pas un document Word (.docx) valide.");
   }
   return { format: ext, aConvertir: FORMATS_A_CONVERTIR.includes(ext) };
 }

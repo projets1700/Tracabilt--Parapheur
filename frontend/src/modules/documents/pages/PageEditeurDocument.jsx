@@ -4,18 +4,14 @@ import EnTeteApp from '../../../composants/EnTeteApp';
 import DocumentViewer from '../composants/DocumentViewer';
 import PageNavigation from '../composants/PageNavigation';
 import ListeQRCodes from '../composants/ListeQRCodes';
-import HistoriqueDocument from '../composants/HistoriqueDocument';
-import ExportDialog from '../composants/ExportDialog';
 import DialogueNomQr from '../composants/DialogueNomQr';
 import LienTelechargement from '../composants/LienTelechargement';
-import BandeauMode from '../composants/BandeauMode';
-import useModeDocuments from '../hooks/useModeDocuments';
-import { IconeFormat } from '../composants/ListeDocuments';
+import IconeFormat from '../composants/IconeFormat';
 import useAnnulation from '../hooks/useAnnulation';
 import { chargerPdf } from '../services/pdfRendu';
 import { imprimerPdf } from '../services/impression';
 import {
-  obtenirDocument, obtenirApercu, creerQr, renommerQr, enregistrerEdition, telechargerDocument, obtenirPdfAvecQr,
+  obtenirDocument, obtenirApercu, creerQr, enregistrerEdition, telechargerOriginal as telechargerFichierOriginal, telechargerAvecQr, obtenirPdfAvecQr,
   messageErreur, STATUTS_DOCUMENT,
 } from '../services/documentsApi';
 import { lireBrouillon, ecrireBrouillon, effacerBrouillon } from '../services/magasinLocal';
@@ -45,7 +41,6 @@ function champSaisi(el) {
  */
 export default function PageEditeurDocument() {
   const { id } = useParams();
-  const mode = useModeDocuments();
 
   const [doc, setDoc] = useState(null);
   const [apercu, setApercu] = useState(null); // { pdf, pages }
@@ -56,7 +51,7 @@ export default function PageEditeurDocument() {
   const [initiaux, setInitiaux] = useState([]);
   // QR codes créés depuis le dernier enregistrement (pour supprimer côté serveur / libérer leur nom s'ils sont retirés).
   const creesServeur = useRef([]);
-  // Fenêtre de saisie du nom : { mode: 'ajout' | 'duplication' | 'renommage', position?, cle? }
+  // Fenêtre de saisie du nom du nouveau QR code : { position }
   const [dialogueNom, setDialogueNom] = useState(null);
   // Dernier fichier téléchargé (lien de secours si le navigateur bloque le téléchargement).
   const [fichierTelecharge, setFichierTelecharge] = useState(null);
@@ -66,14 +61,13 @@ export default function PageEditeurDocument() {
   const [zoom, setZoom] = useState({ mode: 'ajuste', valeur: 1 });
   const [largeurZone, setLargeurZone] = useState(800);
   const [apercuFinal, setApercuFinal] = useState(false);
-  const [exportOuvert, setExportOuvert] = useState(false);
+  const [telechargement, setTelechargement] = useState(false);
   const [notification, setNotification] = useState(null);
   const [occupe, setOccupe] = useState(false);
   // Enregistrement automatique (plus de bouton « Enregistrer ») et impression.
   const [sauvegarde, setSauvegarde] = useState({ enCours: false, erreur: false, version: 0 });
   const sauvegardeEnCours = useRef(false);
   const [impression, setImpression] = useState('');
-  const [versionHisto, setVersionHisto] = useState(0);
   const [brouillon, setBrouillon] = useState(null);
   const zoneRef = useRef(null);
 
@@ -181,27 +175,12 @@ export default function PageEditeurDocument() {
     notifier('succes', `QR code ${qr.numero} ajouté.`);
   }
 
-  /** Renommage : enregistré immédiatement (unicité vérifiée par le serveur), hors historique d'annulation. */
-  async function renommer(cle, nom) {
-    const q = qrcodes.find(x => x.cle === cle);
-    if (!q) return;
-    if (nom === q.numero) { setDialogueNom(null); return; }
-    const champs = await renommerQr(id, q, nom);
-    const appliquer = x => (x.cle === cle ? { ...x, ...champs } : x);
-    transformerTout(etat => etat.map(appliquer));
-    if (q.id) setInitiaux(prev => prev.map(appliquer)); // déjà enregistré côté serveur
-    creesServeur.current = creesServeur.current.map(appliquer);
-    setDialogueNom(null);
-    notifier('succes', `QR code renommé en ${champs.numero}.`);
-  }
-
   function ajouterQr() {
     if (!page) return;
     // Par défaut : coin bas-droit, en décalant si la place est déjà prise.
     const decalage = qrcodes.filter(q => q.page === pageCourante).length * mmVersPoints(8);
     setDialogueNom({
-      mode: 'ajout',
-      position: contraindreDansPage({
+            position: contraindreDansPage({
         page: pageCourante,
         x: page.largeur - MARGE_REPERE - TAILLE_QR_DEFAUT - decalage,
         y: page.hauteur - MARGE_REPERE - TAILLE_QR_DEFAUT - decalage,
@@ -234,12 +213,17 @@ export default function PageEditeurDocument() {
       vus.add(q.cle);
       return true;
     });
-    const maj = await enregistrerEdition(id, { qrcodes, supprimes, pages, initiaux });
+    const maj = await enregistrerEdition(id, { qrcodes, supprimes, initiaux });
     setDoc(d => ({ ...d, ...maj, qrcodes }));
     setInitiaux(qrcodes);
     creesServeur.current = [];
+    // Les QR codes supprimés ont libéré leur nom (il peut être repris par quelqu'un d'autre) :
+    // on les retire aussi de l'historique d'annulation pour qu'ils ne puissent pas revenir.
+    if (supprimes.length) {
+      const liberes = new Set(supprimes.map(q => q.cle));
+      transformerTout(etat => etat.filter(q => !liberes.has(q.cle)));
+    }
     effacerBrouillon(id);
-    setVersionHisto(v => v + 1);
     return maj;
   }
 
@@ -269,7 +253,6 @@ export default function PageEditeurDocument() {
       if (modifie) courant = { ...courant, ...(await enregistrer()), qrcodes };
       const { doc: genere, octets } = await obtenirPdfAvecQr(courant);
       setDoc(d => ({ ...d, ...genere, qrcodes }));
-      setVersionHisto(v => v + 1);
       const titre = (genere.nomGenere || '').replace(/\.[^.]+$/, '') || doc.nom;
       await imprimerPdf(octets, (n, total) => setImpression(`Préparation de l'impression : page ${n} / ${total}…`), titre);
     } catch (err) {
@@ -293,23 +276,43 @@ export default function PageEditeurDocument() {
 
   async function telechargerOriginal() {
     try {
-      await telechargerDocument(doc, 'original');
+      setFichierTelecharge(await telechargerFichierOriginal(doc));
     } catch (err) {
       notifier('erreur', messageErreur(err, 'Le téléchargement a échoué.'));
     }
   }
 
+  /** Téléchargement du PDF avec les QR codes (enregistré puis généré si nécessaire). */
+  async function telechargerAvecQrCodes() {
+    setTelechargement(true);
+    setNotification(null);
+    try {
+      let courant = { ...doc, qrcodes };
+      if (modifie) courant = { ...courant, ...(await enregistrer()), qrcodes };
+      const { doc: genere, fichier } = await telechargerAvecQr(courant);
+      setDoc(d => ({ ...d, ...genere, qrcodes }));
+      setFichierTelecharge(fichier);
+    } catch (err) {
+      notifier('erreur', messageErreur(err, 'Le téléchargement a échoué.'));
+    } finally {
+      setTelechargement(false);
+    }
+  }
+
   useEffect(() => {
-    if (!modifie || !doc || !apercu || brouillon || exportOuvert) return undefined;
+    // À enregistrer aussi : un QR code créé puis supprimé depuis le dernier enregistrement
+    // (l'état revient au même, mais son nom réservé doit être libéré).
+    const nomsALiberer = creesServeur.current.some(q => !qrcodes.some(c => c.cle === q.cle));
+    if (!(modifie || nomsALiberer) || !doc || !apercu || brouillon || telechargement) return undefined;
     const minuterie = setTimeout(sauvegarderAuto, 1500);
     return () => clearTimeout(minuterie);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qrcodes, modifie, doc, apercu, brouillon, exportOuvert, sauvegarde.version]);
+  }, [qrcodes, modifie, doc, apercu, brouillon, telechargement, sauvegarde.version]);
 
   /* ---------------- Raccourcis clavier ---------------- */
   useEffect(() => {
     function touche(e) {
-      if (champSaisi(document.activeElement) || exportOuvert || dialogueNom) return;
+      if (champSaisi(document.activeElement) || dialogueNom) return;
       const ctrl = e.ctrlKey || e.metaKey;
       if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); annuler(); return; }
       if (ctrl && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); retablir(); return; }
@@ -393,10 +396,10 @@ export default function PageEditeurDocument() {
         <button className="btn" onClick={imprimer} disabled={Boolean(impression) || occupe || !qrcodes.length} title={!qrcodes.length ? "Ajoutez d'abord un QR code" : "Imprimer le document avec ses QR codes (choix de l'imprimante sur l'appareil)"}>
           {impression ? 'Préparation…' : '🖨 Imprimer'}
         </button>
-        <button className="btn btn-primaire" onClick={() => setExportOuvert(true)} disabled={occupe || !qrcodes.length} title={!qrcodes.length ? "Ajoutez d'abord un QR code" : 'Télécharger le document avec ses QR codes'}>⬇ Télécharger avec QR code</button>
+        <button className="btn btn-primaire" onClick={telechargerAvecQrCodes} disabled={telechargement || occupe || !qrcodes.length} title={!qrcodes.length ? "Ajoutez d'abord un QR code" : 'Télécharger le document PDF avec ses QR codes'}>{telechargement ? 'Préparation…' : '⬇ Télécharger avec QR code'}</button>
       </div>
 
-      {(notification || brouillon || fichierTelecharge || impression || mode?.mode === 'local') && (
+      {(notification || brouillon || fichierTelecharge || impression) && (
         <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6, background: 'white', borderBottom: '1px solid var(--bordure)' }}>
           {brouillon && (
             <div className="bandeau bandeau-alerte" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
@@ -418,7 +421,6 @@ export default function PageEditeurDocument() {
               <button onClick={() => setNotification(null)} style={{ background: 'none', border: 'none', color: 'inherit' }} aria-label="Fermer">✕</button>
             </div>
           )}
-          <BandeauMode mode={mode} />
         </div>
       )}
 
@@ -473,7 +475,6 @@ export default function PageEditeurDocument() {
             {doc.genereLe && <div className="ligne-info"><span>Généré le</span><span>{formaterDate(doc.genereLe)}</span></div>}
             <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
               <button className="btn btn-petit" onClick={telechargerOriginal}>⬇ Original</button>
-              {doc.genere && <button className="btn btn-petit" onClick={() => telechargerDocument(doc, 'genere').catch(err => notifier('erreur', messageErreur(err)))}>⬇ {doc.nomGenere || 'Document généré'}</button>}
             </div>
           </section>
 
@@ -496,41 +497,18 @@ export default function PageEditeurDocument() {
           </section>
 
 
-          <section>
-            <h3>Historique</h3>
-            <HistoriqueDocument documentId={id} rafraichir={versionHisto} />
-          </section>
         </aside>
       </div>
 
       {dialogueNom && (
         <DialogueNomQr
-          titre={{ ajout: `Nouveau QR code — page ${dialogueNom.position?.page}`, renommage: 'Renommer le QR code' }[dialogueNom.mode]}
-          libelleValider={dialogueNom.mode === 'renommage' ? 'Renommer' : 'Ajouter le QR code'}
-          valeurInitiale={dialogueNom.mode === 'renommage' ? (qrcodes.find(q => q.cle === dialogueNom.cle)?.numero || '') : ''}
-          proposerSuggestion={dialogueNom.mode !== 'renommage'}
-          onValider={nom => (dialogueNom.mode === 'renommage' ? renommer(dialogueNom.cle, nom) : placerNouveauQr(dialogueNom.position, nom))}
+          titre={`Nouveau QR code — page ${dialogueNom.position?.page}`}
+          libelleValider="Ajouter le QR code"
+          onValider={nom => placerNouveauQr(dialogueNom.position, nom)}
           onFermer={() => setDialogueNom(null)}
         />
       )}
 
-      {exportOuvert && (
-        <ExportDialog
-          doc={doc}
-          mode={mode}
-          nbQr={qrcodes.length}
-          aEnregistrer={modifie}
-          onEnregistrer={enregistrer}
-          onFermer={() => setExportOuvert(false)}
-          onTermine={(genere, fichier) => {
-            setDoc(d => ({ ...d, ...genere, qrcodes }));
-            setExportOuvert(false);
-            setVersionHisto(v => v + 1);
-            setNotification(null);
-            setFichierTelecharge(fichier);
-          }}
-        />
-      )}
     </div>
   );
 }

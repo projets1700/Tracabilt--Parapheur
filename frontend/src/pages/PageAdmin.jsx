@@ -2,69 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import client from '../api/client';
-import ListeDocuments from '../modules/documents/composants/ListeDocuments';
-import BandeauMode from '../modules/documents/composants/BandeauMode';
-import useModeDocuments from '../modules/documents/hooks/useModeDocuments';
-import { modifierConfig, messageErreur } from '../modules/documents/services/documentsApi';
-import '../modules/documents/documents.css';
-
-function ConfigDocuments() {
-  const mode = useModeDocuments();
-  const [tailleMo, setTailleMo] = useState('');
-  const [qrContenu, setQrContenu] = useState(null);
-  const [etat, setEtat] = useState({ type: '', texte: '' });
-  const [envoi, setEnvoi] = useState(false);
-
-  if (!mode) return null;
-  const actuelleMo = Math.round((mode.config.taille_max_octets / (1024 * 1024)) * 10) / 10;
-  const modeQr = qrContenu ?? mode.config.qr_contenu ?? 'numero';
-
-  async function enregistrer(e) {
-    e.preventDefault();
-    const changements = {};
-    if (tailleMo) {
-      const valeur = parseFloat(String(tailleMo).replace(',', '.'));
-      if (!Number.isFinite(valeur) || valeur < 0.1 || valeur > 500) {
-        setEtat({ type: 'erreur', texte: 'Indiquez une taille entre 0,1 et 500 Mo.' });
-        return;
-      }
-      changements.taille_max_octets = Math.round(valeur * 1024 * 1024);
-    }
-    if (qrContenu) changements.qr_contenu = qrContenu;
-    setEnvoi(true);
-    try {
-      await modifierConfig(changements);
-      setEtat({ type: 'succes', texte: 'Paramètres mis à jour. Ils s\'appliquent aux prochains imports et QR codes.' });
-    } catch (err) {
-      setEtat({ type: 'erreur', texte: messageErreur(err, 'Mise à jour impossible.') });
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  return (
-    <div className="carte" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <h3 style={{ fontWeight: 600 }}>Paramètres d'importation</h3>
-      <BandeauMode mode={mode} />
-      <form onSubmit={enregistrer} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <div>
-          <label className="label-champ">Taille maximale des fichiers (Mo)</label>
-          <input className="champ" style={{ width: 160 }} inputMode="decimal" placeholder={String(actuelleMo).replace('.', ',')} value={tailleMo} onChange={e => setTailleMo(e.target.value)} disabled={mode.mode !== 'serveur'} />
-        </div>
-        <span style={{ fontSize: 12, color: 'var(--texte3)', alignSelf: 'center' }}>Actuellement : {String(actuelleMo).replace('.', ',')} Mo</span>
-        <div style={{ flexBasis: '100%' }}>
-          <label className="label-champ">Contenu des nouveaux QR codes</label>
-          <select className="champ" style={{ maxWidth: 520 }} value={modeQr} onChange={e => setQrContenu(e.target.value)} disabled={mode.mode !== 'serveur'}>
-            <option value="numero">Numéro du parapheur (lisible directement par l'application de scan)</option>
-            <option value="jeton">Jeton sécurisé non prédictible (résolu par le serveur au scan)</option>
-          </select>
-        </div>
-        <button className="btn btn-primaire" type="submit" disabled={mode.mode !== 'serveur' || envoi || (!tailleMo && !qrContenu)}>Enregistrer</button>
-      </form>
-      {etat.texte && <div className={etat.type === 'erreur' ? 'message-erreur' : 'message-succes'}>{etat.texte}</div>}
-    </div>
-  );
-}
 
 function formaterDate(d) {
   if (!d) return '—';
@@ -658,7 +595,7 @@ export default function PageAdmin() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
-          {[{ id: 'scanners', label: 'Scannaire' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'admins', label: 'Administrateurs' }, { id: 'parapheurs', label: 'Parapheurs' }, { id: 'scans', label: 'Scans' }, { id: 'documents', label: 'Documents' }, { id: 'apk', label: 'Application mobile' }].map(o => (
+          {[{ id: 'scanners', label: 'Scannaire' }, { id: 'superviseurs', label: 'Superviseurs' }, { id: 'admins', label: 'Administrateurs' }, { id: 'parapheurs', label: 'Parapheurs' }, { id: 'scans', label: 'Scans' }, { id: 'apk', label: 'Application mobile' }].map(o => (
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
@@ -846,19 +783,6 @@ export default function PageAdmin() {
                 </table>
               </div>
             )}
-          </div>
-        )}
-
-        {onglet === 'documents' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <p style={{ color: 'var(--texte2)', fontSize: 13 }}>Documents importés et documents générés avec QR codes</p>
-              <Link to="/documents?importer=1" className="btn btn-primaire">+ Importer un document</Link>
-            </div>
-            <div className="carte" style={{ padding: 0, overflow: 'hidden' }}>
-              <ListeDocuments messageVide="Aucun document importé pour le moment." />
-            </div>
-            <ConfigDocuments />
           </div>
         )}
 

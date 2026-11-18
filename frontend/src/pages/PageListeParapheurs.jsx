@@ -144,13 +144,6 @@ export default function PageListeParapheurs() {
                         >
                           Voir l'historique
                         </Link>
-                        <Link
-                          to={`/documents?parapheur=${encodeURIComponent(p.numero)}`}
-                          className="btn"
-                          style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}
-                        >
-                          Documents
-                        </Link>
                       </div>
                     </td>
                   </tr>

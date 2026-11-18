@@ -11,15 +11,6 @@ const limiterAuth = rateLimit({
   legacyHeaders: false,
 });
 
-const limiterAPI = rateLimit({
-  skip: horsTests,
-  windowMs: 60 * 1000, // 1 minute
-  max: 100,
-  message: { message: 'Trop de requêtes. Réessayez dans une minute.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Conversion publique Word/ODT → PDF (visiteurs non connectés) : coûteuse, donc limitée.
 const limiterConversion = rateLimit({
   skip: horsTests,
@@ -30,7 +21,7 @@ const limiterConversion = rateLimit({
   legacyHeaders: false,
 });
 
-// Réservation publique de numéros DEP pour les QR codes des visiteurs.
+// Noms des QR codes (suggestion, réservation, libération).
 const limiterNumeros = rateLimit({
   skip: horsTests,
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -40,4 +31,4 @@ const limiterNumeros = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { limiterAuth, limiterAPI, limiterConversion, limiterNumeros };
+module.exports = { limiterAuth, limiterConversion, limiterNumeros };

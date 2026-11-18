@@ -122,24 +122,9 @@ async function convertir(octets, extEntree, cible, extSortie, options = {}) {
   }
 }
 
-/** DOCX → PDF, en exportant les signets comme destinations nommées. */
-function docxVersPdf(octets, { avecSignets = false } = {}) {
-  const cible = avecSignets
-    ? 'pdf:writer_pdf_Export:{"ExportBookmarksToPDFDestination":{"type":"boolean","value":"true"}}'
-    : 'pdf:writer_pdf_Export';
-  return convertir(octets, 'docx', cible, 'pdf');
-}
-
 /** Document texte (docx, doc, odt) → PDF. */
 function documentVersPdf(octets, extension) {
   return convertir(octets, extension, 'pdf:writer_pdf_Export', 'pdf');
-}
-
-/** PDF → DOCX : reconstruction, fidélité limitée (§3.6). */
-function pdfVersDocx(octets) {
-  // Pas de guillemets autour du nom de filtre : spawn transmet l'argument tel quel
-  // et des guillemets littéraux bloquent LibreOffice.
-  return convertir(octets, 'pdf', 'docx:MS Word 2007 XML', 'docx', { filtreEntree: 'writer_pdf_import' });
 }
 
 async function disponible() {
@@ -151,4 +136,4 @@ async function disponible() {
   }
 }
 
-module.exports = { convertir, docxVersPdf, documentVersPdf, pdfVersDocx, disponible, ErreurConversion };
+module.exports = { convertir, documentVersPdf, disponible, ErreurConversion };

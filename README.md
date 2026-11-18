@@ -192,20 +192,15 @@ Les comptes se créent depuis l'interface — aucun seed nécessaire.
 
 ---
 
-### Gestion documentaire et QR codes *(admin et superviseur)*
+### Gestion documentaire et QR codes *(public, depuis le Visionneur)*
 
-Accessible depuis `/documents`, l'onglet **Documents** de l'administration, la fiche et la liste des parapheurs.
+Accessible sans connexion par le bouton **« Générer QR code »** du Visionneur (`/documents`).
 
-- Import de documents **PDF**, **Word (.docx, .doc)** et **OpenDocument (.odt)** par glisser-déposer (type réel, taille et intégrité vérifiés)
-- Les documents Word et OpenDocument sont **convertis en PDF** à l'import (LibreOffice) : le PDF devient le document de travail, le fichier d'origine est conservé et reste téléchargeable
-- **Sans connexion** depuis le Visionneur : le visiteur travaille dans son navigateur (rien n'est stocké sur le serveur) ; seule la conversion Word/ODT → PDF passe par le serveur
-- Aperçu multipage
-- Éditeur : ajout, déplacement, redimensionnement, duplication et suppression de QR codes, repères magnétiques, réglage en millimètres, annuler / rétablir, aperçu final
-- Génération : moteur **PDF** (pdf-lib)
-- Export PDF ou DOCX (l'export DOCX d'un PDF est une reconstruction, l'utilisateur en est averti)
-- Association au parapheur, historique complet des opérations, brouillon local en cas de perte de connexion
-- Contenu des QR codes configurable par l'admin : **numéro du parapheur** (lu tel quel par l'application mobile) ou **jeton sécurisé** `TQ-…` (résolu par le serveur au moment du scan)
-
+- Import de documents **PDF**, **Word (.docx, .doc)** et **OpenDocument (.odt)** par glisser-déposer (type réel, taille et intégrité vérifiés) ; les Word / ODT sont **convertis en PDF** par le serveur (LibreOffice), sans être conservés
+- Éditeur : ajout, déplacement, redimensionnement et suppression de QR codes, repères magnétiques, annuler / rétablir, enregistrement automatique
+- **Nom de chaque QR code choisi par l'utilisateur** (un nom libre `DEP-000001`… est proposé) et **unique** : deux QR codes ne peuvent jamais porter le même nom ; le nom est écrit en clair au-dessus du QR code
+- Téléchargement du PDF avec QR codes (fichier nommé d'après les QR codes) et **impression** (choix de l'imprimante par l'appareil)
+- **Rien n'est stocké sur le serveur, à part le nom de chaque QR code** (pour garantir son unicité) : documents et QR codes restent dans le navigateur. Le **parapheur est créé au premier scan** du QR code par l'application mobile
 
 ---
 
@@ -269,10 +264,18 @@ Accessible depuis `/documents`, l'onglet **Documents** de l'administration, la f
 |---------|-------|-------------|
 | POST | `/api/superviseur/connexion` | Connexion superviseur *(public)* |
 
-### Documents
+### Documents *(public)*
+
+Aucun document ni QR code n'est conservé : seul le nom de chaque QR code est enregistré.
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
+| POST | `/api/documents/conversion-pdf` | Conversion Word / ODT → PDF, sans stockage (20 conversions / 15 min / IP) |
+| GET | `/api/documents/noms-qr/suggestion` | Proposition d'un nom libre (`DEP-000001`…) |
+| POST | `/api/documents/noms-qr` | Réserver un nom de QR code (`{ "nom": "…" }`) — refusé s'il est déjà utilisé ; renvoie une clé |
+| DELETE | `/api/documents/noms-qr/:nom` | Libérer un nom (en-tête `X-Cle-Nom` : clé reçue à la réservation) |
+
+---------|-------|-------------|
 | POST | `/api/documents/conversion-pdf` | **Public** — conversion Word/ODT → PDF sans stockage (20 conversions / 15 min / IP) |
 | | *Routes suivantes : JWT admin ou superviseur requis* | |
 | GET | `/api/documents/config` | Taille maximale, mode de contenu des QR codes |
@@ -306,10 +309,8 @@ Tables PostgreSQL :
 | `lieux` | Noms de lieux associés aux coordonnées GPS |
 | `admins` | Comptes administrateur (2 maximum, limite appliquée côté application) |
 | `superviseurs` | Compte superviseur |
-| `documents` | Documents importés (fichiers stockés dans `uploads/documents/<id>/`) |
-| `qr_codes` / `qr_code_positions` | QR codes et leur position |
-| `document_history` | Historique des opérations documentaires |
-| `parametres` | Paramètres configurables (taille max, contenu des QR) |
+| `noms_qr` | Noms des QR codes déjà attribués (garantit qu'un nom n'est jamais utilisé deux fois) |
+| `parametres` | Paramètres (taille maximale des fichiers à convertir) |
 
 ---
 
@@ -365,4 +366,4 @@ TEST_INTEGRATION=1 npm test
 | 18 | Identifiant superviseur auto-généré + PIN, fiche scanner modifiable | ✅ |
 | 19 | Page de connexion unique (redirection selon le rôle), fiches superviseur/admin modifiables, admin seedé en base | ✅ |
 | 20 | Suppression d'un parapheur côté admin (et de son historique de scans en cascade) | ✅ |
-| 21 | Module documentaire : QR codes nommés (uniques) dans les PDF, Word et OpenDocument | ✅ |
+| 21 | Génération de QR codes nommés (noms uniques) sur des documents PDF, Word et OpenDocument, impression | ✅ |

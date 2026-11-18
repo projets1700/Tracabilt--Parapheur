@@ -149,13 +149,6 @@ export default function PageVisionneur() {
                   </p>
                 </div>
               </div>
-              <Link
-                to={`/documents?parapheur=${encodeURIComponent(resultat.numero)}`}
-                className="btn"
-                style={{ marginTop: 12, justifyContent: 'center', width: '100%' }}
-              >
-                📄 Documents et QR codes de ce parapheur
-              </Link>
             </div>
 
             <div className="carte">
