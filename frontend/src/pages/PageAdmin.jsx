@@ -847,7 +847,7 @@ export default function PageAdmin() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--fond2)', borderBottom: '1px solid var(--bordure)' }}>
-                      {['Numéro', 'Titre', 'Statut', 'Dernier scan', ''].map(h => (
+                      {['Numéro', 'Titre', 'Statut', 'Dernier scan', 'Localisation', ''].map(h => (
                         <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--texte2)', fontSize: 12 }}>{h}</th>
                       ))}
                     </tr>
@@ -863,6 +863,7 @@ export default function PageAdmin() {
                           </span>
                         </td>
                         <td style={{ padding: '12px 16px', color: 'var(--texte3)' }}>{formaterDate(p.dernier_scan)}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--texte2)' }}>{p.dernier_lieu ? `📍 ${p.dernier_lieu}` : '—'}</td>
                         <td style={{ padding: '12px 16px' }}>
                           <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => supprimerParapheur(p.id, p.numero)}>
                             Supprimer
